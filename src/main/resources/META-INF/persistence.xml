@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0">
+
+    <persistence-unit name="TW_BOT" transaction-type="RESOURCE_LOCAL">
+        <class>com.chatbot.entity.ChannelEntity</class>
+
+        <!-- configs -->
+        <class>com.chatbot.entity.config.GlobalConfigurationEntity</class>
+        <class>com.chatbot.entity.config.ChannelConfigurationEntity</class>
+
+        <!-- features -->
+        <class>com.chatbot.entity.feature.BotFeatureTypeEntity</class>
+        <class>com.chatbot.entity.feature.ChannelBotFeatureConfigurationEntity</class>
+        <class>com.chatbot.entity.feature.ChannelBotFeatureLoggingConfigurationEntity</class>
+        <class>com.chatbot.entity.feature.ChannelBotFeatureCommandConfigurationEntity</class>
+        <class>com.chatbot.entity.feature.ChannelBotFeatureDonationConfigurationEntity</class>
+        <class>com.chatbot.entity.feature.ChannelBotFeatureFollowConfigurationEntity</class>
+        <class>com.chatbot.entity.feature.ChannelBotFeatureSubscriptionConfigurationEntity</class>
+        <class>com.chatbot.entity.feature.ChannelBotFeatureAliveConfigurationEntity</class>
+
+        <!-- commands -->
+        <class>com.chatbot.entity.command.BotCommandTypeEntity</class>
+        <class>com.chatbot.entity.command.BotCommandConfigurationEntity</class>
+        <class>com.chatbot.entity.command.BotCommandSimpleResponseConfigurationEntity</class>
+        <class>com.chatbot.entity.command.BotCommandActionTypeEntity</class>
+        <class>com.chatbot.entity.command.BotCommandActionEntity</class>
+        <class>com.chatbot.entity.command.BotCommandSimpleResponseActionEntity</class>
+        <class>com.chatbot.entity.command.BotCommandTriggerEntity</class>
+        <properties>
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="false"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect"/>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/tw_bot?useUnicode=true&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=UTC"/>
+            <property name="javax.persistence.jdbc.user" value="root"/>
+            <property name="javax.persistence.jdbc.password" value="1234"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>
