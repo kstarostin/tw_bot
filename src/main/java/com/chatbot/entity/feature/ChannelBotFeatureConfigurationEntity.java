@@ -51,6 +51,7 @@ public abstract class ChannelBotFeatureConfigurationEntity extends AbstractEntit
     @Id
     @Column(name = "CHANNEL_BOT_FEATURE_CONFIGURATION_ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Override
     public long getId() {
         return id;
     }
@@ -61,6 +62,7 @@ public abstract class ChannelBotFeatureConfigurationEntity extends AbstractEntit
 
     @Version
     @Column(name = "CHANNEL_BOT_FEATURE_CONFIGURATION_TIMESTAMP")
+    @Override
     public long getTimestamp() {
         return timestamp;
     }

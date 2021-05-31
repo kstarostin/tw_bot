@@ -39,6 +39,7 @@ public class BotCommandActionTypeEntity extends AbstractEntity implements Serial
     @Id
     @Column(name = "BOT_COMMAND_ACTION_TYPE_ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Override
     public long getId() {
         return id;
     }
@@ -49,6 +50,7 @@ public class BotCommandActionTypeEntity extends AbstractEntity implements Serial
 
     @Version
     @Column(name = "BOT_COMMAND_ACTION_TYPE_TIMESTAMP")
+    @Override
     public long getTimestamp() {
         return timestamp;
     }

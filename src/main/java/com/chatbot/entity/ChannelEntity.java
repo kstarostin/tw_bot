@@ -127,6 +127,7 @@ public class ChannelEntity extends AbstractEntity implements Serializable {
     @Id
     @Column(name = "CHANNEL_ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Override
     public long getId() {
         return id;
     }
@@ -137,6 +138,7 @@ public class ChannelEntity extends AbstractEntity implements Serializable {
 
     @Version
     @Column(name = "CHANNEL_TIMESTAMP")
+    @Override
     public long getTimestamp() {
         return timestamp;
     }

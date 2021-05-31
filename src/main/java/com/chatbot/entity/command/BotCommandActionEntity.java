@@ -41,6 +41,7 @@ public abstract class BotCommandActionEntity extends AbstractEntity implements S
     @Id
     @Column(name = "BOT_COMMAND_ACTION_ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Override
     public long getId() {
         return id;
     }
@@ -51,6 +52,7 @@ public abstract class BotCommandActionEntity extends AbstractEntity implements S
 
     @Version
     @Column(name = "BOT_COMMAND_ACTION_TIMESTAMP")
+    @Override
     public long getTimestamp() {
         return timestamp;
     }

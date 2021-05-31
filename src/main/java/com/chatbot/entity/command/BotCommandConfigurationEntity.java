@@ -79,6 +79,7 @@ public abstract class BotCommandConfigurationEntity extends AbstractEntity imple
     @Id
     @Column(name = "BOT_COMMAND_CONFIGURATION_ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Override
     public long getId() {
         return id;
     }
@@ -89,6 +90,7 @@ public abstract class BotCommandConfigurationEntity extends AbstractEntity imple
 
     @Version
     @Column(name = "BOT_COMMAND_CONFIGURATION_TIMESTAMP")
+    @Override
     public long getTimestamp() {
         return timestamp;
     }

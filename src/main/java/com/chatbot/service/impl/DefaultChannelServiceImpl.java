@@ -7,12 +7,16 @@ import com.chatbot.entity.ChannelEntity;
 import com.chatbot.service.ChannelService;
 import com.chatbot.service.GlobalConfigurationService;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.NoResultException;
 import java.util.Optional;
 
 public class DefaultChannelServiceImpl implements ChannelService {
     private static DefaultChannelServiceImpl instance;
+
+    private final Logger LOG = LoggerFactory.getLogger(DefaultChannelServiceImpl.class);
 
     private final ChannelDAO channelDAO = DefaultChannelDAOImpl.getInstance();
     private final GlobalConfigurationService globalConfigurationService = DefaultGlobalConfigurationServiceImpl.getInstance();
@@ -42,7 +46,7 @@ public class DefaultChannelServiceImpl implements ChannelService {
         try {
             return Optional.of(channelDAO.getChannelByName(channelName));
         } catch (final NoResultException nre) {
-            // todo log
+            LOG.warn("No ChannelEntity found for channelName {}", channelName, nre);
             return Optional.empty();
         }
     }

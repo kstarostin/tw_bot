@@ -1,6 +1,8 @@
 package com.chatbot.dao;
 
-public interface CommonDAO<T> {
+import com.chatbot.entity.AbstractEntity;
+
+public interface CommonDAO<T extends AbstractEntity> {
     T create(T t);
     T read(long id);
     T update(T t);

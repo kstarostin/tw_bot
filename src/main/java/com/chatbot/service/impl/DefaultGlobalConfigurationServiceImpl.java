@@ -7,12 +7,16 @@ import com.chatbot.entity.config.GlobalConfigurationEntity;
 import com.chatbot.service.StaticConfigurationService;
 import com.chatbot.service.GlobalConfigurationService;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.NoResultException;
 import java.util.Optional;
 
 public class DefaultGlobalConfigurationServiceImpl implements GlobalConfigurationService {
     private static DefaultGlobalConfigurationServiceImpl instance;
+
+    private final Logger LOG = LoggerFactory.getLogger(DefaultGlobalConfigurationServiceImpl.class);
 
     private static final String STATIC_CONFIG_ATTR_NAME = "name";
 
@@ -44,7 +48,7 @@ public class DefaultGlobalConfigurationServiceImpl implements GlobalConfiguratio
         try {
             return Optional.of(globalConfigurationDAO.getGlobalConfigurationByCode(code));
         } catch (final NoResultException nre) {
-            // todo log
+            LOG.warn("No GlobalConfigurationEntity found for code {}", code, nre);
             return Optional.empty();
         }
     }

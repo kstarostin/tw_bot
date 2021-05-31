@@ -8,6 +8,8 @@ import com.chatbot.util.TechnicalBotCommandTriggerEnum;
 import com.chatbot.util.EmoteEnum;
 import com.chatbot.util.MessageUtils;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 
 public class DefaultMessageServiceImpl implements MessageService {
     private static DefaultMessageServiceImpl instance;
+
+    private final Logger LOG = LoggerFactory.getLogger(DefaultMessageServiceImpl.class);
 
     private Properties messageProperties;
 
@@ -60,11 +64,12 @@ public class DefaultMessageServiceImpl implements MessageService {
                     return messageDate.after(minuteAgo);
                 }).map(messageEntry -> messageEntry.keySet().iterator().next())
                 .collect(Collectors.toList());
-        if (lastMinuteMessages.contains(responseMessage) && !userName.equals(globalConfigurationService.getSuperAdminName())) {
+        if (lastMinuteMessages.contains(responseMessage)
+                && (globalConfigurationService.getSuperAdminName().isPresent() && !userName.equals(globalConfigurationService.getSuperAdminName().get()))) {
             return;
         }
 
-        System.out.printf("Response message [%s]", responseMessage);
+        LOG.info("Response message [{}]", responseMessage);
         trackBotMessageForChannel(event.getChannel().getName(), responseMessage);
         event.getTwitchChat().sendMessage(event.getChannel().getName(), responseMessage);
     }
@@ -147,12 +152,14 @@ public class DefaultMessageServiceImpl implements MessageService {
 
     private Properties getMessageProperties() {
         if (messageProperties == null) {
+            final String resource = "messages/messages.properties";
             try {
+                LOG.debug("Load default messages from the resource [{}] ...", resource);
                 messageProperties = new Properties();
-                messageProperties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("messages/messages.properties"));
+                messageProperties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(resource));
+                LOG.debug("Loaded default messages from the resource [{}]", resource);
             } catch (final Exception e) {
-                e.printStackTrace();
-                System.out.println("Unable to load default messages. Exiting application.");
+                LOG.error("Unable to load default messages from the resource [{}]. Exiting application...", resource, e);
                 System.exit(1);
             }
         }

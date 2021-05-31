@@ -33,21 +33,23 @@ public class BotCommandTriggerEntity extends AbstractEntity implements Serializa
     @Id
     @Column(name = "BOT_COMMAND_TRIGGER_ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long getId() {
+    @Override
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 
     @Version
     @Column(name = "BOT_COMMAND_TRIGGER_TIMESTAMP")
-    public Long getTimestamp() {
+    @Override
+    public long getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Long timestamp) {
+    public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
 

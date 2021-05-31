@@ -39,6 +39,8 @@ import com.chatbot.service.impl.DefaultBotFeatureServiceImpl;
 import com.chatbot.service.impl.DefaultStaticConfigurationServiceImpl;
 import com.chatbot.service.impl.DefaultTwitchClientServiceImpl;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.NoResultException;
 import javax.swing.text.html.Option;
@@ -50,6 +52,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Bot {
+    private final Logger LOG = LoggerFactory.getLogger(Bot.class);
+
     private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
@@ -76,7 +80,7 @@ public class Bot {
         // Connect to all configured channels
         final Optional<GlobalConfigurationEntity> globalConfigurationEntityOptional = globalConfigurationService.getCurrentGlobalConfiguration();
         if (!globalConfigurationEntityOptional.isPresent()) {
-            // todo log
+            LOG.error("Global configuration not found!");
             System.exit(1);
         }
         for (final ChannelEntity channelEntity : globalConfigurationEntityOptional.get().getConfiguredChannels()) {

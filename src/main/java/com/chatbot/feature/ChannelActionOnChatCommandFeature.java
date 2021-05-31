@@ -1,9 +1,5 @@
 package com.chatbot.feature;
 
-import com.chatbot.service.ChannelService;
-import com.chatbot.service.GlobalConfigurationService;
-import com.chatbot.service.impl.DefaultChannelServiceImpl;
-import com.chatbot.service.impl.DefaultGlobalConfigurationServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
@@ -12,7 +8,6 @@ import com.chatbot.strategy.impl.DefaultChatActionOnCommandStrategyImpl;
 
 public class ChannelActionOnChatCommandFeature extends AbstractFeature {
     private final ChatResponseStrategy commandResponseStrategy = DefaultChatActionOnCommandStrategyImpl.getInstance();
-    private final GlobalConfigurationService globalConfigurationService = DefaultGlobalConfigurationServiceImpl.getInstance();
 
     public ChannelActionOnChatCommandFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);

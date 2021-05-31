@@ -18,6 +18,8 @@ import com.chatbot.util.TechnicalBotCommandTriggerEnum;
 import com.chatbot.util.FeatureEnum;
 import com.github.twitch4j.helix.domain.StreamList;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,6 +34,8 @@ import static com.chatbot.util.MessageUtils.USER_TAG;
 
 public class DefaultChatActionOnCommandStrategyImpl extends AbstractResponseStrategy implements ChatResponseStrategy {
     private static DefaultChatActionOnCommandStrategyImpl instance;
+
+    private final Logger LOG = LoggerFactory.getLogger(DefaultChatActionOnCommandStrategyImpl.class);
 
     private static final String MESSAGE_STREAM_OFFLINE_DEFAULT = "message.stream.offline.default";
     private static final String MESSAGE_FEATURE_WRONG_COMMAND_SYNTAX_DEFAULT = "message.feature.wrong.command.syntax.default";
@@ -169,7 +173,7 @@ public class DefaultChatActionOnCommandStrategyImpl extends AbstractResponseStra
                 try {
                     botFeatureService.addFeatureToChannel(channelName, FeatureEnum.valueOf(arguments[2].toUpperCase()));
                 } catch (final IllegalArgumentException e) {
-                    // todo log message
+                    LOG.error("No feature found for code {}", arguments[2], e);
                     return String.format(messageService.getStandardMessageForKey(MESSAGE_FEATURE_WRONG_COMMAND_SYNTAX_DEFAULT), USER_TAG + userName);
                 }
                 return String.format(messageService.getStandardMessageForCommand(FEATURE), USER_TAG + userName, getActiveFeatureListForChannel(channelName));
@@ -180,7 +184,7 @@ public class DefaultChatActionOnCommandStrategyImpl extends AbstractResponseStra
                 try {
                     botFeatureService.removeFeatureFromChannel(channelName, FeatureEnum.valueOf(arguments[2].toUpperCase()));
                 } catch (final IllegalArgumentException e) {
-                    // todo log message
+                    LOG.error("No feature found for code {}", arguments[2], e);
                     return String.format(messageService.getStandardMessageForKey(MESSAGE_FEATURE_WRONG_COMMAND_SYNTAX_DEFAULT), USER_TAG + userName);
                 }
                 return String.format(messageService.getStandardMessageForCommand(FEATURE), USER_TAG + userName, getActiveFeatureListForChannel(channelName));

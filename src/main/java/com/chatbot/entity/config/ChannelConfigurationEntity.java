@@ -99,6 +99,7 @@ public class ChannelConfigurationEntity extends AbstractEntity implements Serial
     @Id
     @Column(name = "CHANNEL_CONFIG_ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Override
     public long getId() {
         return id;
     }
@@ -109,6 +110,7 @@ public class ChannelConfigurationEntity extends AbstractEntity implements Serial
 
     @Version
     @Column(name = "CHANNEL_CONFIG_TIMESTAMP")
+    @Override
     public long getTimestamp() {
         return timestamp;
     }

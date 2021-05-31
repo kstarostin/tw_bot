@@ -16,7 +16,7 @@ import java.util.Set;
 @Table(name = "GLOBAL_CONFIG")
 @NamedQueries(
         {
-                @NamedQuery(name = "GlobalConfigurationEntity.getConfigByCode", query = "SELECT config FROM GlobalConfigurationEntity config WHERE config.code = :code"),
+                @NamedQuery(name = "GlobalConfigurationEntity.getByCode", query = "SELECT config FROM GlobalConfigurationEntity config WHERE config.code = :code"),
         })
 public class GlobalConfigurationEntity extends AbstractEntity implements Serializable {
     private String code; // bot user name
@@ -129,6 +129,7 @@ public class GlobalConfigurationEntity extends AbstractEntity implements Seriali
     @Id
     @Column(name = "GLOBAL_CONFIG_ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Override
     public long getId() {
         return id;
     }
@@ -139,6 +140,7 @@ public class GlobalConfigurationEntity extends AbstractEntity implements Seriali
 
     @Version
     @Column(name = "GLOBAL_CONFIG_TIMESTAMP")
+    @Override
     public long getTimestamp() {
         return timestamp;
     }

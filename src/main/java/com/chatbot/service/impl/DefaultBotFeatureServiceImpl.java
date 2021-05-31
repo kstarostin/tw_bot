@@ -16,6 +16,8 @@ import com.chatbot.util.FeatureEnum;
 import com.chatbot.feature.*;
 import com.chatbot.service.BotFeatureService;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.NoResultException;
 import java.util.Arrays;
@@ -28,7 +30,9 @@ import java.util.stream.Collectors;
 public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     private static DefaultBotFeatureServiceImpl instance;
 
-    private static final String REGISTER_FEATURE = "Register feature: [%s] \n";
+    private final Logger LOG = LoggerFactory.getLogger(DefaultBotFeatureServiceImpl.class);
+
+    private static final String REGISTER_FEATURE = "Register feature: [{}]";
 
     private ChannelNotificationOnDonationFeature channelNotificationOnDonationFeature;
     private ChannelNotificationOnFollowFeature channelNotificationOnFollowFeature;
@@ -68,7 +72,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         }
         if (channelNotificationOnDonationFeature == null) {
             channelNotificationOnDonationFeature = new ChannelNotificationOnDonationFeature(eventHandler);
-            System.out.printf(REGISTER_FEATURE, FeatureEnum.DONATION);
+            LOG.info(REGISTER_FEATURE, FeatureEnum.DONATION);
         }
     }
 
@@ -78,7 +82,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         }
         if (channelNotificationOnFollowFeature == null) {
             channelNotificationOnFollowFeature = new ChannelNotificationOnFollowFeature(eventHandler);
-            System.out.printf(REGISTER_FEATURE, FeatureEnum.FOLLOW);
+            LOG.info(REGISTER_FEATURE, FeatureEnum.FOLLOW);
         }
     }
 
@@ -89,7 +93,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         }
         if (channelNotificationOnSubscriptionFeature == null) {
             channelNotificationOnSubscriptionFeature = new ChannelNotificationOnSubscriptionFeature(eventHandler);
-            System.out.printf(REGISTER_FEATURE, FeatureEnum.SUBSCRIPTION);
+            LOG.info(REGISTER_FEATURE, FeatureEnum.SUBSCRIPTION);
         }
     }
 
@@ -100,7 +104,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         }
         if (channelActionOnChatCommandFeature == null) {
             channelActionOnChatCommandFeature = new ChannelActionOnChatCommandFeature(eventHandler);
-            System.out.printf(REGISTER_FEATURE, FeatureEnum.COMMAND);
+            LOG.info(REGISTER_FEATURE, FeatureEnum.COMMAND);
         }
     }
 
@@ -111,7 +115,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         }
         if (channelResponseOnChatEmoteSpammingFeature == null) {
             channelResponseOnChatEmoteSpammingFeature = new AliveFeature(eventHandler);
-            System.out.printf(REGISTER_FEATURE, FeatureEnum.ALIVE);
+            LOG.info(REGISTER_FEATURE, FeatureEnum.ALIVE);
         }
     }
 
@@ -122,7 +126,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         }
         if (logChatMessageFeature == null) {
             logChatMessageFeature = new LogChatMessageFeature(eventHandler);
-            System.out.printf(REGISTER_FEATURE, FeatureEnum.LOGGING);
+            LOG.info(REGISTER_FEATURE, FeatureEnum.LOGGING);
         }
     }
 
@@ -141,7 +145,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         try {
             return Optional.of(botFeatureTypeDAO.getBotFeatureTypeByCode(featureCode));
         } catch (final NoResultException nre) {
-            // todo log
+            LOG.warn("No BotFeatureTypeEntity found for featureCode {}", featureCode, nre);
             return Optional.empty();
         }
     }

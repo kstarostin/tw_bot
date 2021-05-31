@@ -39,6 +39,7 @@ public class BotCommandTypeEntity extends AbstractEntity implements Serializable
     @Id
     @Column(name = "BOT_COMMAND_TYPE_ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Override
     public long getId() {
         return id;
     }
@@ -49,6 +50,7 @@ public class BotCommandTypeEntity extends AbstractEntity implements Serializable
 
     @Version
     @Column(name = "BOT_COMMAND_TYPE_TIMESTAMP")
+    @Override
     public long getTimestamp() {
         return timestamp;
     }
