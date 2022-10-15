@@ -5,4 +5,6 @@ import com.chatbot.configuration.Configuration;
 public interface StaticConfigurationService {
     Configuration getStaticConfiguration();
     void loadInitialStaticConfiguration();
+
+    String getBotName();
 }

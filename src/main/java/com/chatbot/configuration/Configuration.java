@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -19,6 +17,8 @@ public class Configuration {
     private Map<String, String> api;
 
     private Map<String, String> credentials;
+
+    private Map<String, String> channels;
 
     public Boolean getDebug() {
         return debug;
@@ -50,6 +50,14 @@ public class Configuration {
 
     public void setCredentials(Map<String, String> credentials) {
         this.credentials = credentials;
+    }
+
+    public Map<String, String> getChannels() {
+        return channels;
+    }
+
+    public void setChannels(Map<String, String> channels) {
+        this.channels = channels;
     }
 
     @Override

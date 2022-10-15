@@ -30,6 +30,7 @@ proguard/
 local.properties
 # Local DB configuration file
 src/main/resources/cfg/local.db.properties
+src/main/resources/messages/messages.properties
 
 # Intellij project files
 *.iml

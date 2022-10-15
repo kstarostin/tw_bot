@@ -15,9 +15,9 @@ public class LogChatMessageFeature extends AbstractFeature {
 
     public void onChannelMessage(final ChannelMessageEvent event) {
         LOG.debug("Channel [{}] - Event [{}] - User [{}] - Message [{}]", event.getChannel(), event.getClass().getName(), event.getUser(), event.getMessage());
-        if (!isFeatureActiveForChannel(FeatureEnum.LOGGING, event.getChannel().getName())) {
+        if (!isFeatureActive(FeatureEnum.LOGGING)) {
             return;
         }
-        LOG.info("Channel [{}] - User [{}] - Message [{}]", event.getChannel().getName(), event.getUser().getName(), event.getMessage());
+        LOG.info("Channel[{}]-User[{}]-Time[{}]-Message[{}]", event.getChannel().getName(), event.getUser().getName(), event.getFiredAt().getTime(), event.getMessage());
     }
 }

@@ -54,4 +54,9 @@ public class DefaultStaticConfigurationServiceImpl implements StaticConfiguratio
             System.exit(1);
         }
     }
+
+    @Override
+    public String getBotName() {
+        return getStaticConfiguration().getBot().get("name");
+    }
 }
