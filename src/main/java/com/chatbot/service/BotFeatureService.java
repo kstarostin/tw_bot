@@ -11,4 +11,5 @@ public interface BotFeatureService {
     void registerLogChatMessageFeature(SimpleEventHandler eventHandler);
 
     boolean isFeatureActive(FeatureEnum featureEnum);
+    void setFeatureStatus(FeatureEnum featureEnum, boolean isActive);
 }

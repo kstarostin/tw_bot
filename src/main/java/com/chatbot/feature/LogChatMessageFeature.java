@@ -18,6 +18,6 @@ public class LogChatMessageFeature extends AbstractFeature {
         if (!isFeatureActive(FeatureEnum.LOGGING)) {
             return;
         }
-        LOG.info("Channel[{}]-User[{}]-Time[{}]-Message[{}]", event.getChannel().getName(), event.getUser().getName(), event.getFiredAt().getTime(), event.getMessage());
+        LOG.info("Channel[{}]-[{}]:[{}]:[{}]", event.getChannel().getName(), event.getFiredAt().getTime(), event.getUser().getName(), event.getMessage());
     }
 }

@@ -1,5 +1,6 @@
 package com.chatbot.service.impl;
 
+import com.chatbot.feature.AliveFeature;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.chatbot.feature.*;
@@ -20,11 +21,9 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
 
     private final Map<FeatureEnum, Boolean> featureStateMap = Stream.of(new Object[][] {
             { ALIVE, Boolean.TRUE },
-            { COMMAND, Boolean.FALSE },
+            { COMMAND, Boolean.TRUE },
             { LOGGING, Boolean.TRUE },
             { SUBSCRIPTION, Boolean.TRUE },
-            { FOLLOW, Boolean.FALSE },
-            { DONATION, Boolean.FALSE },
     }).collect(Collectors.toMap(data -> (FeatureEnum) data[0], data -> (Boolean) data[1]));
 
     private static final String REGISTER_FEATURE = "Register feature: [{}]";
@@ -85,7 +84,12 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     }
 
     @Override
-    public boolean isFeatureActive(FeatureEnum featureEnum) {
+    public boolean isFeatureActive(final FeatureEnum featureEnum) {
         return featureStateMap.containsKey(featureEnum) && featureStateMap.get(featureEnum);
+    }
+
+    @Override
+    public void setFeatureStatus(final FeatureEnum featureEnum, final boolean isActive) {
+        featureStateMap.put(featureEnum, isActive);
     }
 }

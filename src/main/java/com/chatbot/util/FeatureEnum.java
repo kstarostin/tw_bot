@@ -2,8 +2,6 @@ package com.chatbot.util;
 
 public enum FeatureEnum {
     LOGGING ("logging"),
-    DONATION ("donation"),
-    FOLLOW ("follow"),
     SUBSCRIPTION ("subscription"),
     COMMAND ("command"),
     ALIVE("alive");
