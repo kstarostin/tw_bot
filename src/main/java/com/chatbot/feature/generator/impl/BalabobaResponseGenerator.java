@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -19,7 +20,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
 
     private final Logger LOG = LoggerFactory.getLogger(BalabobaResponseGenerator.class);
 
-    private final static int GENERATED_MESSAGE_MAX_LENGTH = 250;
+    private final static int[] GENERATED_MESSAGE_MAX_LENGTHS = {50, 100, 150, 200, 250, 300, 350};
     private final static int GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS = 10;
 
     private BalabobaResponseGenerator () {
@@ -35,12 +36,18 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     @Override
     public String generate(final String message) {
         String generatedMessage;
+        int maxLength = calculateRandomLength();
         int generateCounter = 1;
         do {
-            generatedMessage = shorten(generateWithBalaboba(message));
+            generatedMessage = shorten(generateWithBalaboba(message), maxLength);
             generateCounter++;
-        } while (generatedMessage.length() > GENERATED_MESSAGE_MAX_LENGTH && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
+        } while (generatedMessage.length() > maxLength && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
         return generatedMessage;
+    }
+
+    private int calculateRandomLength() {
+        int random = new Random().nextInt(GENERATED_MESSAGE_MAX_LENGTHS.length);
+        return GENERATED_MESSAGE_MAX_LENGTHS[random];
     }
 
     private String generateWithBalaboba(final String message) {
@@ -74,12 +81,12 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         return BalabobaStyle.SHORT_STORIES.toString();
     }
 
-    private String shorten(final String message) {
+    private String shorten(final String message, final int maxLength) {
         final String[] sentences =  message.split("[.!?]");
         if (sentences.length > 1) {
             StringBuilder shortenedMessage = new StringBuilder();
             for (final String sentence : sentences) {
-                if (shortenedMessage.length() + sentence.length() < GENERATED_MESSAGE_MAX_LENGTH) {
+                if (shortenedMessage.length() + sentence.length() < maxLength) {
                     shortenedMessage.append(sentence).append(".");
                 } else if (StringUtils.isNotEmpty(shortenedMessage.toString())) {
                     return shortenedMessage.toString();
