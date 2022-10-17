@@ -26,6 +26,8 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
             { SUBSCRIPTION, Boolean.TRUE },
     }).collect(Collectors.toMap(data -> (FeatureEnum) data[0], data -> (Boolean) data[1]));
 
+    private int randomAnswerProbability = 5;
+
     private static final String REGISTER_FEATURE = "Register feature: [{}]";
 
     private ChannelNotificationOnSubscriptionFeature channelNotificationOnSubscriptionFeature;
@@ -91,5 +93,15 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     @Override
     public void setFeatureStatus(final FeatureEnum featureEnum, final boolean isActive) {
         featureStateMap.put(featureEnum, isActive);
+    }
+
+    @Override
+    public int getRandomAnswerProbability() {
+        return randomAnswerProbability;
+    }
+
+    @Override
+    public void setRandomAnswerProbability(final int randomAnswerProbability) {
+        this.randomAnswerProbability = randomAnswerProbability;
     }
 }

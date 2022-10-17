@@ -12,4 +12,7 @@ public interface BotFeatureService {
 
     boolean isFeatureActive(FeatureEnum featureEnum);
     void setFeatureStatus(FeatureEnum featureEnum, boolean isActive);
+
+    int getRandomAnswerProbability();
+    void setRandomAnswerProbability(int randomAnswerProbability);
 }

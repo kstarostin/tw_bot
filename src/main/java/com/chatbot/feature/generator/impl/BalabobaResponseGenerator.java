@@ -1,8 +1,6 @@
 package com.chatbot.feature.generator.impl;
 
 import com.chatbot.feature.generator.ResponseGenerator;
-import com.chatbot.service.StaticConfigurationService;
-import com.chatbot.service.impl.DefaultStaticConfigurationServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -21,10 +19,8 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
 
     private final Logger LOG = LoggerFactory.getLogger(BalabobaResponseGenerator.class);
 
-    private final static int GENERATED_MESSAGE_MAX_LENGTH = 350;
+    private final static int GENERATED_MESSAGE_MAX_LENGTH = 250;
     private final static int GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS = 10;
-
-    private final StaticConfigurationService configurationService = DefaultStaticConfigurationServiceImpl.getInstance();
 
     private BalabobaResponseGenerator () {
     }
@@ -38,11 +34,10 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
 
     @Override
     public String generate(final String message) {
-        final String sanitizedMessage = message.replace("@", StringUtils.EMPTY).replace(configurationService.getBotName(), StringUtils.EMPTY);
         String generatedMessage;
         int generateCounter = 1;
         do {
-            generatedMessage = shorten(generateWithBalaboba(sanitizedMessage));
+            generatedMessage = shorten(generateWithBalaboba(message));
             generateCounter++;
         } while (generatedMessage.length() > GENERATED_MESSAGE_MAX_LENGTH && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
         return generatedMessage;
@@ -75,7 +70,8 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     }
 
     private String getStyle() {
-        return Stream.of(BalabobaStyle.values()).skip((int) (Set.of(BalabobaStyle.values()).size() * Math.random())).findFirst().orElse(BalabobaStyle.NO_STYLE).toString();
+        //return Stream.of(BalabobaStyle.values()).skip((int) (Set.of(BalabobaStyle.values()).size() * Math.random())).findFirst().orElse(BalabobaStyle.NO_STYLE).toString();
+        return BalabobaStyle.SHORT_STORIES.toString();
     }
 
     private String shorten(final String message) {

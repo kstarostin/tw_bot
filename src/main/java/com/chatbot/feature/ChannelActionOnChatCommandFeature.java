@@ -7,6 +7,7 @@ import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.Set;
 
@@ -17,6 +18,9 @@ public class ChannelActionOnChatCommandFeature extends AbstractFeature {
     private static final String FEATURE_COMMAND_ON_ARG = "on";
     private static final String FEATURE_COMMAND_OFF_ARG = "off";
     private static final String FEATURE_COMMAND_STATUS_ARG = "status";
+
+    private static final int MIN_PROBABILITY = 0;
+    private static final int MAX_PROBABILITY = 100;
 
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
@@ -89,12 +93,27 @@ public class ChannelActionOnChatCommandFeature extends AbstractFeature {
                 return messageService.getStandardMessageForKey("message.command.default");
             case FEATURE_COMMAND_STATUS_ARG:
                 final StringBuilder messageBuilder = new StringBuilder("%s ");
-                features.forEach(feature -> messageBuilder.append(feature)
-                        .append(":")
-                        .append(botFeatureService.isFeatureActive(FeatureEnum.valueOf(feature.toString().toUpperCase())) ? FEATURE_COMMAND_ON_ARG : FEATURE_COMMAND_OFF_ARG)
-                        .append(" | "));
+                features.forEach(feature -> {
+                    messageBuilder.append(feature)
+                            .append(":")
+                            .append(botFeatureService.isFeatureActive(FeatureEnum.valueOf(feature.toString().toUpperCase())) ? FEATURE_COMMAND_ON_ARG : FEATURE_COMMAND_OFF_ARG);
+                    if (FeatureEnum.ALIVE.equals(feature)) {
+                        messageBuilder.append(":").append(botFeatureService.getRandomAnswerProbability());
+                    }
+                    messageBuilder.append(" | ");
+                });
                 return StringUtils.chop(messageBuilder.toString().trim());
             default:
+                if (StringUtils.isNumeric(args[1])) {
+                    int probability = NumberUtils.toInt(args[1]);
+                    if (probability <= MIN_PROBABILITY) {
+                        probability = MIN_PROBABILITY;
+                    } else if (probability >= MAX_PROBABILITY) {
+                        probability = MAX_PROBABILITY;
+                    }
+                    botFeatureService.setRandomAnswerProbability(probability);
+                    return messageService.getStandardMessageForKey("message.command.default");
+                }
                 return StringUtils.EMPTY;
         }
     }
