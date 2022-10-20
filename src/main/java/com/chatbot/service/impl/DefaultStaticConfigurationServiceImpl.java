@@ -59,4 +59,9 @@ public class DefaultStaticConfigurationServiceImpl implements StaticConfiguratio
     public String getBotName() {
         return getStaticConfiguration().getBot().get("name");
     }
+
+    @Override
+    public boolean isActiveOnLiveStreamOnly() {
+        return getStaticConfiguration().isActiveOnLiveStreamOnly();
+    }
 }

@@ -9,6 +9,7 @@ public interface BotFeatureService {
     void registerChannelActionOnChatCommandFeature(SimpleEventHandler eventHandler);
     void registerChannelResponseOnChatEmoteSpammingFeature(SimpleEventHandler eventHandler);
     void registerLogChatMessageFeature(SimpleEventHandler eventHandler);
+    void registerChatModerationFeature(SimpleEventHandler eventHandler);
 
     boolean isFeatureActive(FeatureEnum featureEnum);
     void setFeatureStatus(FeatureEnum featureEnum, boolean isActive);

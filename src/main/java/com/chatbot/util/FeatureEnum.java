@@ -4,7 +4,8 @@ public enum FeatureEnum {
     LOGGING ("logging"),
     SUBSCRIPTION ("subscription"),
     COMMAND ("command"),
-    ALIVE("alive");
+    ALIVE("alive"),
+    MODERATOR("moderator");
 
     private final String text;
 

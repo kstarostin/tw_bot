@@ -7,4 +7,6 @@ public interface StaticConfigurationService {
     void loadInitialStaticConfiguration();
 
     String getBotName();
+
+    boolean isActiveOnLiveStreamOnly();
 }

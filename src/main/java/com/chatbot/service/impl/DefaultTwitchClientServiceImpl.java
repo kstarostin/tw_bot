@@ -5,6 +5,7 @@ import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.chatbot.service.StaticConfigurationService;
 import com.chatbot.service.TwitchClientService;
+import com.github.twitch4j.helix.TwitchHelix;
 
 public class DefaultTwitchClientServiceImpl implements TwitchClientService {
     private static DefaultTwitchClientServiceImpl instance;
@@ -27,6 +28,11 @@ public class DefaultTwitchClientServiceImpl implements TwitchClientService {
     @Override
     public TwitchClient getTwitchClient() {
         return twitchClient;
+    }
+
+    @Override
+    public TwitchHelix getTwitchHelixClient() {
+        return twitchClient.getHelix();
     }
 
     @Override

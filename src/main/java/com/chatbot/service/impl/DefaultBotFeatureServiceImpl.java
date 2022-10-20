@@ -1,6 +1,7 @@
 package com.chatbot.service.impl;
 
 import com.chatbot.feature.AliveFeature;
+import com.chatbot.service.StaticConfigurationService;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.chatbot.feature.*;
@@ -8,9 +9,10 @@ import com.chatbot.service.BotFeatureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.chatbot.util.FeatureEnum.*;
 
@@ -19,23 +21,24 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
 
     private final Logger LOG = LoggerFactory.getLogger(DefaultBotFeatureServiceImpl.class);
 
-    private final Map<FeatureEnum, Boolean> featureStateMap = Stream.of(new Object[][] {
-            { ALIVE, Boolean.TRUE },
-            { COMMAND, Boolean.TRUE },
-            { LOGGING, Boolean.TRUE },
-            { SUBSCRIPTION, Boolean.TRUE },
-    }).collect(Collectors.toMap(data -> (FeatureEnum) data[0], data -> (Boolean) data[1]));
+    private final Map<FeatureEnum, Boolean> featureStateMap;
 
-    private int randomAnswerProbability = 5;
+    private int randomAnswerProbability;
 
     private static final String REGISTER_FEATURE = "Register feature: [{}]";
 
     private ChannelNotificationOnSubscriptionFeature channelNotificationOnSubscriptionFeature;
     private ChannelActionOnChatCommandFeature channelActionOnChatCommandFeature;
-    private AliveFeature channelResponseOnChatEmoteSpammingFeature;
+    private AliveFeature aliveFeature;
+    private ChatModerationFeature chatModerationFeature;
     private LogChatMessageFeature logChatMessageFeature;
 
+    private final StaticConfigurationService configurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+
     private DefaultBotFeatureServiceImpl () {
+        final Set<FeatureEnum> activeFeatures = getActiveFeatures();
+        featureStateMap = Arrays.stream(FeatureEnum.values()).collect(Collectors.toMap(feature -> feature, activeFeatures::contains));
+        randomAnswerProbability = configurationService.getStaticConfiguration().getRandomAliveTriggerProbability();
     }
 
     public static synchronized DefaultBotFeatureServiceImpl getInstance() {
@@ -51,6 +54,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         registerChannelActionOnChatCommandFeature(eventHandler);
         registerChannelResponseOnChatEmoteSpammingFeature(eventHandler);
         registerLogChatMessageFeature(eventHandler);
+        registerChatModerationFeature(eventHandler);
     }
 
     @Override
@@ -71,8 +75,8 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
 
     @Override
     public void registerChannelResponseOnChatEmoteSpammingFeature(final SimpleEventHandler eventHandler) {
-        if (channelResponseOnChatEmoteSpammingFeature == null) {
-            channelResponseOnChatEmoteSpammingFeature = new AliveFeature(eventHandler);
+        if (aliveFeature == null) {
+            aliveFeature = new AliveFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, ALIVE);
         }
     }
@@ -82,6 +86,14 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         if (logChatMessageFeature == null) {
             logChatMessageFeature = new LogChatMessageFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, LOGGING);
+        }
+    }
+
+    @Override
+    public void registerChatModerationFeature(final SimpleEventHandler eventHandler) {
+        if (chatModerationFeature == null) {
+            chatModerationFeature = new ChatModerationFeature(eventHandler);
+            LOG.info(REGISTER_FEATURE, MODERATOR);
         }
     }
 
@@ -103,5 +115,11 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     @Override
     public void setRandomAnswerProbability(final int randomAnswerProbability) {
         this.randomAnswerProbability = randomAnswerProbability;
+    }
+
+    private Set<FeatureEnum> getActiveFeatures() {
+        return configurationService.getStaticConfiguration().getActiveFeatures().stream()
+                .map(FeatureEnum::valueOf)
+                .collect(Collectors.toSet());
     }
 }

@@ -14,10 +14,9 @@
 #                                                                                      #
 ########################################################################################
 
-debug: false
 bot:
     # Name of your bot
-    name: "twitch4j chatbot"
+    name: "0mskBot"
 
     # Current version of your bot
     version: "0.1"
@@ -35,6 +34,36 @@ credentials:
     # OAuth Token for IRC USer (You can get yours here: http://twitchapps.com/tmi/)
     irc: YOUR_IRC_TOKEN
 
+    access_token: YOUR_ACCESS_TOKEN
+
+# Specifies whether the bot can be triggered only when connected channel is live
+active_on_live_stream_only: false
+
+active_features:
+    - LOGGING
+    - COMMAND
+    - SUBSCRIPTION
+    - MODERATOR
+    - ALIVE
+
+## Alive
+# Defines what is probability from 0 to 100 of a random message from bot in Alive mode
+random_alive_trigger_probability: 5
+
+## Moderation
+# Channel permissions of users for skipping moderation
+message_whitelisted_permissions:
+    - BROADCASTER
+    - MODERATOR
+    - TWITCHSTAFF
+    - VIP
+    - SUBSCRIBER
+
+# Number threshold of suspicious words to trigger message check
+moderation_word_number_threshold: 3
+# Max number of suspicious words to check in one message
+moderation_max_word_number_: 999
+
 # Channels - The bot will connect to all listed channels
 channels:
-    - YOUR_CHANNEL
+    channel: YOUR_CHANNEL

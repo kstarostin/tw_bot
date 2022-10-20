@@ -1,16 +1,15 @@
 package com.chatbot.configuration;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
+import java.util.List;
 import java.util.Map;
 
-@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Configuration {
-
-    private Boolean debug;
 
     private Map<String, String> bot;
 
@@ -18,15 +17,19 @@ public class Configuration {
 
     private Map<String, String> credentials;
 
+    private boolean activeOnLiveStreamOnly;
+
+    private List<String> activeFeatures;
+
+    private int randomAliveTriggerProbability;
+
     private Map<String, String> channels;
 
-    public Boolean getDebug() {
-        return debug;
-    }
+    private List<String> messageWhitelistedPermissions;
 
-    public void setDebug(Boolean debug) {
-        this.debug = debug;
-    }
+    private int moderationWordNumberThreshold;
+
+    private int moderationMaxWordNumber;
 
     public Map<String, String> getBot() {
         return bot;
@@ -52,6 +55,30 @@ public class Configuration {
         this.credentials = credentials;
     }
 
+    public boolean isActiveOnLiveStreamOnly() {
+        return activeOnLiveStreamOnly;
+    }
+
+    public void setActiveOnLiveStreamOnly(boolean activeOnLiveStreamOnly) {
+        this.activeOnLiveStreamOnly = activeOnLiveStreamOnly;
+    }
+
+    public List<String> getActiveFeatures() {
+        return activeFeatures;
+    }
+
+    public void setActiveFeatures(List<String> activeFeatures) {
+        this.activeFeatures = activeFeatures;
+    }
+
+    public int getRandomAliveTriggerProbability() {
+        return randomAliveTriggerProbability;
+    }
+
+    public void setRandomAliveTriggerProbability(int randomAliveTriggerProbability) {
+        this.randomAliveTriggerProbability = randomAliveTriggerProbability;
+    }
+
     public Map<String, String> getChannels() {
         return channels;
     }
@@ -60,12 +87,27 @@ public class Configuration {
         this.channels = channels;
     }
 
-    @Override
-    public String toString() {
-        return "StaticConfiguration {" +
-                "bot=" + bot +
-                ", api=" + api +
-                ", credentials=" + credentials +
-                '}';
+    public List<String> getMessageWhitelistedPermissions() {
+        return messageWhitelistedPermissions;
+    }
+
+    public void setMessageWhitelistedPermissions(List<String> messageWhitelistedPermissions) {
+        this.messageWhitelistedPermissions = messageWhitelistedPermissions;
+    }
+
+    public int getModerationWordNumberThreshold() {
+        return moderationWordNumberThreshold;
+    }
+
+    public void setModerationWordNumberThreshold(int moderationWordNumberThreshold) {
+        this.moderationWordNumberThreshold = moderationWordNumberThreshold;
+    }
+
+    public int getModerationMaxWordNumber() {
+        return moderationMaxWordNumber;
+    }
+
+    public void setModerationMaxWordNumber(int moderationMaxWordNumber) {
+        this.moderationMaxWordNumber = moderationMaxWordNumber;
     }
 }

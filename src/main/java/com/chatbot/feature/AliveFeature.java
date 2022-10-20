@@ -4,10 +4,10 @@ import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.service.BotFeatureService;
 import com.chatbot.service.MessageService;
-import com.chatbot.service.StaticConfigurationService;
+import com.chatbot.service.ModerationService;
 import com.chatbot.service.impl.DefaultBotFeatureServiceImpl;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
-import com.chatbot.service.impl.DefaultStaticConfigurationServiceImpl;
+import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
@@ -24,13 +24,13 @@ public class AliveFeature extends AbstractFeature {
 
     private static final String TAG_CHARACTER = "@";
 
-    private static final int MIN_PROBABILITY = 1;
-    private static final int MAX_PROBABILITY = 100;
+    private static final int RND_TRIGGER_MIN_PROBABILITY = 1;
+    private static final int RND_TRIGGER_MAX_PROBABILITY = 100;
 
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
-    private final StaticConfigurationService configurationService = DefaultStaticConfigurationServiceImpl.getInstance();
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
+    private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
 
     public AliveFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
@@ -38,23 +38,23 @@ public class AliveFeature extends AbstractFeature {
 
     public void onChannelMessage(final ChannelMessageEvent event) {
         final String userName = event.getUser().getName();
-        if (!isFeatureActive(FeatureEnum.ALIVE)) {
+        if (!isFeatureActive(FeatureEnum.ALIVE) || (isActiveOnLiveStreamOnly() && !isStreamLive(event.getChannel().getName()))) {
             return;
         }
         final String message = event.getMessage();
-        if (isCommand(message)) {
+        if (isCommand(message) || moderationService.isSuspiciousMessage(message, event.getPermissions())) {
             return;
         }
         if (!isUserGreeted(userName)) {
-            final String responseMessage = String.format(messageService.getStandardMessageForKey("message.hello." + userName.toLowerCase()), userName);
+            final String responseMessage = String.format(messageService.getStandardMessageForKey("message.hello." + userName.toLowerCase()), TAG_CHARACTER + userName);
             if (StringUtils.isNotEmpty(responseMessage)) {
                 messageService.respondWithDelay(event, responseMessage, calculateResponseDelayTime(responseMessage));
                 GREETED_USERS.add(userName);
             }
-        } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomAnswer())) {
+        } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger())) {
             final String responseMessage = balabobaResponseGenerator.generate(sanitizeMessage(message));
             if (StringUtils.isNotEmpty(responseMessage)) {
-                messageService.respondWithDelay(event, userName + " " + responseMessage, calculateResponseDelayTime(responseMessage));
+                messageService.respondWithDelay(event, TAG_CHARACTER + userName + " " + responseMessage, calculateResponseDelayTime(responseMessage));
             }
         }
     }
@@ -71,9 +71,9 @@ public class AliveFeature extends AbstractFeature {
         return !message.contains(TAG_CHARACTER);
     }
 
-    private boolean isRandomAnswer() {
+    private boolean isRandomTrigger() {
         final SplittableRandom random = new SplittableRandom();
-        return random.nextInt(MIN_PROBABILITY, MAX_PROBABILITY + 1) <= botFeatureService.getRandomAnswerProbability();
+        return random.nextInt(RND_TRIGGER_MIN_PROBABILITY, RND_TRIGGER_MAX_PROBABILITY + 1) <= botFeatureService.getRandomAnswerProbability();
     }
 
     private String sanitizeMessage(String message) {

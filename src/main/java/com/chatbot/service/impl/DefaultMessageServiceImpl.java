@@ -10,16 +10,12 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 
 public class DefaultMessageServiceImpl implements MessageService {
     private static DefaultMessageServiceImpl instance;
 
     private final Logger LOG = LoggerFactory.getLogger(DefaultMessageServiceImpl.class);
-
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     private DefaultMessageServiceImpl() {
     }

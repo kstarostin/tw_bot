@@ -12,7 +12,7 @@ repositories {
 // Dependencies
 dependencies {
     // Twitch4J
-    implementation group: "com.github.twitch4j", name: "twitch4j", version: "1.3.1"
+    implementation group: "com.github.twitch4j", name: "twitch4j", version: "1.12.0"
 
     // Logging Implementation
     //implementation group: "ch.qos.logback", name: "logback-classic", version: "1.2.3"
@@ -27,13 +27,10 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
-    testImplementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.30'
-
-    // https://mvnrepository.com/artifact/log4j/log4j
-    implementation group: 'log4j', name: 'log4j', version: '1.2.17'
+    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.36'
 
     // https://mvnrepository.com/artifact/org.json/json
     implementation group: 'org.json', name: 'json', version: '20220924'
