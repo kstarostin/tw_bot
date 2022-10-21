@@ -21,15 +21,25 @@ public class Configuration {
 
     private List<String> activeFeatures;
 
+    private String superAdmin;
+
     private int randomAliveTriggerProbability;
 
     private Map<String, String> channels;
 
     private List<String> messageWhitelistedPermissions;
 
+    private boolean checkModeratorPermissions;
+
     private int moderationWordNumberThreshold;
 
-    private int moderationMaxWordNumber;
+    private int violationPointsThresholdForTimeout;
+
+    private int violationPointsThresholdForBan;
+
+    private int violationPointsForFirstMessage;
+
+    private int autoTimeoutTimeSeconds;
 
     public Map<String, String> getBot() {
         return bot;
@@ -71,6 +81,14 @@ public class Configuration {
         this.activeFeatures = activeFeatures;
     }
 
+    public String getSuperAdmin() {
+        return superAdmin;
+    }
+
+    public void setSuperAdmin(String superAdmin) {
+        this.superAdmin = superAdmin;
+    }
+
     public int getRandomAliveTriggerProbability() {
         return randomAliveTriggerProbability;
     }
@@ -95,6 +113,14 @@ public class Configuration {
         this.messageWhitelistedPermissions = messageWhitelistedPermissions;
     }
 
+    public boolean isCheckModeratorPermissions() {
+        return checkModeratorPermissions;
+    }
+
+    public void setCheckModeratorPermissions(boolean checkModeratorPermissions) {
+        this.checkModeratorPermissions = checkModeratorPermissions;
+    }
+
     public int getModerationWordNumberThreshold() {
         return moderationWordNumberThreshold;
     }
@@ -103,11 +129,35 @@ public class Configuration {
         this.moderationWordNumberThreshold = moderationWordNumberThreshold;
     }
 
-    public int getModerationMaxWordNumber() {
-        return moderationMaxWordNumber;
+    public int getViolationPointsThresholdForTimeout() {
+        return violationPointsThresholdForTimeout;
     }
 
-    public void setModerationMaxWordNumber(int moderationMaxWordNumber) {
-        this.moderationMaxWordNumber = moderationMaxWordNumber;
+    public void setViolationPointsThresholdForTimeout(int violationPointsThresholdForTimeout) {
+        this.violationPointsThresholdForTimeout = violationPointsThresholdForTimeout;
+    }
+
+    public int getViolationPointsThresholdForBan() {
+        return violationPointsThresholdForBan;
+    }
+
+    public void setViolationPointsThresholdForBan(int violationPointsThresholdForBan) {
+        this.violationPointsThresholdForBan = violationPointsThresholdForBan;
+    }
+
+    public int getViolationPointsForFirstMessage() {
+        return violationPointsForFirstMessage;
+    }
+
+    public void setViolationPointsForFirstMessage(int violationPointsForFirstMessage) {
+        this.violationPointsForFirstMessage = violationPointsForFirstMessage;
+    }
+
+    public int getAutoTimeoutTimeSeconds() {
+        return autoTimeoutTimeSeconds;
+    }
+
+    public void setAutoTimeoutTimeSeconds(int autoTimeoutTimeSeconds) {
+        this.autoTimeoutTimeSeconds = autoTimeoutTimeSeconds;
     }
 }

@@ -42,12 +42,23 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
             generatedMessage = shorten(generateWithBalaboba(message), maxLength);
             generateCounter++;
         } while (generatedMessage.length() > maxLength && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
-        return generatedMessage;
+        return sanitizeMessage(generatedMessage);
     }
 
     private int calculateRandomLength() {
         int random = new Random().nextInt(GENERATED_MESSAGE_MAX_LENGTHS.length);
         return GENERATED_MESSAGE_MAX_LENGTHS[random];
+    }
+
+    private String sanitizeMessage(final String message) {
+        String sanitizedMessage = message.trim();
+        if (sanitizedMessage.startsWith("-")) {
+            sanitizedMessage = sanitizedMessage.replaceFirst("-", StringUtils.EMPTY);
+        }
+        if (sanitizedMessage.contains("\n")) {
+            sanitizedMessage = sanitizedMessage.replaceAll("\n", StringUtils.SPACE);
+        }
+        return sanitizedMessage;
     }
 
     private String generateWithBalaboba(final String message) {
@@ -58,7 +69,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
             http.setDoInput(true);
             http.connect();
 
-            final String request = "{\"query\":\"" + message + "\",\"intro\":0,\"filter\":" + getStyle() + "}";
+            final String request = "{\"query\":\"" + message + "\",\"intro\":0,\"style\":" + getStyle() + ",\"filter\":0}";
             LOG.info("Balaboba request: " + request);
             http.getOutputStream().write(request.getBytes(StandardCharsets.UTF_8));
 
@@ -72,13 +83,13 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         }
         catch (final Exception e) {
             LOG.error(e.getMessage());
-            return e.toString();
+            return StringUtils.EMPTY;
         }
     }
 
     private String getStyle() {
-        //return Stream.of(BalabobaStyle.values()).skip((int) (Set.of(BalabobaStyle.values()).size() * Math.random())).findFirst().orElse(BalabobaStyle.NO_STYLE).toString();
-        return BalabobaStyle.SHORT_STORIES.toString();
+        return Stream.of(BalabobaStyle.values()).skip((int) (Set.of(BalabobaStyle.values()).size() * Math.random())).findFirst().orElse(BalabobaStyle.NO_STYLE).toString();
+        //return BalabobaStyle.TOSTS.toString();
     }
 
     private String shorten(final String message, final int maxLength) {

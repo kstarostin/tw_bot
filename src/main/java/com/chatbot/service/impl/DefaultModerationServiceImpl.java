@@ -1,8 +1,15 @@
 package com.chatbot.service.impl;
 
+import com.chatbot.service.MessageService;
 import com.chatbot.service.ModerationService;
 import com.chatbot.service.StaticConfigurationService;
+import com.chatbot.service.TwitchClientService;
+import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
+import com.github.twitch4j.helix.domain.Follow;
+import com.github.twitch4j.helix.domain.User;
+import com.github.twitch4j.helix.domain.UserList;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,9 +17,14 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URL;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,9 +37,17 @@ public class DefaultModerationServiceImpl implements ModerationService {
 
     private static final String SUSPICIOUS_KEYWORDS_PATH = "moderation/suspicious-keywords.txt";
 
-    private final Set<String> suspiciousKeyWords = getSuspiciousKeyWordList();
+    private static final String CHARACTERS_REPLACEMENT_MAP_RU = "moderation/character-replacement-map-ru.txt";
+
+    private static final int MATCH_THRESHOLD_MAX_VALUE = 999;
+
+    private final Set<String> suspiciousKeyWords = new HashSet<>(readDictionary(SUSPICIOUS_KEYWORDS_PATH));
+
+    private final Map<Character, List<String>> charMapRuEn = getCharReplacementMap();
 
     private final StaticConfigurationService configurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
+    private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
     private DefaultModerationServiceImpl() {
     }
@@ -37,6 +57,28 @@ public class DefaultModerationServiceImpl implements ModerationService {
             instance = new DefaultModerationServiceImpl();
         }
         return instance;
+    }
+
+    @Override
+    public boolean isBotModeratorOnChannel(final String channelName) {
+        if (configurationService.getStaticConfiguration().isCheckModeratorPermissions()) {
+            final String botName = configurationService.getBotName().toLowerCase();
+            final List<String> channelModerators = twitchClientService.getTwitchClient().getMessagingInterface().getChatters(channelName).execute().getModerators();
+            return CollectionUtils.isNotEmpty(channelModerators) && channelModerators.stream().map(String::toLowerCase).collect(Collectors.toSet()).contains(botName);
+        }
+        return true;
+    }
+
+    @Override
+    public void banUser(final String channelName, final String userName, final String reason) {
+        final String command = String.format(messageService.getStandardMessageForKey("command.moderation.ban"), userName, reason);
+        messageService.sendMessage(channelName, command);
+    }
+
+    @Override
+    public void timeoutUser(final String channelName, final String userName, final String reason, final Integer duration) {
+        final String command = String.format(messageService.getStandardMessageForKey("command.moderation.timeout"), userName, duration, reason);
+        messageService.sendMessage(channelName, command);
     }
 
     @Override
@@ -52,11 +94,11 @@ public class DefaultModerationServiceImpl implements ModerationService {
 
     @Override
     public int getSuspiciousWordsMatchCount(final String message, final Integer matchThreshold) {
-        final int threshold = matchThreshold != null ? matchThreshold : configurationService.getStaticConfiguration().getModerationMaxWordNumber();
+        final int threshold = matchThreshold != null ? matchThreshold : MATCH_THRESHOLD_MAX_VALUE;
         int matchCounter = 0;
         for (final String keyword : suspiciousKeyWords) {
             final List<String> keywordTokens = Arrays.stream(keyword.split("\\|")).filter(token -> !token.isEmpty()).collect(Collectors.toList());
-            if (keywordTokens.stream().anyMatch(token -> StringUtils.containsIgnoreCase(message, token))) {
+            if (keywordTokens.stream().anyMatch(wordToken -> contains(message, wordToken))) {
                 matchCounter++;
             }
             if (matchCounter >= threshold) {
@@ -64,6 +106,57 @@ public class DefaultModerationServiceImpl implements ModerationService {
             }
         }
         return matchCounter;
+    }
+
+    @Override
+    public boolean isFirstMessage(final ChannelMessageEvent event) {
+        final Map<String, String> messageTags = event.getMessageEvent().getTags();
+        return messageTags.containsKey("first-msg") && !messageTags.get("first-msg").equals("0");
+    }
+
+    @Override
+    public boolean isFollowing(final String userId, final String channelId) {
+        if (userId.equalsIgnoreCase(channelId)) {
+            return true;
+        }
+        return getUserFollowOnChannel(userId, channelId).isPresent();
+    }
+
+    @Override
+    public long getFollowAgeInSeconds(final String userId, final String channelId) {
+        if (userId.equalsIgnoreCase(channelId)) {
+            return Long.MAX_VALUE;
+        }
+        final Optional<Follow> followOptional = getUserFollowOnChannel(userId, channelId);
+        if (followOptional.isEmpty() || followOptional.get().getFollowedAtInstant() == null) {
+            return 0;
+        }
+        final Instant followInstant = followOptional.get().getFollowedAtInstant();
+        return Instant.now().getEpochSecond() - followInstant.getEpochSecond();
+    }
+
+    @Override
+    public long getUserAgeInSeconds(final String userId) {
+        final Optional<User> userOptional = twitchClientService.getTwitchHelixClient().getUsers(getAuthToken(), List.of(userId), null).execute().getUsers().stream().findFirst();
+        if (userOptional.isEmpty() || userOptional.get().getCreatedAt() == null) {
+            return 0;
+        }
+        final Instant createdInstant = userOptional.get().getCreatedAt();
+        return Instant.now().getEpochSecond() - createdInstant.getEpochSecond();
+    }
+
+    private Optional<Follow> getUserFollowOnChannel(final String userId, final String channelId) {
+        return twitchClientService.getTwitchHelixClient().getFollowers(getAuthToken(), userId, channelId, null, null).execute().getFollows().stream().findFirst();
+    }
+
+    private boolean contains(final String message, final String originalWordToken) {
+        final Set<Character> charsetToInspect = originalWordToken.chars().mapToObj(e->(char)e).collect(Collectors.toSet());
+        charsetToInspect.retainAll(charMapRuEn.keySet());
+
+        final List<String> wordsToInspect = new ArrayList<>();
+        wordsToInspect.add(originalWordToken);
+
+        return wordsToInspect.stream().anyMatch(word -> StringUtils.containsIgnoreCase(message, word));
     }
 
     private boolean isWhiteListedUser(final Set<CommandPermission> userPermissions) {
@@ -74,8 +167,15 @@ public class DefaultModerationServiceImpl implements ModerationService {
         return configurationService.getStaticConfiguration().getMessageWhitelistedPermissions().stream().map(CommandPermission::valueOf).collect(Collectors.toSet());
     }
 
-    private Set<String> getSuspiciousKeyWordList() {
-        return new HashSet<>(readDictionary(SUSPICIOUS_KEYWORDS_PATH));
+    private Map<Character, List<String>> getCharReplacementMap() {
+        final Map<Character, List<String>> map = new HashMap<>();
+        readDictionary(CHARACTERS_REPLACEMENT_MAP_RU).forEach(line -> {
+            final String[] lineTokens = line.split("-");
+            if (lineTokens.length > 1) {
+                map.put(lineTokens[0].charAt(0), List.of(Arrays.copyOfRange(lineTokens, 1, lineTokens.length)));
+            }
+        });
+        return map;
     }
 
     private Set<String> readDictionary(final String path) {
@@ -99,5 +199,15 @@ public class DefaultModerationServiceImpl implements ModerationService {
             LOG.error(String.format("Can't read file %s", keywordFilePath));
         }
         return keywords;
+    }
+
+    private String getAuthToken() {
+        return configurationService.getStaticConfiguration().getCredentials().get("access_token");
+    }
+
+    private String getUserId(final String userName) {
+        final String authToken = configurationService.getStaticConfiguration().getCredentials().get("access_token");
+        final UserList userList = twitchClientService.getTwitchHelixClient().getUsers(authToken, null, List.of(configurationService.getBotName())).execute();
+        return userList.getUsers().stream().filter(user -> userName.equalsIgnoreCase(user.getLogin())).map(User::getId).findFirst().orElse(StringUtils.EMPTY);
     }
 }

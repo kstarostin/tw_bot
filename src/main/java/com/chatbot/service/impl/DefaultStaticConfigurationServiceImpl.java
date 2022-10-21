@@ -61,6 +61,11 @@ public class DefaultStaticConfigurationServiceImpl implements StaticConfiguratio
     }
 
     @Override
+    public String getSuperAdminName() {
+        return getStaticConfiguration().getSuperAdmin();
+    }
+
+    @Override
     public boolean isActiveOnLiveStreamOnly() {
         return getStaticConfiguration().isActiveOnLiveStreamOnly();
     }

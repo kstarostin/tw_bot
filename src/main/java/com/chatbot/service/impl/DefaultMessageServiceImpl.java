@@ -1,11 +1,16 @@
 package com.chatbot.service.impl;
 
-import com.github.twitch4j.chat.events.AbstractChannelEvent;
+import com.chatbot.service.BotFeatureService;
+import com.chatbot.service.StaticConfigurationService;
+import com.chatbot.service.TwitchClientService;
+import com.chatbot.util.FeatureEnum;
 import com.chatbot.service.MessageService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Timer;
@@ -16,6 +21,12 @@ public class DefaultMessageServiceImpl implements MessageService {
     private static DefaultMessageServiceImpl instance;
 
     private final Logger LOG = LoggerFactory.getLogger(DefaultMessageServiceImpl.class);
+
+    private static final String DATE_FORMAT = "dd-MM-yyyy HH:mm:ss";
+
+    private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
+    private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
 
     private DefaultMessageServiceImpl() {
     }
@@ -28,21 +39,24 @@ public class DefaultMessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void respond(final AbstractChannelEvent event, final String responseMessage) {
-        if (responseMessage.isEmpty()) {
+    public void sendMessage(final String channelName, final String message) {
+        if (message.isEmpty()) {
             return;
         }
-        LOG.info("Response message [{}]", responseMessage);
-        event.getTwitchChat().sendMessage(event.getChannel().getName(), responseMessage);
+        if (botFeatureService.isFeatureActive(FeatureEnum.LOGGING)) {
+            final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+            LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , staticConfigurationService.getBotName(), message);
+        }
+        twitchClientService.getTwitchClient().getChat().sendMessage(channelName, message);
     }
 
     @Override
-    public void respondWithDelay(final AbstractChannelEvent event, final String responseMessage, final int delay) {
+    public void sendMessageWithDelay(final String channelName, final String responseMessage, final int delay) {
         new Timer().schedule(
                 new TimerTask() {
                     @Override
                     public void run() {
-                        respond(event, responseMessage);
+                        sendMessage(channelName, responseMessage);
                     }
                 },
                 delay

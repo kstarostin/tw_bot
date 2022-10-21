@@ -1,7 +1,7 @@
 package com.chatbot.service.impl;
 
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
-import com.github.twitch4j.TwitchClient;
+import com.github.twitch4j.ITwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.chatbot.service.StaticConfigurationService;
 import com.chatbot.service.TwitchClientService;
@@ -10,7 +10,7 @@ import com.github.twitch4j.helix.TwitchHelix;
 public class DefaultTwitchClientServiceImpl implements TwitchClientService {
     private static DefaultTwitchClientServiceImpl instance;
 
-    private TwitchClient twitchClient;
+    private ITwitchClient twitchClient;
 
     private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
 
@@ -26,7 +26,7 @@ public class DefaultTwitchClientServiceImpl implements TwitchClientService {
     }
 
     @Override
-    public TwitchClient getTwitchClient() {
+    public ITwitchClient getTwitchClient() {
         return twitchClient;
     }
 
@@ -43,8 +43,8 @@ public class DefaultTwitchClientServiceImpl implements TwitchClientService {
     }
 
     private void buildClientInternal() {
-        OAuth2Credential credential =
-                new OAuth2Credential("twitch", staticConfigurationService.getStaticConfiguration().getCredentials().get("irc"));
+        final String accessToken = staticConfigurationService.getStaticConfiguration().getCredentials().get("irc");
+        final OAuth2Credential credential = new OAuth2Credential("twitch", accessToken);
         final TwitchClientBuilder clientBuilder = TwitchClientBuilder.builder();
 
         twitchClient = clientBuilder
@@ -57,21 +57,7 @@ public class DefaultTwitchClientServiceImpl implements TwitchClientService {
                  */
                 .withChatAccount(credential)
                 .withEnableChat(true)
-                /*
-                 * GraphQL has a limited support
-                 * Don't expect a bunch of features enabling it
-                 */
-                .withEnableGraphQL(true)
-                /*
-                 * Kraken is going to be deprecated
-                 * see : https://dev.twitch.tv/docs/v5/#which-api-version-can-you-use
-                 * It is only here so you can call methods that are not (yet)
-                 * implemented in Helix
-                 */
-                .withEnableKraken(true)
-                /*
-                 * Build the TwitchClient Instance
-                 */
+                .withEnableTMI(true)
                 .build();
     }
 }

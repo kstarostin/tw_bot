@@ -1,7 +1,5 @@
 package com.chatbot.feature;
 
-import com.chatbot.service.MessageService;
-import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
@@ -12,7 +10,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import java.util.Set;
 
 public class ChannelActionOnChatCommandFeature extends AbstractFeature {
-    private static final String SUPER_ADMIN_NAME = "0mskbird";
     private static final String FEATURE_COMMAND_ARG = "-f";
     private static final String FEATURE_COMMAND_ALL_ARG = "all";
     private static final String FEATURE_COMMAND_ON_ARG = "on";
@@ -22,33 +19,36 @@ public class ChannelActionOnChatCommandFeature extends AbstractFeature {
     private static final int MIN_PROBABILITY = 0;
     private static final int MAX_PROBABILITY = 100;
 
-    private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
-
     public ChannelActionOnChatCommandFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
     }
 
     public void onChannelMessage(final ChannelMessageEvent event) {
+        final String channelName = event.getChannel().getName();
         final String userName = event.getUser().getName();
         final String message = event.getMessage();
         if (!isCommand(message)) {
             return;
         }
-        if (!isSuperAdmin(userName)) {
-            messageService.respond(event, String.format(messageService.getStandardMessageForKey("message.command.no.permission"), userName));
+        if (!isSuperAdmin(userName) && !isChannelOwner(userName, event.getChannel().getName())) {
+            messageService.sendMessage(channelName, String.format(messageService.getStandardMessageForKey("message.command.unauthorized"), userName));
         }
         final String[] commandArgs = parseCommandArgs(message);
 
         final String responseMessage = executeCommand(commandArgs);
         if (StringUtils.isNotEmpty(responseMessage)) {
-            messageService.respond(event, String.format(responseMessage, userName));
+            messageService.sendMessage(channelName, String.format(responseMessage, userName));
         } else {
-            messageService.respond(event, String.format(messageService.getStandardMessageForKey("message.command.error"), userName));
+            messageService.sendMessage(channelName, String.format(messageService.getStandardMessageForKey("message.command.error"), userName));
         }
     }
 
-    private boolean isSuperAdmin(final String channelName) {
-        return SUPER_ADMIN_NAME.equalsIgnoreCase(channelName);
+    private boolean isSuperAdmin(final String userName) {
+        return configurationService.getSuperAdminName().equalsIgnoreCase(userName);
+    }
+
+    private boolean isChannelOwner(final String userName, final String channelName) {
+        return userName.equalsIgnoreCase(channelName);
     }
 
     private String[] parseCommandArgs(final String message) {

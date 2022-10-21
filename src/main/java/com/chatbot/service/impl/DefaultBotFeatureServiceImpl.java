@@ -28,6 +28,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     private static final String REGISTER_FEATURE = "Register feature: [{}]";
 
     private ChannelNotificationOnSubscriptionFeature channelNotificationOnSubscriptionFeature;
+    private ChannelNotificationOnStreamStatusFeature channelNotificationOnStreamStatusFeature;
     private ChannelActionOnChatCommandFeature channelActionOnChatCommandFeature;
     private AliveFeature aliveFeature;
     private ChatModerationFeature chatModerationFeature;
@@ -53,6 +54,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         registerChannelNotificationOnSubscriptionFeature(eventHandler);
         registerChannelActionOnChatCommandFeature(eventHandler);
         registerChannelResponseOnChatEmoteSpammingFeature(eventHandler);
+        registerChannelNotificationOnStreamStatusFeature(eventHandler);
         registerLogChatMessageFeature(eventHandler);
         registerChatModerationFeature(eventHandler);
     }
@@ -94,6 +96,14 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         if (chatModerationFeature == null) {
             chatModerationFeature = new ChatModerationFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, MODERATOR);
+        }
+    }
+
+    @Override
+    public void registerChannelNotificationOnStreamStatusFeature(final SimpleEventHandler eventHandler) {
+        if (channelNotificationOnStreamStatusFeature == null) {
+            channelNotificationOnStreamStatusFeature = new ChannelNotificationOnStreamStatusFeature(eventHandler);
+            LOG.info(REGISTER_FEATURE, STREAM);
         }
     }
 

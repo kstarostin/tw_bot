@@ -3,6 +3,7 @@ package com.chatbot.util;
 public enum FeatureEnum {
     LOGGING ("logging"),
     SUBSCRIPTION ("subscription"),
+    STREAM ("stream"),
     COMMAND ("command"),
     ALIVE("alive"),
     MODERATOR("moderator");

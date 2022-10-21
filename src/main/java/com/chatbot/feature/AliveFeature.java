@@ -3,10 +3,8 @@ package com.chatbot.feature;
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.service.BotFeatureService;
-import com.chatbot.service.MessageService;
 import com.chatbot.service.ModerationService;
 import com.chatbot.service.impl.DefaultBotFeatureServiceImpl;
-import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -22,12 +20,8 @@ public class AliveFeature extends AbstractFeature {
 
     private final static Set<String> GREETED_USERS = new HashSet<>();
 
-    private static final String TAG_CHARACTER = "@";
-
     private static final int RND_TRIGGER_MIN_PROBABILITY = 1;
     private static final int RND_TRIGGER_MAX_PROBABILITY = 100;
-
-    private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
@@ -37,6 +31,7 @@ public class AliveFeature extends AbstractFeature {
     }
 
     public void onChannelMessage(final ChannelMessageEvent event) {
+        final String channelName = event.getChannel().getName();
         final String userName = event.getUser().getName();
         if (!isFeatureActive(FeatureEnum.ALIVE) || (isActiveOnLiveStreamOnly() && !isStreamLive(event.getChannel().getName()))) {
             return;
@@ -48,13 +43,13 @@ public class AliveFeature extends AbstractFeature {
         if (!isUserGreeted(userName)) {
             final String responseMessage = String.format(messageService.getStandardMessageForKey("message.hello." + userName.toLowerCase()), TAG_CHARACTER + userName);
             if (StringUtils.isNotEmpty(responseMessage)) {
-                messageService.respondWithDelay(event, responseMessage, calculateResponseDelayTime(responseMessage));
+                messageService.sendMessageWithDelay(channelName, responseMessage, calculateResponseDelayTime(responseMessage));
                 GREETED_USERS.add(userName);
             }
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger())) {
             final String responseMessage = balabobaResponseGenerator.generate(sanitizeMessage(message));
             if (StringUtils.isNotEmpty(responseMessage)) {
-                messageService.respondWithDelay(event, TAG_CHARACTER + userName + " " + responseMessage, calculateResponseDelayTime(responseMessage));
+                messageService.sendMessageWithDelay(channelName, TAG_CHARACTER + userName + " " + responseMessage, calculateResponseDelayTime(responseMessage));
             }
         }
     }

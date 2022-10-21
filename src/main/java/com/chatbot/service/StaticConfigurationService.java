@@ -8,5 +8,7 @@ public interface StaticConfigurationService {
 
     String getBotName();
 
+    String getSuperAdminName();
+
     boolean isActiveOnLiveStreamOnly();
 }
