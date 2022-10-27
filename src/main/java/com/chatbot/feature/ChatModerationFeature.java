@@ -51,7 +51,7 @@ public class ChatModerationFeature extends AbstractFeature {
 
     private int calculateViolationPoints(final String message, final ChannelMessageEvent event) {
         int totalViolationPoints = 0;
-        int suspiciousWordsVP = moderationService.getSuspiciousWordsMatchCount(message);
+        int suspiciousWordsVP = Math.min(moderationService.getSuspiciousWordsMatchCount(message), 5);
         int firstMessageVP = 0;
         if (moderationService.isFirstMessage(event)) {
             firstMessageVP = getViolationPointsForFirstMessage();

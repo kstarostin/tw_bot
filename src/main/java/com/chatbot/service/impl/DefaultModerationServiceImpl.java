@@ -20,6 +20,7 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -155,8 +156,37 @@ public class DefaultModerationServiceImpl implements ModerationService {
 
         final List<String> wordsToInspect = new ArrayList<>();
         wordsToInspect.add(originalWordToken);
+        wordsToInspect.addAll(generateWordsByReplacingChars(originalWordToken, charsetToInspect));
 
         return wordsToInspect.stream().anyMatch(word -> StringUtils.containsIgnoreCase(message, word));
+    }
+
+    private List<String> generateWordsByReplacingChars(final String originalWordToken, final Set<Character> charsetToInspect) {
+        final List<Character> wordCharset = originalWordToken.chars().mapToObj(e->(char)e).collect(Collectors.toList());
+        if (!CollectionUtils.containsAny(wordCharset, charsetToInspect)) {
+            return Collections.emptyList();
+        }
+        final List<String> additionalWordTokens = new ArrayList<>();
+
+        // replace 1 char
+        for (int position = 0; position < wordCharset.size(); position++) {
+            if (charsetToInspect.contains(wordCharset.get(position))) {
+                for (final String partToReplace : charMapRuEn.get(wordCharset.get(position))) {
+                    additionalWordTokens.add(originalWordToken.substring(0, position) + partToReplace + originalWordToken.substring(position + 1));
+                }
+            }
+        }
+        // replace all chars
+        final StringBuilder sb = new StringBuilder();
+        for (final Character character : wordCharset) {
+            if (charsetToInspect.contains(character)) {
+                sb.append(charMapRuEn.get(character).iterator().next());
+            } else {
+                sb.append(character);
+            }
+        }
+        additionalWordTokens.add(sb.toString());
+        return additionalWordTokens;
     }
 
     private boolean isWhiteListedUser(final Set<CommandPermission> userPermissions) {
