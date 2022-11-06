@@ -53,6 +53,8 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
      * This is the directory that will be used under the user's home directory where OAuth tokens will be stored.
      */
     private static final String CREDENTIALS_DIRECTORY = ".oauth-credentials";
+    private static final String LOCALHOST = "localhost";
+    private static final int PORT = 8080;
 
     private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
     private final DayCacheService dayCacheService = DefaultDayCacheServiceImpl.getInstance();
@@ -158,7 +160,10 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
         final GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, scopes).setCredentialDataStore(datastore).build();
 
         // Build the local server and bind it to port 8080
-        final LocalServerReceiver localReceiver = new LocalServerReceiver.Builder().setPort(8080).build();
+        final LocalServerReceiver localReceiver = new LocalServerReceiver.Builder()
+                .setHost(String.valueOf(staticConfigurationService.getCredentialProperties().getOrDefault("google.verification.code.receiver.host", LOCALHOST)))
+                .setPort(Integer.parseInt(String.valueOf(staticConfigurationService.getCredentialProperties().getOrDefault("google.verification.code.receiver.port", PORT))))
+                .build();
 
         // Authorize.
         return new AuthorizationCodeInstalledApp(flow, localReceiver).authorize("user");
