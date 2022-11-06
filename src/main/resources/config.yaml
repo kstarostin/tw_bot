@@ -34,7 +34,7 @@ random_alive_trigger_probability: 5
 ## FEATURE: MODERATOR
 # Channel permissions of users for skipping moderation
 message_whitelisted_permissions:
-#    - BROADCASTER
+    - BROADCASTER
     - MODERATOR
     - TWITCHSTAFF
     - VIP
