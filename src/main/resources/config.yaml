@@ -1,0 +1,59 @@
+bot:
+    # Name of your bot
+    name: "0mskBot"
+
+    # Current version of your bot
+    version: "0.1"
+
+super_admin: "0mskbird"
+
+# Channels - The bot will connect to all listed Twitch channels
+twitch_channels:
+    channel: adixred
+#    channel: 0mskbird
+
+## COMMON CONFIGS
+# Specifies whether the bot can be triggered only when joined channel is live
+active_on_live_stream_only: false
+
+active_features:
+    - LOGGING
+    - COMMAND
+    - SUBSCRIPTION
+#    - STREAM
+    - MODERATOR
+    - ALIVE
+
+## FEATURE: ALIVE
+# Defines whether Bot welcomes chat users (if welcome message is available for them)
+user_greeting_enabled: true
+# Defines what is probability from 0 to 100 of a random message from bot in Alive mode
+random_alive_trigger_probability: 5
+
+
+## FEATURE: MODERATOR
+# Channel permissions of users for skipping moderation
+message_whitelisted_permissions:
+#    - BROADCASTER
+    - MODERATOR
+    - TWITCHSTAFF
+    - VIP
+    - SUBSCRIBER
+
+# Specifies if bot should check whether it has moderator permissions or not before doing moderation activities
+check_moderator_permissions: true
+
+# Number threshold of suspicious words to trigger message check
+moderation_word_number_threshold: 3
+
+# Number of total points for a message to get timeout on channel
+violation_points_threshold_for_timeout: 10
+
+# Number of total points for a message to get banned on channel
+violation_points_threshold_for_ban: 15
+
+# Number of total points for a message to get banned on channel
+violation_points_for_first_message: 5
+
+# Time in seconds for automatic timeout in moderation mode
+auto_timeout_time_seconds: 86400 # 24 hours

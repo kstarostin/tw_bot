@@ -12,13 +12,14 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
-import java.util.Set;
-import java.util.stream.Stream;
 
 public class BalabobaResponseGenerator implements ResponseGenerator {
     private static BalabobaResponseGenerator instance;
 
     private final Logger LOG = LoggerFactory.getLogger(BalabobaResponseGenerator.class);
+
+    private static final String BALABOBA_API_URL = "https://zeapi.yandex.net/lab/api/yalm/text3";
+    private final static String REQUEST_TEMPLATE = "{\"query\":\"@@@query@@@\",\"intro\":0,\"style\":@@@style@@@,\"filter\":0}";
 
     private final static int[] GENERATED_MESSAGE_MAX_LENGTHS = {50, 100, 150, 200, 250, 300, 350};
     private final static int GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS = 10;
@@ -55,6 +56,9 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         if (sanitizedMessage.startsWith("-")) {
             sanitizedMessage = sanitizedMessage.replaceFirst("-", StringUtils.EMPTY);
         }
+        if (sanitizedMessage.startsWith("—")) {
+            sanitizedMessage = sanitizedMessage.replaceFirst("—", StringUtils.EMPTY);
+        }
         if (sanitizedMessage.contains("\n")) {
             sanitizedMessage = sanitizedMessage.replaceAll("\n", StringUtils.SPACE);
         }
@@ -63,13 +67,13 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
 
     private String generateWithBalaboba(final String message) {
         try {
-            final URLConnection http = new URL("https://zeapi.yandex.net/lab/api/yalm/text3").openConnection();
+            final URLConnection http = new URL(BALABOBA_API_URL).openConnection();
             http.setRequestProperty("Content-Type", "application/json");
             http.setDoOutput(true);
             http.setDoInput(true);
             http.connect();
 
-            final String request = "{\"query\":\"" + message + "\",\"intro\":0,\"style\":" + getStyle() + ",\"filter\":0}";
+            final String request = createRequest(message, getStyle());
             LOG.info("Balaboba request: " + request);
             http.getOutputStream().write(request.getBytes(StandardCharsets.UTF_8));
 
@@ -87,9 +91,13 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         }
     }
 
+    private String createRequest(final String query, final String style) {
+        return REQUEST_TEMPLATE.replace("@@@query@@@", query).replace("@@@style@@@", style);
+    }
+
     private String getStyle() {
-        return Stream.of(BalabobaStyle.values()).skip((int) (Set.of(BalabobaStyle.values()).size() * Math.random())).findFirst().orElse(BalabobaStyle.NO_STYLE).toString();
-        //return BalabobaStyle.TOSTS.toString();
+        //return Stream.of(BalabobaStyle.values()).skip((int) (Set.of(BalabobaStyle.values()).size() * Math.random())).findFirst().orElse(BalabobaStyle.NO_STYLE).toString();
+        return BalabobaStyle.NO_STYLE.toString();
     }
 
     private String shorten(final String message, final int maxLength) {

@@ -1,4 +1,4 @@
-package com.chatbot.feature;
+package com.chatbot.feature.twitch;
 
 import com.chatbot.service.ModerationService;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;

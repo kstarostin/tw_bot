@@ -1,4 +1,4 @@
-package com.chatbot.feature;
+package com.chatbot.feature.twitch;
 
 import com.chatbot.service.BotFeatureService;
 import com.chatbot.service.ChannelService;
@@ -22,7 +22,7 @@ public abstract class AbstractFeature {
     protected final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
     protected boolean isFeatureActive(final FeatureEnum featureEnum) {
-        return botFeatureService.isFeatureActive(featureEnum);
+        return botFeatureService.isTwitchFeatureActive(featureEnum);
     }
 
     protected boolean isActiveOnLiveStreamOnly() {

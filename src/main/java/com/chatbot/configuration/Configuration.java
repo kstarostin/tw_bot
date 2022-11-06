@@ -13,19 +13,17 @@ public class Configuration {
 
     private Map<String, String> bot;
 
-    private Map<String, String> api;
-
-    private Map<String, String> credentials;
-
     private boolean activeOnLiveStreamOnly;
 
     private List<String> activeFeatures;
 
     private String superAdmin;
 
+    private boolean userGreetingEnabled;
+
     private int randomAliveTriggerProbability;
 
-    private Map<String, String> channels;
+    private Map<String, String> twitchChannels;
 
     private List<String> messageWhitelistedPermissions;
 
@@ -47,22 +45,6 @@ public class Configuration {
 
     public void setBot(Map<String, String> bot) {
         this.bot = bot;
-    }
-
-    public Map<String, String> getApi() {
-        return api;
-    }
-
-    public void setApi(Map<String, String> api) {
-        this.api = api;
-    }
-
-    public Map<String, String> getCredentials() {
-        return credentials;
-    }
-
-    public void setCredentials(Map<String, String> credentials) {
-        this.credentials = credentials;
     }
 
     public boolean isActiveOnLiveStreamOnly() {
@@ -89,6 +71,14 @@ public class Configuration {
         this.superAdmin = superAdmin;
     }
 
+    public boolean isUserGreetingEnabled() {
+        return userGreetingEnabled;
+    }
+
+    public void setUserGreetingEnabled(boolean userGreetingEnabled) {
+        this.userGreetingEnabled = userGreetingEnabled;
+    }
+
     public int getRandomAliveTriggerProbability() {
         return randomAliveTriggerProbability;
     }
@@ -97,12 +87,12 @@ public class Configuration {
         this.randomAliveTriggerProbability = randomAliveTriggerProbability;
     }
 
-    public Map<String, String> getChannels() {
-        return channels;
+    public Map<String, String> getTwitchChannels() {
+        return twitchChannels;
     }
 
-    public void setChannels(Map<String, String> channels) {
-        this.channels = channels;
+    public void setTwitchChannels(Map<String, String> twitchChannels) {
+        this.twitchChannels = twitchChannels;
     }
 
     public List<String> getMessageWhitelistedPermissions() {

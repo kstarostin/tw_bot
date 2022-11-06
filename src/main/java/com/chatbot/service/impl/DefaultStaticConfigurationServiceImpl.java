@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.util.Properties;
 
 public class DefaultStaticConfigurationServiceImpl implements StaticConfigurationService {
     private static DefaultStaticConfigurationServiceImpl instance;
@@ -37,6 +38,27 @@ public class DefaultStaticConfigurationServiceImpl implements StaticConfiguratio
     public void loadInitialStaticConfiguration() {
         if (configuration == null) {
             loadConfigurationInternal();
+        }
+    }
+
+    @Override
+    public Properties getCredentialProperties() {
+        return getProperties("credentials.properties");
+    }
+
+    @Override
+    public Properties getProperties(final String path) {
+        Properties messageProperties;
+        try {
+            LOG.debug("Load properties from the resource [{}] ...", path);
+            messageProperties = new Properties();
+            messageProperties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(path));
+            LOG.debug("Properties from the resource [{}] loaded", path);
+            return messageProperties;
+        } catch (final Exception e) {
+            LOG.error("Unable to load properties from the resource [{}]. Exiting application...", path, e);
+            System.exit(-1);
+            return null;
         }
     }
 

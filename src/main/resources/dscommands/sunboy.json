@@ -1,0 +1,12 @@
+{
+  "name": "sunboy",
+  "description": "Пророк Санбой твоего дня",
+  "options": [
+    {
+      "name": "text",
+      "description": "текст ответа",
+      "type": 3,
+      "required": false
+    }
+  ]
+}

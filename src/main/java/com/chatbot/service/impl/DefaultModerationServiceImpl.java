@@ -46,7 +46,7 @@ public class DefaultModerationServiceImpl implements ModerationService {
 
     private final Map<Character, List<String>> charMapRuEn = getCharReplacementMap();
 
-    private final StaticConfigurationService configurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
@@ -62,8 +62,8 @@ public class DefaultModerationServiceImpl implements ModerationService {
 
     @Override
     public boolean isBotModeratorOnChannel(final String channelName) {
-        if (configurationService.getStaticConfiguration().isCheckModeratorPermissions()) {
-            final String botName = configurationService.getBotName().toLowerCase();
+        if (staticConfigurationService.getStaticConfiguration().isCheckModeratorPermissions()) {
+            final String botName = staticConfigurationService.getBotName().toLowerCase();
             final List<String> channelModerators = twitchClientService.getTwitchClient().getMessagingInterface().getChatters(channelName).execute().getModerators();
             return CollectionUtils.isNotEmpty(channelModerators) && channelModerators.stream().map(String::toLowerCase).collect(Collectors.toSet()).contains(botName);
         }
@@ -84,7 +84,7 @@ public class DefaultModerationServiceImpl implements ModerationService {
 
     @Override
     public boolean isSuspiciousMessage(final String message, final Set<CommandPermission> userPermissions) {
-        final int matchThreshold = configurationService.getStaticConfiguration().getModerationWordNumberThreshold();
+        final int matchThreshold = staticConfigurationService.getStaticConfiguration().getModerationWordNumberThreshold();
         return !isWhiteListedUser(userPermissions) && getSuspiciousWordsMatchCount(message, matchThreshold) >= matchThreshold;
     }
 
@@ -190,11 +190,11 @@ public class DefaultModerationServiceImpl implements ModerationService {
     }
 
     private boolean isWhiteListedUser(final Set<CommandPermission> userPermissions) {
-        return getMessageWhitelistedPermissions().containsAll(userPermissions);
+        return CollectionUtils.containsAny(getMessageWhitelistedPermissions(), userPermissions);
     }
 
     private Set<CommandPermission> getMessageWhitelistedPermissions() {
-        return configurationService.getStaticConfiguration().getMessageWhitelistedPermissions().stream().map(CommandPermission::valueOf).collect(Collectors.toSet());
+        return staticConfigurationService.getStaticConfiguration().getMessageWhitelistedPermissions().stream().map(CommandPermission::valueOf).collect(Collectors.toSet());
     }
 
     private Map<Character, List<String>> getCharReplacementMap() {
@@ -232,12 +232,11 @@ public class DefaultModerationServiceImpl implements ModerationService {
     }
 
     private String getAuthToken() {
-        return configurationService.getStaticConfiguration().getCredentials().get("access_token");
+        return staticConfigurationService.getCredentialProperties().getProperty("twitch.credentials.access.token");
     }
 
     private String getUserId(final String userName) {
-        final String authToken = configurationService.getStaticConfiguration().getCredentials().get("access_token");
-        final UserList userList = twitchClientService.getTwitchHelixClient().getUsers(authToken, null, List.of(configurationService.getBotName())).execute();
+        final UserList userList = twitchClientService.getTwitchHelixClient().getUsers(getAuthToken(), null, List.of(staticConfigurationService.getBotName())).execute();
         return userList.getUsers().stream().filter(user -> userName.equalsIgnoreCase(user.getLogin())).map(User::getId).findFirst().orElse(StringUtils.EMPTY);
     }
 }

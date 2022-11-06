@@ -35,6 +35,15 @@ dependencies {
     // https://mvnrepository.com/artifact/org.json/json
     implementation group: 'org.json', name: 'json', version: '20220924'
 
+    // https://mvnrepository.com/artifact/com.discord4j/discord4j-core
+    implementation group: 'com.discord4j', name: 'discord4j-core', version: '3.2.3'
+
+    // https://mvnrepository.com/artifact/com.google.apis/google-api-services-youtube
+    implementation group: 'com.google.apis', name: 'google-api-services-youtube', version: 'v3-rev222-1.25.0'
+
+    // https://mvnrepository.com/artifact/com.google.oauth-client/google-oauth-client-jetty
+    implementation group: 'com.google.oauth-client', name: 'google-oauth-client-jetty', version: '1.34.1'
+
 }
 
 // Declare Main

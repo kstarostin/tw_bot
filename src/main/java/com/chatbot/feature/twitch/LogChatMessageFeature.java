@@ -1,4 +1,4 @@
-package com.chatbot.feature;
+package com.chatbot.feature.twitch;
 
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;

@@ -1,10 +1,14 @@
 package com.chatbot.service.impl;
 
-import com.chatbot.feature.AliveFeature;
+import com.chatbot.feature.twitch.AliveFeature;
+import com.chatbot.feature.twitch.ChatCommandMessageFeature;
+import com.chatbot.feature.twitch.ChannelNotificationOnStreamStatusFeature;
+import com.chatbot.feature.twitch.ChannelNotificationOnSubscriptionFeature;
+import com.chatbot.feature.twitch.ChatModerationFeature;
+import com.chatbot.feature.twitch.LogChatMessageFeature;
 import com.chatbot.service.StaticConfigurationService;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
-import com.chatbot.feature.*;
 import com.chatbot.service.BotFeatureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,11 +29,16 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
 
     private int randomAnswerProbability;
 
+    private boolean isMuted;
+
     private static final String REGISTER_FEATURE = "Register feature: [{}]";
 
+    /**
+     * Twitch features
+     */
     private ChannelNotificationOnSubscriptionFeature channelNotificationOnSubscriptionFeature;
     private ChannelNotificationOnStreamStatusFeature channelNotificationOnStreamStatusFeature;
-    private ChannelActionOnChatCommandFeature channelActionOnChatCommandFeature;
+    private ChatCommandMessageFeature chatCommandMessageFeature;
     private AliveFeature aliveFeature;
     private ChatModerationFeature chatModerationFeature;
     private LogChatMessageFeature logChatMessageFeature;
@@ -50,17 +59,17 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     }
 
     @Override
-    public void registerAllFeatures(final SimpleEventHandler eventHandler) {
-        registerChannelNotificationOnSubscriptionFeature(eventHandler);
-        registerChannelActionOnChatCommandFeature(eventHandler);
-        registerChannelResponseOnChatEmoteSpammingFeature(eventHandler);
-        registerChannelNotificationOnStreamStatusFeature(eventHandler);
-        registerLogChatMessageFeature(eventHandler);
-        registerChatModerationFeature(eventHandler);
+    public void registerAllTwitchFeatures(final SimpleEventHandler eventHandler) {
+        registerLogChatMessageTwitchFeature(eventHandler);
+        registerChannelNotificationOnSubscriptionTwitchFeature(eventHandler);
+        registerChatCommandMessageTwitchFeature(eventHandler);
+        registerAliveTwitchFeature(eventHandler);
+        registerChannelNotificationOnStreamStatusTwitchFeature(eventHandler);
+        registerChatModerationTwitchFeature(eventHandler);
     }
 
     @Override
-    public void registerChannelNotificationOnSubscriptionFeature(final SimpleEventHandler eventHandler) {
+    public void registerChannelNotificationOnSubscriptionTwitchFeature(final SimpleEventHandler eventHandler) {
         if (channelNotificationOnSubscriptionFeature == null) {
             channelNotificationOnSubscriptionFeature = new ChannelNotificationOnSubscriptionFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, SUBSCRIPTION);
@@ -68,15 +77,15 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     }
 
     @Override
-    public void registerChannelActionOnChatCommandFeature(final SimpleEventHandler eventHandler) {
-        if (channelActionOnChatCommandFeature == null) {
-            channelActionOnChatCommandFeature = new ChannelActionOnChatCommandFeature(eventHandler);
+    public void registerChatCommandMessageTwitchFeature(final SimpleEventHandler eventHandler) {
+        if (chatCommandMessageFeature == null) {
+            chatCommandMessageFeature = new ChatCommandMessageFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, COMMAND);
         }
     }
 
     @Override
-    public void registerChannelResponseOnChatEmoteSpammingFeature(final SimpleEventHandler eventHandler) {
+    public void registerAliveTwitchFeature(final SimpleEventHandler eventHandler) {
         if (aliveFeature == null) {
             aliveFeature = new AliveFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, ALIVE);
@@ -84,7 +93,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     }
 
     @Override
-    public void registerLogChatMessageFeature(final SimpleEventHandler eventHandler) {
+    public void registerLogChatMessageTwitchFeature(final SimpleEventHandler eventHandler) {
         if (logChatMessageFeature == null) {
             logChatMessageFeature = new LogChatMessageFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, LOGGING);
@@ -92,7 +101,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     }
 
     @Override
-    public void registerChatModerationFeature(final SimpleEventHandler eventHandler) {
+    public void registerChatModerationTwitchFeature(final SimpleEventHandler eventHandler) {
         if (chatModerationFeature == null) {
             chatModerationFeature = new ChatModerationFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, MODERATOR);
@@ -100,7 +109,7 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     }
 
     @Override
-    public void registerChannelNotificationOnStreamStatusFeature(final SimpleEventHandler eventHandler) {
+    public void registerChannelNotificationOnStreamStatusTwitchFeature(final SimpleEventHandler eventHandler) {
         if (channelNotificationOnStreamStatusFeature == null) {
             channelNotificationOnStreamStatusFeature = new ChannelNotificationOnStreamStatusFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, STREAM);
@@ -108,12 +117,12 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     }
 
     @Override
-    public boolean isFeatureActive(final FeatureEnum featureEnum) {
+    public boolean isTwitchFeatureActive(final FeatureEnum featureEnum) {
         return featureStateMap.containsKey(featureEnum) && featureStateMap.get(featureEnum);
     }
 
     @Override
-    public void setFeatureStatus(final FeatureEnum featureEnum, final boolean isActive) {
+    public void setTwitchFeatureStatus(final FeatureEnum featureEnum, final boolean isActive) {
         featureStateMap.put(featureEnum, isActive);
     }
 
@@ -125,6 +134,16 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
     @Override
     public void setRandomAnswerProbability(final int randomAnswerProbability) {
         this.randomAnswerProbability = randomAnswerProbability;
+    }
+
+    @Override
+    public boolean isBotMuted() {
+        return isMuted;
+    }
+
+    @Override
+    public void setMuted(final boolean isMuted) {
+        this.isMuted = isMuted;
     }
 
     private Set<FeatureEnum> getActiveFeatures() {

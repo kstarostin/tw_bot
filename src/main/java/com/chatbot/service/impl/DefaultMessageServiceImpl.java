@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -39,19 +38,33 @@ public class DefaultMessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void sendMessage(final String channelName, final String message) {
-        if (message.isEmpty()) {
+    public void sendMessage(String channelName, String responseMessage) {
+        sendMessage(channelName, responseMessage, true);
+    }
+
+    @Override
+    public void sendMessage(final String channelName, final String responseMessage, final boolean isMuteChecked) {
+        if (responseMessage.isEmpty()) {
             return;
         }
-        if (botFeatureService.isFeatureActive(FeatureEnum.LOGGING)) {
-            final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-            LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , staticConfigurationService.getBotName(), message);
+        if (isMuteChecked && botFeatureService.isBotMuted()) {
+            return;
         }
-        twitchClientService.getTwitchClient().getChat().sendMessage(channelName, message);
+        if (botFeatureService.isTwitchFeatureActive(FeatureEnum.LOGGING)) {
+            final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+            LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , staticConfigurationService.getBotName(), responseMessage);
+        }
+        twitchClientService.getTwitchClient().getChat().sendMessage(channelName, responseMessage);
     }
 
     @Override
     public void sendMessageWithDelay(final String channelName, final String responseMessage, final int delay) {
+        if (botFeatureService.isBotMuted()) {
+            return;
+        }
+        if (responseMessage.isEmpty()) {
+            return;
+        }
         new Timer().schedule(
                 new TimerTask() {
                     @Override
@@ -65,24 +78,8 @@ public class DefaultMessageServiceImpl implements MessageService {
 
     @Override
     public String getStandardMessageForKey(final String key) {
-        final String propertyMessage = getMessageProperties().getProperty(key);
+        final String propertyMessage = staticConfigurationService.getProperties("messages/messages.properties").getProperty(key);
         final String[] messages = StringUtils.isNotEmpty(propertyMessage) ? propertyMessage.split("\\|") : new String[0];
         return messages.length > 0 ? messages[new Random().nextInt(messages.length)] : StringUtils.EMPTY;
-    }
-
-    private Properties getMessageProperties() {
-        final String resource = "messages/messages.properties";
-        Properties messageProperties;
-        try {
-            LOG.debug("Load default messages from the resource [{}] ...", resource);
-            messageProperties = new Properties();
-            messageProperties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(resource));
-            LOG.debug("Loaded default messages from the resource [{}]", resource);
-            return messageProperties;
-        } catch (final Exception e) {
-            LOG.error("Unable to load default messages from the resource [{}]. Exiting application...", resource, e);
-            System.exit(-1);
-            return null;
-        }
     }
 }

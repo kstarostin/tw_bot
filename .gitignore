@@ -29,8 +29,7 @@ proguard/
 # Local configuration file (sdk path, etc)
 local.properties
 # Local DB configuration file
-src/main/resources/cfg/local.db.properties
-src/main/resources/messages/messages.properties
+src/main/resources/credentials.properties
 src/main/resources/moderation/suspicious-keywords.txt
 
 # Intellij project files
@@ -45,9 +44,6 @@ src/main/resources/moderation/suspicious-keywords.txt
 
 # Exceptions
 !gradle/wrapper/*.jar
-
-# Config files
-*.yaml
 
 # Logs / Save Files
 config/*

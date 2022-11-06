@@ -32,7 +32,7 @@ public class DefaultChannelServiceImpl implements ChannelService {
 
     @Override
     public Optional<Stream> getStream(final String channelName) {
-        final String authToken = staticConfigurationService.getStaticConfiguration().getCredentials().get("access_token");
+        final String authToken = staticConfigurationService.getCredentialProperties().getProperty("twitch.credentials.access.token");
         final List<Stream> streams = twitchClientService.getTwitchHelixClient().getStreams(authToken, null, null, 1, null, null, null, List.of(channelName))
                 .execute().getStreams();
         return streams.size() == 1 ? streams.stream().findFirst() : Optional.empty();

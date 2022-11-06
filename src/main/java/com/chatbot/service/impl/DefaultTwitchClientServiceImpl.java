@@ -43,13 +43,13 @@ public class DefaultTwitchClientServiceImpl implements TwitchClientService {
     }
 
     private void buildClientInternal() {
-        final String accessToken = staticConfigurationService.getStaticConfiguration().getCredentials().get("irc");
+        final String accessToken = staticConfigurationService.getCredentialProperties().getProperty("twitch.credentials.irc");
         final OAuth2Credential credential = new OAuth2Credential("twitch", accessToken);
         final TwitchClientBuilder clientBuilder = TwitchClientBuilder.builder();
 
         twitchClient = clientBuilder
-                .withClientId(staticConfigurationService.getStaticConfiguration().getApi().get("twitch_client_id"))
-                .withClientSecret(staticConfigurationService.getStaticConfiguration().getApi().get("twitch_client_secret"))
+                .withClientId(staticConfigurationService.getCredentialProperties().getProperty("twitch.client.id"))
+                .withClientSecret(staticConfigurationService.getCredentialProperties().getProperty("twitch.client.secret"))
                 .withEnableHelix(true)
                 /*
                  * Chat Module

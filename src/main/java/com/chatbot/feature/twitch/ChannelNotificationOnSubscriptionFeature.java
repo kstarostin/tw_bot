@@ -1,4 +1,4 @@
-package com.chatbot.feature;
+package com.chatbot.feature.twitch;
 
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;

@@ -1,30 +1,29 @@
-package com.chatbot.feature;
+package com.chatbot.feature.twitch;
 
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.service.BotFeatureService;
+import com.chatbot.service.DayCacheService;
 import com.chatbot.service.ModerationService;
 import com.chatbot.service.impl.DefaultBotFeatureServiceImpl;
+import com.chatbot.service.impl.DefaultDayCacheServiceImpl;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.SplittableRandom;
 import java.util.stream.IntStream;
 
 public class AliveFeature extends AbstractFeature {
-
-    private final static Set<String> GREETED_USERS = new HashSet<>();
 
     private static final int RND_TRIGGER_MIN_PROBABILITY = 1;
     private static final int RND_TRIGGER_MAX_PROBABILITY = 100;
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
+    private final DayCacheService dayCacheService = DefaultDayCacheServiceImpl.getInstance();
 
     public AliveFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
@@ -40,11 +39,11 @@ public class AliveFeature extends AbstractFeature {
         if (isCommand(message) || moderationService.isSuspiciousMessage(message, event.getPermissions())) {
             return;
         }
-        if (!isUserGreeted(userName)) {
+        if (isGreetingEnabled() && !isUserGreeted(userName)) {
             final String responseMessage = String.format(messageService.getStandardMessageForKey("message.hello." + userName.toLowerCase()), TAG_CHARACTER + userName);
             if (StringUtils.isNotEmpty(responseMessage)) {
                 messageService.sendMessageWithDelay(channelName, responseMessage, calculateResponseDelayTime(responseMessage));
-                GREETED_USERS.add(userName);
+                dayCacheService.cacheGreeting(userName);
             }
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger())) {
             final String responseMessage = balabobaResponseGenerator.generate(sanitizeMessage(message));
@@ -59,7 +58,11 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private boolean isUserGreeted(final String userName) {
-        return GREETED_USERS.contains(userName);
+        return dayCacheService.getCachedGreetings().isPresent() && dayCacheService.getCachedGreetings().get().contains(userName);
+    }
+
+    private boolean isGreetingEnabled() {
+        return configurationService.getStaticConfiguration().isUserGreetingEnabled();
     }
 
     private boolean isNoOneTagged(final String message) {
