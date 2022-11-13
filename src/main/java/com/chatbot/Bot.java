@@ -40,8 +40,7 @@ public class Bot {
     public void start() {
         // Connect to all configured channels
         final Configuration staticConfiguration = staticConfigurationService.getStaticConfiguration();
-        final String twitchChannelName = staticConfiguration.getTwitchChannels().get("channel");
-        joinTwitchChannel(twitchChannelName);
+        staticConfiguration.getTwitchChannels().forEach(this::joinTwitchChannel);
         logInDiscord();
     }
 

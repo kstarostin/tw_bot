@@ -3,20 +3,14 @@ package com.chatbot.service.impl;
 import com.chatbot.service.DayCacheService;
 import com.chatbot.service.StaticConfigurationService;
 import com.chatbot.service.YouTubeService;
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.StoredCredential;
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.store.DataStore;
-import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.YouTubeScopes;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.SearchResult;
 import org.apache.commons.collections4.CollectionUtils;
@@ -24,8 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -49,12 +42,8 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
      * Define a global instance of the JSON factory.
      */
     private static final JsonFactory JSON_FACTORY = new JacksonFactory();
-    /**
-     * This is the directory that will be used under the user's home directory where OAuth tokens will be stored.
-     */
-    private static final String CREDENTIALS_DIRECTORY = ".oauth-credentials";
-    private static final String LOCALHOST = "localhost";
-    private static final int PORT = 8080;
+
+    private GoogleCredential googleCredential;
 
     private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
     private final DayCacheService dayCacheService = DefaultDayCacheServiceImpl.getInstance();
@@ -84,12 +73,9 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
     }
 
     private String getVideoFromYuoTube(final String channelId) {
-        // This OAuth 2.0 access scope allows for read-only access to the
-        // authenticated user's account, but not other types of account access.
-        final List<String> scopes = List.of("https://www.googleapis.com/auth/youtube.readonly");
         try {
             // Authorize the request.
-            final Credential credential = authorize(scopes);
+            final GoogleCredential credential = getCredential();
 
             // This object is used to make YouTube Data API requests.
             final YouTube youtube = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(staticConfigurationService.getBotName()).build();
@@ -150,31 +136,27 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
         return StringUtils.EMPTY;
     }
 
-    private Credential authorize(final List<String> scopes) throws IOException {
-        // Load client secrets.
-        final GoogleClientSecrets clientSecrets = getClientSecrets();
-        // This creates the credentials datastore at ~/.oauth-credentials/${credentialDatastore}
-        final FileDataStoreFactory fileDataStoreFactory = new FileDataStoreFactory(new File(System.getProperty("user.home") + "/" + CREDENTIALS_DIRECTORY));
-        final DataStore<StoredCredential> datastore = fileDataStoreFactory.getDataStore("videos");
-
-        final GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, scopes).setCredentialDataStore(datastore).build();
-
-        // Build the local server and bind it to port 8080
-        final LocalServerReceiver localReceiver = new LocalServerReceiver.Builder()
-                .setHost(String.valueOf(staticConfigurationService.getCredentialProperties().getOrDefault("google.verification.code.receiver.host", LOCALHOST)))
-                .setPort(Integer.parseInt(String.valueOf(staticConfigurationService.getCredentialProperties().getOrDefault("google.verification.code.receiver.port", PORT))))
-                .build();
-
-        // Authorize.
-        return new AuthorizationCodeInstalledApp(flow, localReceiver).authorize("user");
+    private GoogleCredential getCredential() {
+        if (googleCredential == null) {
+            googleCredential = createCredential();
+        }
+        return googleCredential;
     }
 
-    private GoogleClientSecrets getClientSecrets() {
-        final GoogleClientSecrets clientSecrets = new GoogleClientSecrets();
-        GoogleClientSecrets.Details installed = new GoogleClientSecrets.Details();
-        installed.setClientId(staticConfigurationService.getCredentialProperties().getProperty("google.credentials.client.id"));
-        installed.setClientSecret(staticConfigurationService.getCredentialProperties().getProperty("google.credentials.client.secret"));
-        clientSecrets.setInstalled(installed);
-        return clientSecrets;
+    private GoogleCredential createCredential() {
+        final String resource = "googleapi/omskbot-service-account.json";
+        try {
+            LOG.debug("Load Google Service Account Key from the resource [{}] ...", resource);
+            final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+            final InputStream inputStream = classloader.getResourceAsStream(resource);
+
+            final GoogleCredential credential = GoogleCredential.fromStream(inputStream).createScoped(List.of(YouTubeScopes.YOUTUBE_READONLY));
+            LOG.debug("Loaded Google Service Account Key from the resource [{}]", resource);
+            return credential;
+        } catch (final Exception e) {
+            LOG.error("Unable to load Google Service Account Key from the resource [{}]. Exiting application...", resource, e);
+            System.exit(1);
+        }
+        return null;
     }
 }

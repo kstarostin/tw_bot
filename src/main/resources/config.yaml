@@ -9,8 +9,8 @@ super_admin: "0mskbird"
 
 # Channels - The bot will connect to all listed Twitch channels
 twitch_channels:
-    channel: adixred
-#    channel: 0mskbird
+    - adixred
+    - 0mskbird
 
 ## COMMON CONFIGS
 # Specifies whether the bot can be triggered only when joined channel is live

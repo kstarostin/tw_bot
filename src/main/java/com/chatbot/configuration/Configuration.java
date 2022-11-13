@@ -23,7 +23,7 @@ public class Configuration {
 
     private int randomAliveTriggerProbability;
 
-    private Map<String, String> twitchChannels;
+    private List<String> twitchChannels;
 
     private List<String> messageWhitelistedPermissions;
 
@@ -87,11 +87,11 @@ public class Configuration {
         this.randomAliveTriggerProbability = randomAliveTriggerProbability;
     }
 
-    public Map<String, String> getTwitchChannels() {
+    public List<String> getTwitchChannels() {
         return twitchChannels;
     }
 
-    public void setTwitchChannels(Map<String, String> twitchChannels) {
+    public void setTwitchChannels(List<String> twitchChannels) {
         this.twitchChannels = twitchChannels;
     }
 
