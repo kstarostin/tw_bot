@@ -1,9 +1,10 @@
 package com.chatbot.service;
 
+import java.util.Map;
 import java.util.Optional;
 
 public interface YouTubeService {
 
-    String getRandomVideo(String channelId);
-    Optional<String> getCachedRandomVideo(String channelId);
+    String getRandomVideo(Map<String, Integer> channels);
+    Optional<String> getCachedRandomVideo();
 }

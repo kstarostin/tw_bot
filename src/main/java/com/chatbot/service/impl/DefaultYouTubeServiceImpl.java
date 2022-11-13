@@ -25,6 +25,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -59,20 +60,20 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
     }
 
     @Override
-    public String getRandomVideo(final String channelId) {
-        final Optional<String> videoUrlOptional = getCachedRandomVideo(channelId);
+    public String getRandomVideo(final Map<String, Integer> channels) {
+        final Optional<String> videoUrlOptional = getCachedRandomVideo();
         if (videoUrlOptional.isPresent()) {
             return videoUrlOptional.get();
         }
-        return getVideoFromYuoTube(channelId);
+        return getRandomVideoFromYuoTube(channels);
     }
 
     @Override
-    public Optional<String> getCachedRandomVideo(final String channelId) {
+    public Optional<String> getCachedRandomVideo() {
         return dayCacheService.getCachedYtVideo();
     }
 
-    private String getVideoFromYuoTube(final String channelId) {
+    private String getRandomVideoFromYuoTube(final Map<String, Integer> channels) {
         try {
             // Authorize the request.
             final GoogleCredential credential = getCredential();
@@ -82,37 +83,41 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
 
             final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
             final List<SearchResult> searchResultList = new ArrayList<>();
-            String nextPageToken = null;
-            final long maxResults = 200L;
 
-            int requestCounter = 0;
+            final long maxTotalResults = channels.values().stream().reduce(0, Integer::sum);
 
-            do {
-                requestCounter ++;
-                final YouTube.Search.List searchRequest = youtube.search().list("snippet,id");
-                searchRequest.setChannelId(channelId);
-                searchRequest.setKey(staticConfigurationService.getCredentialProperties().getProperty("google.credentials.api.key"));
-                searchRequest.setMaxResults(maxResults);
-                searchRequest.setOrder("date");
-                searchRequest.setType("video");
-                if (nextPageToken != null) {
-                    searchRequest.setPageToken(nextPageToken);
-                }
+            for (final String channelId : channels.keySet()) {
+                String nextPageToken = null;
 
-                LOG.info("YouTube[{}]-[{}]:Request#{} [{}]", channelId, formatter.format(new Date()), requestCounter, searchRequest);
-                final SearchListResponse searchListResponse = searchRequest.execute();
+                final long maxResults = channels.get(channelId);
+                int requestCounter = 0;
 
-                final int limit = (int) (maxResults - searchResultList.size());
+                do {
+                    requestCounter ++;
+                    final YouTube.Search.List searchRequest = youtube.search().list("snippet,id");
+                    searchRequest.setChannelId(channelId);
+                    searchRequest.setKey(staticConfigurationService.getCredentialProperties().getProperty("google.credentials.api.key"));
+                    searchRequest.setMaxResults(maxTotalResults);
+                    searchRequest.setOrder("date");
+                    searchRequest.setType("video");
+                    if (nextPageToken != null) {
+                        searchRequest.setPageToken(nextPageToken);
+                    }
 
-                searchResultList.addAll(searchListResponse.getItems().stream()
-                        .filter(item -> "youtube#video".equals(item.getId().getKind()))
-                        .limit(limit)
-                        .collect(Collectors.toList()));
+                    LOG.info("YouTube[{}]-[{}]:Request#{} [{}]", channelId, formatter.format(new Date()), requestCounter, searchRequest);
+                    final SearchListResponse searchListResponse = searchRequest.execute();
 
-                nextPageToken = StringUtils.isNotEmpty(searchListResponse.getNextPageToken()) ? searchListResponse.getNextPageToken() : null;
+                    final long limit = (maxTotalResults - searchResultList.size());
 
-            } while (StringUtils.isNotEmpty(nextPageToken) && searchResultList.size() < maxResults);
+                    searchResultList.addAll(searchListResponse.getItems().stream()
+                            .filter(item -> "youtube#video".equals(item.getId().getKind()))
+                            .limit(limit)
+                            .collect(Collectors.toList()));
 
+                    nextPageToken = StringUtils.isNotEmpty(searchListResponse.getNextPageToken()) ? searchListResponse.getNextPageToken() : null;
+
+                } while (StringUtils.isNotEmpty(nextPageToken) && searchResultList.size() < maxTotalResults);
+            }
             if (CollectionUtils.isEmpty(searchResultList)) {
                 return StringUtils.EMPTY;
             }

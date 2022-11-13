@@ -16,11 +16,13 @@ import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 public abstract class AbstractCommandFeature<T extends Event> extends AbstractDiscordFeature<T> {
     private final Logger LOG = LoggerFactory.getLogger(AbstractCommandFeature.class);
 
-    private static final String YUOTUBE_CHANNEL_ID = "UC2WNW0NZVyMeEPvtLmScgvQ"; // SUNBOYUNITED
+    private static final String YOUTUBE_CHANNEL_ID_1 = "UC2WNW0NZVyMeEPvtLmScgvQ"; // SUNBOYUNITED
+    private static final String YOUTUBE_CHANNEL_ID_2 = "UCBF5sbrlpTYECHMSfPT8wKw"; // Архив гениальных видео
 
     private final YouTubeService youTubeService = DefaultYouTubeServiceImpl.getInstance();
     private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
@@ -44,7 +46,7 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
         final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), userName, content);
 
-        final String videoURL = youTubeService.getRandomVideo(YUOTUBE_CHANNEL_ID);
+        final String videoURL = youTubeService.getRandomVideo(Map.of(YOUTUBE_CHANNEL_ID_1, 150, YOUTUBE_CHANNEL_ID_2, 50));
         final String responseMessage = StringUtils.isNotBlank(customResponseText)
                 ? customResponseText + StringUtils.SPACE + videoURL
                 : String.format(messageService.getStandardMessageForKey("message.discord.sunboy"), videoURL);
@@ -54,6 +56,6 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
     }
 
     protected boolean hasCachedVideo() {
-        return youTubeService.getCachedRandomVideo(YUOTUBE_CHANNEL_ID).isPresent();
+        return youTubeService.getCachedRandomVideo().isPresent();
     }
 }
