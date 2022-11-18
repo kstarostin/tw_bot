@@ -57,7 +57,7 @@ public class DefaultDayCacheServiceImpl implements DayCacheService {
         if (greetingDayCacheOptional.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(greetingDayCacheOptional.get().getDayCache().get(getTodayAsMilli()));
+        return Optional.ofNullable(greetingDayCacheOptional.get().getDayCache().get(getTodayAsMilli()));
     }
 
     @Override
