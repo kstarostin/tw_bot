@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.chatbot.configuration.Configuration;
 import com.chatbot.service.ConfigurationService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,12 +101,13 @@ public class DefaultConfigurationServiceImpl implements ConfigurationService {
     }
 
     private Optional<Configuration> loadChannelConfiguration(final String channelName) {
-        final String configPath = CONFIG_PATH + File.separator + CHANNELS_PATH + File.separator + channelName.toLowerCase() + CONFIG_FILE_APPENDER;
+        final String channelsPath = DEFAULT_CONFIG_NAME.equals(channelName) ? StringUtils.EMPTY : File.separator + CHANNELS_PATH;
+        final String configPath = CONFIG_PATH + channelsPath + File.separator + channelName.toLowerCase() + CONFIG_FILE_APPENDER;
         try {
             final Configuration configuration = loadConfigurationInternally(configPath, Configuration.class);
             LOG.info("Loaded [{}] configuration", channelName);
             return Optional.of(configuration);
-        } catch (final IOException ioe) {
+        } catch (final Exception e) {
             LOG.error("Can't load [{}] configuration", channelName);
         }
         return Optional.empty();
