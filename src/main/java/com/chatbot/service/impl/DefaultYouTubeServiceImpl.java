@@ -1,7 +1,7 @@
 package com.chatbot.service.impl;
 
 import com.chatbot.service.DayCacheService;
-import com.chatbot.service.StaticConfigurationService;
+import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.YouTubeService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -46,7 +46,7 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
 
     private GoogleCredential googleCredential;
 
-    private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final DayCacheService dayCacheService = DefaultDayCacheServiceImpl.getInstance();
 
     private DefaultYouTubeServiceImpl() {
@@ -79,7 +79,7 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
             final GoogleCredential credential = getCredential();
 
             // This object is used to make YouTube Data API requests.
-            final YouTube youtube = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(staticConfigurationService.getBotName()).build();
+            final YouTube youtube = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(configurationService.getBotName()).build();
 
             final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
             final List<SearchResult> searchResultList = new ArrayList<>();
@@ -96,7 +96,7 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
                     requestCounter ++;
                     final YouTube.Search.List searchRequest = youtube.search().list("snippet,id");
                     searchRequest.setChannelId(channelId);
-                    searchRequest.setKey(staticConfigurationService.getCredentialProperties().getProperty("google.credentials.api.key"));
+                    searchRequest.setKey(configurationService.getCredentialProperties().getProperty("google.credentials.api.key"));
                     searchRequest.setMaxResults(maxTotalResults);
                     searchRequest.setOrder("date");
                     searchRequest.setType("video");

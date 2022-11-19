@@ -1,16 +1,18 @@
 package com.chatbot;
 
-import com.chatbot.configuration.Configuration;
+import com.chatbot.configuration.GlobalConfiguration;
 import com.chatbot.feature.discord.command.CommandMessageFeature;
 import com.chatbot.feature.discord.MessageReactionFeature;
 import com.chatbot.feature.discord.command.SlashCommandMessageFeature;
+import com.chatbot.service.ChannelService;
+import com.chatbot.service.impl.DefaultChannelServiceImpl;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 
 import com.chatbot.service.BotFeatureService;
-import com.chatbot.service.StaticConfigurationService;
+import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.service.impl.DefaultBotFeatureServiceImpl;
-import com.chatbot.service.impl.DefaultStaticConfigurationServiceImpl;
+import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import com.chatbot.service.impl.DefaultTwitchClientServiceImpl;
 import discord4j.core.DiscordClient;
 import discord4j.core.GatewayDiscordClient;
@@ -27,26 +29,26 @@ import java.util.List;
 public class Bot {
     private final Logger LOG = LoggerFactory.getLogger(Bot.class);
 
-    private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
+    private final ChannelService channelService = DefaultChannelServiceImpl.getInstance();
 
     public Bot() {
-        staticConfigurationService.loadInitialStaticConfiguration();
+        configurationService.loadConfiguration();
         twitchClientService.buildClient();
         registerFeatures();
     }
 
     public void start() {
         // Connect to all configured channels
-        final Configuration staticConfiguration = staticConfigurationService.getStaticConfiguration();
-        staticConfiguration.getTwitchChannels().forEach(this::joinTwitchChannel);
+        final GlobalConfiguration globalConfiguration = configurationService.getConfiguration();
+        globalConfiguration.getTwitchChannels().forEach(this::joinTwitchChannel);
         logInDiscord();
     }
 
     private void joinTwitchChannel(final String twitchChannelName) {
-        twitchClientService.getTwitchClient().getChat().joinChannel(twitchChannelName);
-        LOG.info(String.format("Join Twitch channel: [%s]", twitchChannelName));
+        channelService.joinChannel(twitchChannelName);
     }
 
     private void registerFeatures() {
@@ -55,7 +57,7 @@ public class Bot {
     }
 
     private void logInDiscord() {
-        final String token = staticConfigurationService.getCredentialProperties().getProperty("discord.credentials.access.token");
+        final String token = configurationService.getCredentialProperties().getProperty("discord.credentials.access.token");
         final DiscordClient discordClient = DiscordClient.create(token);
 
         final Mono<Void> login = discordClient.withGateway((GatewayDiscordClient gateway) -> {

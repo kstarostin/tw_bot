@@ -6,17 +6,12 @@ import com.chatbot.feature.twitch.ChannelNotificationOnStreamStatusFeature;
 import com.chatbot.feature.twitch.ChannelNotificationOnSubscriptionFeature;
 import com.chatbot.feature.twitch.ChatModerationFeature;
 import com.chatbot.feature.twitch.LogChatMessageFeature;
-import com.chatbot.service.StaticConfigurationService;
+import com.chatbot.service.ConfigurationService;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.chatbot.service.BotFeatureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.chatbot.util.FeatureEnum.*;
 
@@ -25,30 +20,21 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
 
     private final Logger LOG = LoggerFactory.getLogger(DefaultBotFeatureServiceImpl.class);
 
-    private final Map<FeatureEnum, Boolean> featureStateMap;
-
-    private int randomAnswerProbability;
-
-    private boolean isMuted;
-
     private static final String REGISTER_FEATURE = "Register feature: [{}]";
 
     /**
      * Twitch features
      */
     private ChannelNotificationOnSubscriptionFeature channelNotificationOnSubscriptionFeature;
-    private ChannelNotificationOnStreamStatusFeature channelNotificationOnStreamStatusFeature;
+    //private ChannelNotificationOnStreamStatusFeature channelNotificationOnStreamStatusFeature;
     private ChatCommandMessageFeature chatCommandMessageFeature;
     private AliveFeature aliveFeature;
     private ChatModerationFeature chatModerationFeature;
     private LogChatMessageFeature logChatMessageFeature;
 
-    private final StaticConfigurationService configurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
 
     private DefaultBotFeatureServiceImpl () {
-        final Set<FeatureEnum> activeFeatures = getActiveFeatures();
-        featureStateMap = Arrays.stream(FeatureEnum.values()).collect(Collectors.toMap(feature -> feature, activeFeatures::contains));
-        randomAnswerProbability = configurationService.getStaticConfiguration().getRandomAliveTriggerProbability();
     }
 
     public static synchronized DefaultBotFeatureServiceImpl getInstance() {
@@ -64,7 +50,6 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         registerChannelNotificationOnSubscriptionTwitchFeature(eventHandler);
         registerChatCommandMessageTwitchFeature(eventHandler);
         registerAliveTwitchFeature(eventHandler);
-        registerChannelNotificationOnStreamStatusTwitchFeature(eventHandler);
         registerChatModerationTwitchFeature(eventHandler);
     }
 
@@ -108,47 +93,25 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
         }
     }
 
-    @Override
+    /*@Override
     public void registerChannelNotificationOnStreamStatusTwitchFeature(final SimpleEventHandler eventHandler) {
         if (channelNotificationOnStreamStatusFeature == null) {
             channelNotificationOnStreamStatusFeature = new ChannelNotificationOnStreamStatusFeature(eventHandler);
             LOG.info(REGISTER_FEATURE, STREAM);
         }
+    }*/
+
+    @Override
+    public boolean isTwitchFeatureActive(final String channelName, final FeatureEnum featureEnum) {
+        return configurationService.getConfiguration(channelName).getActiveFeatures().contains(featureEnum.name());
     }
 
     @Override
-    public boolean isTwitchFeatureActive(final FeatureEnum featureEnum) {
-        return featureStateMap.containsKey(featureEnum) && featureStateMap.get(featureEnum);
-    }
-
-    @Override
-    public void setTwitchFeatureStatus(final FeatureEnum featureEnum, final boolean isActive) {
-        featureStateMap.put(featureEnum, isActive);
-    }
-
-    @Override
-    public int getRandomAnswerProbability() {
-        return randomAnswerProbability;
-    }
-
-    @Override
-    public void setRandomAnswerProbability(final int randomAnswerProbability) {
-        this.randomAnswerProbability = randomAnswerProbability;
-    }
-
-    @Override
-    public boolean isBotMuted() {
-        return isMuted;
-    }
-
-    @Override
-    public void setMuted(final boolean isMuted) {
-        this.isMuted = isMuted;
-    }
-
-    private Set<FeatureEnum> getActiveFeatures() {
-        return configurationService.getStaticConfiguration().getActiveFeatures().stream()
-                .map(FeatureEnum::valueOf)
-                .collect(Collectors.toSet());
+    public void setTwitchFeatureStatus(final String channelName, final FeatureEnum featureEnum, final boolean isActive) {
+        if (isActive) {
+            configurationService.getConfiguration(channelName).getActiveFeatures().add(featureEnum.name());
+        } else {
+            configurationService.getConfiguration(channelName).getActiveFeatures().remove(featureEnum.name());
+        }
     }
 }

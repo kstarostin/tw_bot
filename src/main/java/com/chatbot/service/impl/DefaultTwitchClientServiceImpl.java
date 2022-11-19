@@ -3,7 +3,7 @@ package com.chatbot.service.impl;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.twitch4j.ITwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
-import com.chatbot.service.StaticConfigurationService;
+import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.TwitchClientService;
 import com.github.twitch4j.helix.TwitchHelix;
 
@@ -12,7 +12,7 @@ public class DefaultTwitchClientServiceImpl implements TwitchClientService {
 
     private ITwitchClient twitchClient;
 
-    private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
 
     private DefaultTwitchClientServiceImpl () {
         buildClient();
@@ -43,13 +43,13 @@ public class DefaultTwitchClientServiceImpl implements TwitchClientService {
     }
 
     private void buildClientInternal() {
-        final String accessToken = staticConfigurationService.getCredentialProperties().getProperty("twitch.credentials.irc");
+        final String accessToken = configurationService.getCredentialProperties().getProperty("twitch.credentials.irc");
         final OAuth2Credential credential = new OAuth2Credential("twitch", accessToken);
         final TwitchClientBuilder clientBuilder = TwitchClientBuilder.builder();
 
         twitchClient = clientBuilder
-                .withClientId(staticConfigurationService.getCredentialProperties().getProperty("twitch.client.id"))
-                .withClientSecret(staticConfigurationService.getCredentialProperties().getProperty("twitch.client.secret"))
+                .withClientId(configurationService.getCredentialProperties().getProperty("twitch.client.id"))
+                .withClientSecret(configurationService.getCredentialProperties().getProperty("twitch.client.secret"))
                 .withEnableHelix(true)
                 /*
                  * Chat Module

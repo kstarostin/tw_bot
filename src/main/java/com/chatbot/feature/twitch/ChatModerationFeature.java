@@ -20,24 +20,24 @@ public class ChatModerationFeature extends AbstractFeature {
     }
 
     public void onChannelMessage(final ChannelMessageEvent event) {
-        if (!isFeatureActive(FeatureEnum.MODERATOR) || (isActiveOnLiveStreamOnly() && !isStreamLive(event.getChannel().getName())) || !moderationService.isBotModeratorOnChannel(event.getChannel().getName())) {
+        final String channelName = event.getChannel().getName();
+        if (!isFeatureActive(channelName, FeatureEnum.MODERATOR) || (isActiveOnLiveStreamOnly(channelName) && !isStreamLive(event.getChannel().getName())) || !moderationService.isBotModeratorOnChannel(event.getChannel().getName())) {
             return;
         }
-        final String channelName = event.getChannel().getName();
         final String userName = event.getUser().getName();
         final String message = event.getMessage();
-        if (moderationService.isSuspiciousMessage(message, event.getPermissions())) {
+        if (moderationService.isSuspiciousMessage(channelName, message, event.getPermissions())) {
             final String responseMessage;
             int violationPoints = calculateViolationPoints(message, event);
 
-            if (violationPoints >= getViolationPointsThresholdToBan()) {
+            if (violationPoints >= getViolationPointsThresholdToBan(channelName)) {
                 final String banReasonMessage = messageService.getStandardMessageForKey("message.moderation.ban.reason");
                 moderationService.banUser(channelName, event.getUser().getName(), banReasonMessage);
 
                 responseMessage = String.format(messageService.getStandardMessageForKey("message.moderation.ban"), TAG_CHARACTER + userName);
-            } else if (violationPoints >= getViolationPointsThresholdToTimeout()) {
+            } else if (violationPoints >= getViolationPointsThresholdToTimeout(channelName)) {
                 final String muteReasonMessage = messageService.getStandardMessageForKey("message.moderation.timeout.reason");
-                moderationService.timeoutUser(channelName, event.getUser().getName(), muteReasonMessage, getAutoTimeoutTimeSeconds());
+                moderationService.timeoutUser(channelName, event.getUser().getName(), muteReasonMessage, getAutoTimeoutTimeSeconds(channelName));
 
                 responseMessage = String.format(messageService.getStandardMessageForKey("message.moderation.timeout"), TAG_CHARACTER + userName);
             } else {
@@ -54,7 +54,7 @@ public class ChatModerationFeature extends AbstractFeature {
         int suspiciousWordsVP = Math.min(moderationService.getSuspiciousWordsMatchCount(message), 5);
         int firstMessageVP = 0;
         if (moderationService.isFirstMessage(event)) {
-            firstMessageVP = getViolationPointsForFirstMessage();
+            firstMessageVP = getViolationPointsForFirstMessage(event.getChannel().getName());
         }
         final long followAgeSeconds = moderationService.getFollowAgeInSeconds(event.getUser().getId(), event.getChannel().getId());
         int followAgeVP = calculateFollowAgeViolationPoints(followAgeSeconds);
@@ -96,19 +96,19 @@ public class ChatModerationFeature extends AbstractFeature {
         return 0;
     }
 
-    private int getViolationPointsThresholdToTimeout() {
-        return configurationService.getStaticConfiguration().getViolationPointsThresholdForTimeout();
+    private int getViolationPointsThresholdToTimeout(final String channelName) {
+        return configurationService.getConfiguration(channelName).getViolationPointsThresholdForTimeout();
     }
 
-    private int getViolationPointsThresholdToBan() {
-        return configurationService.getStaticConfiguration().getViolationPointsThresholdForBan();
+    private int getViolationPointsThresholdToBan(final String channelName) {
+        return configurationService.getConfiguration(channelName).getViolationPointsThresholdForBan();
     }
 
-    private int getViolationPointsForFirstMessage() {
-        return configurationService.getStaticConfiguration().getViolationPointsForFirstMessage();
+    private int getViolationPointsForFirstMessage(final String channelName) {
+        return configurationService.getConfiguration(channelName).getViolationPointsForFirstMessage();
     }
 
-    private int getAutoTimeoutTimeSeconds() {
-        return configurationService.getStaticConfiguration().getAutoTimeoutTimeSeconds();
+    private int getAutoTimeoutTimeSeconds(final String channelName) {
+        return configurationService.getConfiguration(channelName).getAutoTimeoutTimeSeconds();
     }
 }

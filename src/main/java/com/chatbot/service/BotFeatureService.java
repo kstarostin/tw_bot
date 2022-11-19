@@ -10,14 +10,8 @@ public interface BotFeatureService {
     void registerAliveTwitchFeature(SimpleEventHandler eventHandler);
     void registerLogChatMessageTwitchFeature(SimpleEventHandler eventHandler);
     void registerChatModerationTwitchFeature(SimpleEventHandler eventHandler);
-    void registerChannelNotificationOnStreamStatusTwitchFeature(SimpleEventHandler eventHandler);
+    //void registerChannelNotificationOnStreamStatusTwitchFeature(SimpleEventHandler eventHandler);
 
-    boolean isTwitchFeatureActive(FeatureEnum featureEnum);
-    void setTwitchFeatureStatus(FeatureEnum featureEnum, boolean isActive);
-
-    int getRandomAnswerProbability();
-    void setRandomAnswerProbability(int randomAnswerProbability);
-
-    boolean isBotMuted();
-    void setMuted(boolean isMuted);
+    boolean isTwitchFeatureActive(String channelName, FeatureEnum featureEnum);
+    void setTwitchFeatureStatus(String channelName, FeatureEnum featureEnum, boolean isActive);
 }

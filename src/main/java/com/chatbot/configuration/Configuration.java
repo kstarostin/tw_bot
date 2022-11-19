@@ -5,47 +5,24 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Configuration {
-
-    private Map<String, String> bot;
-
     private boolean activeOnLiveStreamOnly;
 
-    private List<String> activeFeatures;
-
-    private String superAdmin;
-
+    private boolean muted;
+    private Set<String> activeFeatures;
     private boolean userGreetingEnabled;
-
-    private int randomAliveTriggerProbability;
-
-    private List<String> twitchChannels;
-
+    private int independenceRate;
     private List<String> messageWhitelistedPermissions;
-
     private boolean checkModeratorPermissions;
-
     private int moderationWordNumberThreshold;
-
     private int violationPointsThresholdForTimeout;
-
     private int violationPointsThresholdForBan;
-
     private int violationPointsForFirstMessage;
-
     private int autoTimeoutTimeSeconds;
-
-    public Map<String, String> getBot() {
-        return bot;
-    }
-
-    public void setBot(Map<String, String> bot) {
-        this.bot = bot;
-    }
 
     public boolean isActiveOnLiveStreamOnly() {
         return activeOnLiveStreamOnly;
@@ -55,20 +32,20 @@ public class Configuration {
         this.activeOnLiveStreamOnly = activeOnLiveStreamOnly;
     }
 
-    public List<String> getActiveFeatures() {
+    public boolean isMuted() {
+        return muted;
+    }
+
+    public void setMuted(boolean muted) {
+        this.muted = muted;
+    }
+
+    public Set<String> getActiveFeatures() {
         return activeFeatures;
     }
 
-    public void setActiveFeatures(List<String> activeFeatures) {
+    public void setActiveFeatures(Set<String> activeFeatures) {
         this.activeFeatures = activeFeatures;
-    }
-
-    public String getSuperAdmin() {
-        return superAdmin;
-    }
-
-    public void setSuperAdmin(String superAdmin) {
-        this.superAdmin = superAdmin;
     }
 
     public boolean isUserGreetingEnabled() {
@@ -79,20 +56,12 @@ public class Configuration {
         this.userGreetingEnabled = userGreetingEnabled;
     }
 
-    public int getRandomAliveTriggerProbability() {
-        return randomAliveTriggerProbability;
+    public int getIndependenceRate() {
+        return independenceRate;
     }
 
-    public void setRandomAliveTriggerProbability(int randomAliveTriggerProbability) {
-        this.randomAliveTriggerProbability = randomAliveTriggerProbability;
-    }
-
-    public List<String> getTwitchChannels() {
-        return twitchChannels;
-    }
-
-    public void setTwitchChannels(List<String> twitchChannels) {
-        this.twitchChannels = twitchChannels;
+    public void setIndependenceRate(int independenceRate) {
+        this.independenceRate = independenceRate;
     }
 
     public List<String> getMessageWhitelistedPermissions() {

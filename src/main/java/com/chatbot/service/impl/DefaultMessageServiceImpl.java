@@ -1,7 +1,7 @@
 package com.chatbot.service.impl;
 
 import com.chatbot.service.BotFeatureService;
-import com.chatbot.service.StaticConfigurationService;
+import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.util.FeatureEnum;
 import com.chatbot.service.MessageService;
@@ -24,7 +24,7 @@ public class DefaultMessageServiceImpl implements MessageService {
     private static final String DATE_FORMAT = "dd-MM-yyyy HH:mm:ss";
 
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
-    private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
 
     private DefaultMessageServiceImpl() {
@@ -47,19 +47,19 @@ public class DefaultMessageServiceImpl implements MessageService {
         if (responseMessage.isEmpty()) {
             return;
         }
-        if (isMuteChecked && botFeatureService.isBotMuted()) {
+        if (isMuteChecked && configurationService.getConfiguration(channelName).isMuted()) {
             return;
         }
-        if (botFeatureService.isTwitchFeatureActive(FeatureEnum.LOGGING)) {
+        if (botFeatureService.isTwitchFeatureActive(channelName, FeatureEnum.LOGGING)) {
             final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-            LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , staticConfigurationService.getBotName(), responseMessage);
+            LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , configurationService.getBotName(), responseMessage);
         }
         twitchClientService.getTwitchClient().getChat().sendMessage(channelName, responseMessage);
     }
 
     @Override
     public void sendMessageWithDelay(final String channelName, final String responseMessage, final int delay) {
-        if (botFeatureService.isBotMuted()) {
+        if (configurationService.getConfiguration(channelName).isMuted()) {
             return;
         }
         if (responseMessage.isEmpty()) {
@@ -78,7 +78,7 @@ public class DefaultMessageServiceImpl implements MessageService {
 
     @Override
     public String getStandardMessageForKey(final String key) {
-        final String propertyMessage = staticConfigurationService.getProperties("messages/messages.properties").getProperty(key);
+        final String propertyMessage = configurationService.getProperties("messages/messages.properties").getProperty(key);
         final String[] messages = StringUtils.isNotEmpty(propertyMessage) ? propertyMessage.split("\\|") : new String[0];
         return messages.length > 0 ? messages[new Random().nextInt(messages.length)] : StringUtils.EMPTY;
     }

@@ -2,10 +2,10 @@ package com.chatbot.feature.discord.command;
 
 import com.chatbot.feature.discord.AbstractDiscordFeature;
 import com.chatbot.service.MessageService;
-import com.chatbot.service.StaticConfigurationService;
+import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.YouTubeService;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
-import com.chatbot.service.impl.DefaultStaticConfigurationServiceImpl;
+import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import com.chatbot.service.impl.DefaultYouTubeServiceImpl;
 import discord4j.core.event.domain.Event;
 import discord4j.core.object.entity.Message;
@@ -25,7 +25,7 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
     private static final String YOUTUBE_CHANNEL_ID_2 = "UCBF5sbrlpTYECHMSfPT8wKw"; // Архив гениальных видео
 
     private final YouTubeService youTubeService = DefaultYouTubeServiceImpl.getInstance();
-    private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     protected final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
     protected String handleCommand(final Message message) {
@@ -51,7 +51,7 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
                 ? customResponseText + StringUtils.SPACE + videoURL
                 : String.format(messageService.getStandardMessageForKey("message.discord.sunboy"), videoURL);
 
-        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), staticConfigurationService.getBotName(), responseMessage);
+        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseMessage);
         return responseMessage;
     }
 

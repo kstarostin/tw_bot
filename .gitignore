@@ -32,6 +32,7 @@ local.properties
 src/main/resources/credentials.properties
 src/main/resources/moderation/suspicious-keywords.txt
 src/main/resources/googleapi/omskbot-service-account.json
+src/main/resources/config/channels/*
 
 # Intellij project files
 *.iml

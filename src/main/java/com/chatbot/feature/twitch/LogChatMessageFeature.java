@@ -18,7 +18,7 @@ public class LogChatMessageFeature extends AbstractFeature {
     }
 
     public void onChannelMessage(final ChannelMessageEvent event) {
-        if (!isFeatureActive(FeatureEnum.LOGGING)) {
+        if (!isFeatureActive(event.getChannel().getName(), FeatureEnum.LOGGING)) {
             return;
         }
         final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);

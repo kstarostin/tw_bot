@@ -2,10 +2,8 @@ package com.chatbot.feature.twitch;
 
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.ResponseGenerator;
-import com.chatbot.service.BotFeatureService;
 import com.chatbot.service.DayCacheService;
 import com.chatbot.service.ModerationService;
-import com.chatbot.service.impl.DefaultBotFeatureServiceImpl;
 import com.chatbot.service.impl.DefaultDayCacheServiceImpl;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.util.FeatureEnum;
@@ -21,7 +19,6 @@ public class AliveFeature extends AbstractFeature {
     private static final int RND_TRIGGER_MIN_PROBABILITY = 1;
     private static final int RND_TRIGGER_MAX_PROBABILITY = 100;
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
-    private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
     private final DayCacheService dayCacheService = DefaultDayCacheServiceImpl.getInstance();
 
@@ -32,20 +29,20 @@ public class AliveFeature extends AbstractFeature {
     public void onChannelMessage(final ChannelMessageEvent event) {
         final String channelName = event.getChannel().getName();
         final String userName = event.getUser().getName();
-        if (!isFeatureActive(FeatureEnum.ALIVE) || (isActiveOnLiveStreamOnly() && !isStreamLive(event.getChannel().getName()))) {
+        if (!isFeatureActive(channelName, FeatureEnum.ALIVE) || (isActiveOnLiveStreamOnly(channelName) && !isStreamLive(event.getChannel().getName()))) {
             return;
         }
         final String message = event.getMessage();
-        if (isCommand(message) || moderationService.isSuspiciousMessage(message, event.getPermissions())) {
+        if (isCommand(message) || moderationService.isSuspiciousMessage(channelName, message, event.getPermissions())) {
             return;
         }
-        if (isGreetingEnabled() && !isUserGreeted(userName)) {
+        if (isGreetingEnabled(channelName) && !isUserGreeted(userName)) {
             final String responseMessage = String.format(messageService.getStandardMessageForKey("message.hello." + userName.toLowerCase()), TAG_CHARACTER + userName);
             if (StringUtils.isNotEmpty(responseMessage)) {
                 messageService.sendMessageWithDelay(channelName, responseMessage, calculateResponseDelayTime(responseMessage));
                 dayCacheService.cacheGreeting(userName);
             }
-        } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger())) {
+        } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger(channelName))) {
             final String responseMessage = balabobaResponseGenerator.generate(sanitizeMessage(message));
             if (StringUtils.isNotEmpty(responseMessage)) {
                 messageService.sendMessageWithDelay(channelName, TAG_CHARACTER + userName + " " + responseMessage, calculateResponseDelayTime(responseMessage));
@@ -61,17 +58,17 @@ public class AliveFeature extends AbstractFeature {
         return dayCacheService.getCachedGreetings().isPresent() && dayCacheService.getCachedGreetings().get().contains(userName);
     }
 
-    private boolean isGreetingEnabled() {
-        return configurationService.getStaticConfiguration().isUserGreetingEnabled();
+    private boolean isGreetingEnabled(final String channelName) {
+        return configurationService.getConfiguration(channelName).isUserGreetingEnabled();
     }
 
     private boolean isNoOneTagged(final String message) {
         return !message.contains(TAG_CHARACTER);
     }
 
-    private boolean isRandomTrigger() {
+    private boolean isRandomTrigger(final String channelName) {
         final SplittableRandom random = new SplittableRandom();
-        return random.nextInt(RND_TRIGGER_MIN_PROBABILITY, RND_TRIGGER_MAX_PROBABILITY + 1) <= botFeatureService.getRandomAnswerProbability();
+        return random.nextInt(RND_TRIGGER_MIN_PROBABILITY, RND_TRIGGER_MAX_PROBABILITY + 1) <= configurationService.getConfiguration(channelName).getIndependenceRate();
     }
 
     private String sanitizeMessage(String message) {

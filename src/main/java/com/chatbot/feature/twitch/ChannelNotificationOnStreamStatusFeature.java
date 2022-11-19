@@ -13,17 +13,19 @@ public class ChannelNotificationOnStreamStatusFeature extends AbstractFeature {
     }
 
     public void onStreamOnline(final StreamOnlineEvent event) {
-        if (!isFeatureActive(FeatureEnum.STREAM)) {
+        final String channelName = event.getBroadcasterUserLogin();
+        /*if (!isFeatureActive(channelName, FeatureEnum.STREAM)) {
             return;
-        }
+        }*/
         final String notificationMessage = messageService.getStandardMessageForKey("message.stream.online");
         messageService.sendMessage(event.getBroadcasterUserLogin(), notificationMessage);
     }
 
     public void onStreamOffline(final StreamOfflineEvent event) {
-        if (!isFeatureActive(FeatureEnum.STREAM)) {
+        final String channelName = event.getBroadcasterUserLogin();
+        /*if (!isFeatureActive(channelName, FeatureEnum.STREAM)) {
             return;
-        }
+        }*/
         final String notificationMessage = messageService.getStandardMessageForKey("message.stream.offline");
         messageService.sendMessage(event.getBroadcasterUserLogin(), notificationMessage);
     }

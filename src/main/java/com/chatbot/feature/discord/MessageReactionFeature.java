@@ -1,7 +1,7 @@
 package com.chatbot.feature.discord;
 
-import com.chatbot.service.StaticConfigurationService;
-import com.chatbot.service.impl.DefaultStaticConfigurationServiceImpl;
+import com.chatbot.service.ConfigurationService;
+import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
@@ -30,7 +30,7 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
             RED_ROOM_ANNOUNCE, Map.of(PAUSEY, 987043617216536596L, POGEY, 980131980039573585L)
     );
 
-    private final StaticConfigurationService staticConfigurationService = DefaultStaticConfigurationServiceImpl.getInstance();
+    private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
 
     private MessageReactionFeature() {
     }
@@ -60,11 +60,11 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         ReactionEmoji reaction = null;
         if (isEveryone(message.getContent())) {
             reaction = getReaction(channelId, "Pausey", false);
-            LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), staticConfigurationService.getBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
+            LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         if (hasStreamLink(message.getContent())) {
             reaction = getReaction(channelId, "Pogey", false);
-            LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), staticConfigurationService.getBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
+            LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         return reaction != null ? message.addReaction(reaction) : Mono.empty();
     }

@@ -13,7 +13,7 @@ public interface ModerationService {
 
     void timeoutUser(String channelName, String userName, String reason, Integer duration);
 
-    boolean isSuspiciousMessage(String message, Set<CommandPermission> userPermissions);
+    boolean isSuspiciousMessage(String channelName, String message, Set<CommandPermission> userPermissions);
 
     int getSuspiciousWordsMatchCount(String message);
 
