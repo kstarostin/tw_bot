@@ -61,11 +61,10 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
 
     private String sanitizeMessage(final String message) {
         String sanitizedMessage = message.trim();
-        while (sanitizedMessage.startsWith("-")) {
+        while (sanitizedMessage.startsWith("-") || sanitizedMessage.startsWith("—")) {
             StringUtils.removeStart(sanitizedMessage, "-");
-        }
-        while (sanitizedMessage.startsWith("—")) {
             StringUtils.removeStart(sanitizedMessage, "—");
+            sanitizedMessage = message.trim();
         }
         if (sanitizedMessage.contains("\n")) {
             sanitizedMessage = sanitizedMessage.replaceAll("\n", StringUtils.SPACE);
@@ -119,7 +118,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     }
 
     private String shorten(final String message, final int maxLength) {
-        final String[] sentences =  message.split("(?<=[\\.\\!\\?])");
+        final String[] sentences =  message.split("(?<=[.!?])");
         if (sentences.length > 1) {
             StringBuilder shortenedMessage = new StringBuilder();
             for (final String sentence : sentences) {
