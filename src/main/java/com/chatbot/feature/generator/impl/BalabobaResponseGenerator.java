@@ -119,7 +119,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     }
 
     private String shorten(final String message, final int maxLength) {
-        final String[] sentences =  message.split("(?<=[\\\\.\\\\!\\\\?])");
+        final String[] sentences =  message.split("(?<=[\\.\\!\\?])");
         if (sentences.length > 1) {
             StringBuilder shortenedMessage = new StringBuilder();
             for (final String sentence : sentences) {
