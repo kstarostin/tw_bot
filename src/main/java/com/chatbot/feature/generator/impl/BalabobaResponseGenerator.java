@@ -62,9 +62,9 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     private String sanitizeMessage(final String message) {
         String sanitizedMessage = message.trim();
         while (sanitizedMessage.startsWith("-") || sanitizedMessage.startsWith("—")) {
-            StringUtils.removeStart(sanitizedMessage, "-");
-            StringUtils.removeStart(sanitizedMessage, "—");
-            sanitizedMessage = message.trim();
+            sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "-");
+            sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "—");
+            sanitizedMessage = sanitizedMessage.trim();
         }
         if (sanitizedMessage.contains("\n")) {
             sanitizedMessage = sanitizedMessage.replaceAll("\n", StringUtils.SPACE);
