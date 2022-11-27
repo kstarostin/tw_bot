@@ -19,9 +19,17 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     private final Logger LOG = LoggerFactory.getLogger(BalabobaResponseGenerator.class);
 
     private static final String BALABOBA_API_URL = "https://zeapi.yandex.net/lab/api/yalm/text3";
-    private final static String REQUEST_TEMPLATE = "{\"query\":\"@@@query@@@\",\"intro\":0,\"style\":@@@style@@@,\"filter\":0}";
+    private final static String REQUEST_TEMPLATE = "{\"query\":\"@@@query@@@\",\"intro\":@@@intro@@@,\"style\":@@@style@@@,\"filter\":@@@filter@@@}";
 
-    private final static int[] GENERATED_MESSAGE_MAX_LENGTHS = {50, 100, 150, 200, 250, 300, 350};
+    private final static int[] GENERATED_MESSAGE_MAX_LENGTHS = {
+            50, 50, 50, 50, 50, 50, 50,
+            100, 100, 100, 100, 100, 100,
+            150, 150, 150, 150, 150,
+            200, 200, 200, 200,
+            250, 250, 250,
+            300, 300,
+            350
+    };
     private final static int GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS = 10;
 
     private BalabobaResponseGenerator () {
@@ -40,10 +48,10 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         int maxLength = calculateRandomLength();
         int generateCounter = 1;
         do {
-            generatedMessage = shorten(generateWithBalaboba(message), maxLength);
+            generatedMessage = shorten(sanitizeMessage(generateWithBalaboba(message)), maxLength);
             generateCounter++;
         } while (generatedMessage.length() > maxLength && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
-        return sanitizeMessage(generatedMessage);
+        return generatedMessage;
     }
 
     private int calculateRandomLength() {
@@ -53,11 +61,11 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
 
     private String sanitizeMessage(final String message) {
         String sanitizedMessage = message.trim();
-        if (sanitizedMessage.startsWith("-")) {
-            sanitizedMessage = sanitizedMessage.replaceFirst("-", StringUtils.EMPTY);
+        while (sanitizedMessage.startsWith("-")) {
+            StringUtils.removeStart(sanitizedMessage, "-");
         }
-        if (sanitizedMessage.startsWith("—")) {
-            sanitizedMessage = sanitizedMessage.replaceFirst("—", StringUtils.EMPTY);
+        while (sanitizedMessage.startsWith("—")) {
+            StringUtils.removeStart(sanitizedMessage, "—");
         }
         if (sanitizedMessage.contains("\n")) {
             sanitizedMessage = sanitizedMessage.replaceAll("\n", StringUtils.SPACE);
@@ -73,7 +81,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
             http.setDoInput(true);
             http.connect();
 
-            final String request = createRequest(message, getStyle());
+            final String request = createRequest(message, 0, getStyle(), 0);
             LOG.info("Balaboba request: " + request);
             http.getOutputStream().write(request.getBytes(StandardCharsets.UTF_8));
 
@@ -91,8 +99,18 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         }
     }
 
-    private String createRequest(final String query, final String style) {
-        return REQUEST_TEMPLATE.replace("@@@query@@@", query).replace("@@@style@@@", style);
+    private String createRequest(final String query, final Integer intro, final String style, final Integer filter) throws Exception {
+        final String defaultValue = "0";
+        String requestQuery;
+        if (StringUtils.isEmpty(query)) {
+            throw new Exception("Empty query provided...");
+        } else {
+            requestQuery = REQUEST_TEMPLATE.replace("@@@query@@@", query);
+        }
+        requestQuery = requestQuery.replace("@@@intro@@@", intro != null ? intro.toString() : defaultValue);
+        requestQuery = requestQuery.replace("@@@style@@@", StringUtils.isNotEmpty(style) ? style : defaultValue);
+        requestQuery = requestQuery.replace("@@@filter@@@", filter != null ? filter.toString() : defaultValue);
+        return requestQuery;
     }
 
     private String getStyle() {
@@ -101,12 +119,12 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     }
 
     private String shorten(final String message, final int maxLength) {
-        final String[] sentences =  message.split("[.!?]");
+        final String[] sentences =  message.split("(?<=[\\\\.\\\\!\\\\?])");
         if (sentences.length > 1) {
             StringBuilder shortenedMessage = new StringBuilder();
             for (final String sentence : sentences) {
                 if (shortenedMessage.length() + sentence.length() < maxLength) {
-                    shortenedMessage.append(sentence).append(".");
+                    shortenedMessage.append(sentence);
                 } else if (StringUtils.isNotEmpty(shortenedMessage.toString())) {
                     return shortenedMessage.toString();
                 } else {
