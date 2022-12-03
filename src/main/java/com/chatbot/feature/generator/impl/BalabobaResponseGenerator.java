@@ -43,30 +43,30 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     }
 
     @Override
-    public String generate(final String requestMessage, final boolean includeRequest) {
-        return includeRequest ? requestMessage + StringUtils.SPACE + generateByBalaboba(requestMessage, Style.NO_STYLE) : generateByBalaboba(requestMessage, Style.NO_STYLE);
+    public String generate(final String requestMessage, final boolean shortenResponse, final boolean sanitizeResponse, final boolean includeRequest) {
+        return generate(requestMessage, shortenResponse, sanitizeResponse, includeRequest, null);
     }
 
     @Override
-    public String generate(final String requestMessage, final boolean includeRequest, final Style style) {
-        return includeRequest ? requestMessage + StringUtils.SPACE + generateByBalaboba(requestMessage, style) : generateByBalaboba(requestMessage, style);
-    }
+    public String generate(final String requestMessage, final boolean shortenResponse, final boolean sanitizeResponse, final boolean includeRequest, final Style style) {
+        Style requestStyle = style != null ? style : getRandomStyle();
+        final String payload = createPayload(requestMessage + StringUtils.SPACE, 0, requestStyle.toString(), 0);
 
-    @Override
-    public String generateSanitized(final String requestMessage, final boolean includeRequest) {
-        return sanitizeResponseMessage(generate(requestMessage, includeRequest));
-    }
-
-    @Override
-    public String generateShortSanitized(final String requestMessage, final boolean includeRequest) {
         String generatedMessage;
-        int maxLength = calculateRandomLength();
-        int generateCounter = 1;
-        do {
-            generatedMessage = shorten(generateSanitized(requestMessage, includeRequest), maxLength);
-            generateCounter++;
-        } while (generatedMessage.length() > maxLength && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
-        return generatedMessage;
+        if (shortenResponse) {
+            int maxLength = calculateRandomLength();
+            int generateCounter = 1;
+            do {
+                generatedMessage = shorten(generateByBalaboba(payload), maxLength);
+                generateCounter++;
+            } while (generatedMessage.length() > maxLength && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
+        } else {
+            generatedMessage = generateByBalaboba(payload);
+        }
+        if (sanitizeResponse) {
+            generatedMessage = sanitizeResponseMessage(generatedMessage);
+        }
+        return includeRequest ? requestMessage + StringUtils.SPACE + generatedMessage : generatedMessage;
     }
 
     private int calculateRandomLength() {
@@ -92,7 +92,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         return sanitizedMessage;
     }
 
-    private String generateByBalaboba(final String requestMessage, final Style style) {
+    private String generateByBalaboba(final String payload) {
         try {
             final URLConnection http = new URL(BALABOBA_API_URL).openConnection();
             http.setRequestProperty("Content-Type", "application/json");
@@ -100,9 +100,8 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
             http.setDoInput(true);
             http.connect();
 
-            final String request = createRequest(requestMessage + StringUtils.SPACE, 0, style.toString(), 0);
-            LOG.info("Balaboba request: " + request);
-            http.getOutputStream().write(request.getBytes(StandardCharsets.UTF_8));
+            LOG.info("Balaboba request: " + payload);
+            http.getOutputStream().write(payload.getBytes(StandardCharsets.UTF_8));
 
             final BufferedReader reader = new BufferedReader(new InputStreamReader(http.getInputStream()));
             final String line = reader.readLine();
@@ -118,21 +117,16 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         }
     }
 
-    private String createRequest(final String query, final Integer intro, final String style, final Integer filter) throws Exception {
+    private String createPayload(final String query, final Integer intro, final String style, final Integer filter) {
         final String defaultValue = "0";
-        String requestQuery;
-        if (StringUtils.isEmpty(query)) {
-            throw new Exception("Empty query provided...");
-        } else {
-            requestQuery = REQUEST_TEMPLATE.replace("@@@query@@@", query);
-        }
-        requestQuery = requestQuery.replace("@@@intro@@@", intro != null ? intro.toString() : defaultValue);
-        requestQuery = requestQuery.replace("@@@style@@@", StringUtils.isNotEmpty(style) ? style : defaultValue);
-        requestQuery = requestQuery.replace("@@@filter@@@", filter != null ? filter.toString() : defaultValue);
+        String requestQuery = REQUEST_TEMPLATE.replace("@@@query@@@", query);
+        requestQuery = requestQuery.replace("@@@intro@@@", StringUtils.isNotEmpty(style) ? style : defaultValue);
+        requestQuery = requestQuery.replace("@@@style@@@", defaultValue);
+        requestQuery = requestQuery.replace("@@@filter@@@", StringUtils.isNotEmpty(style) ? "1" : defaultValue);
         return requestQuery;
     }
 
-    private Style getStyle() {
+    private Style getRandomStyle() {
         //return Stream.of(BalabobaStyle.values()).skip((int) (Set.of(BalabobaStyle.values()).size() * Math.random())).findFirst().orElse(BalabobaStyle.NO_STYLE).toString();
         return Style.NO_STYLE;
     }

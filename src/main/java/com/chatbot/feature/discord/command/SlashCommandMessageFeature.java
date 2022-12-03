@@ -13,6 +13,8 @@ import java.util.Optional;
 public class SlashCommandMessageFeature extends AbstractCommandFeature<ChatInputInteractionEvent> {
     private static SlashCommandMessageFeature instance;
 
+    private static final String COMMAND_SIGN = "/";
+
     private SlashCommandMessageFeature() {
     }
 
@@ -31,17 +33,35 @@ public class SlashCommandMessageFeature extends AbstractCommandFeature<ChatInput
                 .map(ApplicationCommandInteraction::getName)
                 .map(nameOptional -> "/" + nameOptional.orElse(StringUtils.EMPTY))
                 .orElse(StringUtils.EMPTY);
-        final Optional<String> textOptional = getOptionalText(event);
 
+        if ((COMMAND_SIGN + COMMAND_SUNBOY).equals(command)) {
+            return handleSunboyCommand(event, channelId, userName, command);
+        }
+        if ((COMMAND_SIGN + COMMAND_UFA).equals(command)) {
+            return handleUfaCommand(event, channelId, userName, command);
+        }
+        return Mono.empty();
+    }
+
+    private Mono<Void> handleSunboyCommand(final ChatInputInteractionEvent event, final String channelId, final String userName, final String command) {
+        final Optional<String> textOptional = getOptionalText(event);
         if (hasCachedVideo()) {
-            return event.reply().withContent(textOptional.isEmpty() ? handleCommand(channelId, userName, command) : handleCommand(channelId, userName, command, textOptional.get()));
+            return event.reply().withContent(textOptional.isEmpty() ? handleSunboyCommand(channelId, userName, command) : handleSunboyCommand(channelId, userName, command, textOptional.get()));
         } else {
             event.reply(messageService.getStandardMessageForKey("message.discord.sunboy.inprogress")).subscribe();
 
-            final String replyText = textOptional.isEmpty() ? handleCommand(channelId, userName, command) : handleCommand(channelId, userName, command, textOptional.get());
+            final String replyText = textOptional.isEmpty() ? handleSunboyCommand(channelId, userName, command) : handleSunboyCommand(channelId, userName, command, textOptional.get());
             event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
             return Mono.empty();
         }
+    }
+
+    private Mono<Void> handleUfaCommand(final ChatInputInteractionEvent event, final String channelId, final String userName, final String command) {
+        event.reply(messageService.getStandardMessageForKey("message.discord.ufa.inprogress")).subscribe();
+
+        final String replyText = handleUfaCommand(channelId, userName, command);
+        event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
+        return Mono.empty();
     }
 
     private Optional<String> getOptionalText(final ChatInputInteractionEvent event) {

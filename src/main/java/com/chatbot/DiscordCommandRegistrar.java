@@ -21,7 +21,7 @@ public class DiscordCommandRegistrar {
     private final Logger LOG = LoggerFactory.getLogger(DiscordCommandRegistrar.class);
 
     // The name of the folder the commands json is in, inside our resources folder
-    private static final String commandsFolderName = "dscommands/";
+    private static final String COMMANDS_FOLDER_NAME = "dscommands/";
 
     private final RestClient restClient;
 
@@ -58,13 +58,13 @@ public class DiscordCommandRegistrar {
 
     private static List<String> getCommandsJson(List<String> fileNames) throws IOException {
         // Confirm that the commands folder exists
-        final URL url = DiscordCommandRegistrar.class.getClassLoader().getResource(commandsFolderName);
-        Objects.requireNonNull(url, commandsFolderName + " could not be found");
+        final URL url = DiscordCommandRegistrar.class.getClassLoader().getResource(COMMANDS_FOLDER_NAME);
+        Objects.requireNonNull(url, COMMANDS_FOLDER_NAME + " could not be found");
 
         //Get all the files inside this folder and return the contents of the files as a list of strings
         final List<String> list = new ArrayList<>();
         for (String file : fileNames) {
-            String resourceFileAsString = getResourceFileAsString(commandsFolderName + file);
+            String resourceFileAsString = getResourceFileAsString(COMMANDS_FOLDER_NAME + file);
             list.add(Objects.requireNonNull(resourceFileAsString, "Command file not found: " + file));
         }
         return list;

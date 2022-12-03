@@ -9,6 +9,8 @@ import reactor.core.publisher.Mono;
 public class CommandMessageFeature extends AbstractCommandFeature<MessageCreateEvent> {
     private static CommandMessageFeature instance;
 
+    private static final String COMMAND_SIGN = "!";
+
     private CommandMessageFeature() {
     }
 
@@ -22,8 +24,15 @@ public class CommandMessageFeature extends AbstractCommandFeature<MessageCreateE
     @Override
     public Mono<Void> handle(final MessageCreateEvent event) {
         final Message message = event.getMessage();
+        final String responseMessage;
 
-        final String responseMessage = StringUtils.startsWithAny(message.getContent(), "!sunboy") ? handleCommand(message) : StringUtils.EMPTY;
+        if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_SUNBOY)) {
+            responseMessage = handleSunboyCommand(message);
+        } else if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_UFA)) {
+            responseMessage = handleUfaCommand(message);
+        } else {
+            responseMessage = StringUtils.EMPTY;
+        }
 
         return StringUtils.isNotEmpty(responseMessage) ? message.getChannel().flatMap(channel -> channel.createMessage(responseMessage)).then() : Mono.empty();
     }

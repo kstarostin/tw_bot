@@ -43,7 +43,7 @@ public class AliveFeature extends AbstractFeature {
                 dayCacheService.cacheGreeting(userName);
             }
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger(channelName))) {
-            final String responseMessage = balabobaResponseGenerator.generateShortSanitized(sanitizeRequestMessage(message), false);
+            final String responseMessage = balabobaResponseGenerator.generate(sanitizeRequestMessage(message), true, true, false);
             if (StringUtils.isNotEmpty(responseMessage)) {
                 messageService.sendMessageWithDelay(channelName, TAG_CHARACTER + userName + " " + responseMessage, calculateResponseDelayTime(responseMessage));
             }

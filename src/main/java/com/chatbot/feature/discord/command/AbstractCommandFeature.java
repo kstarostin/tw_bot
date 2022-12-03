@@ -1,6 +1,8 @@
 package com.chatbot.feature.discord.command;
 
 import com.chatbot.feature.discord.AbstractDiscordFeature;
+import com.chatbot.feature.generator.ResponseGenerator;
+import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.service.MessageService;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.YouTubeService;
@@ -21,6 +23,9 @@ import java.util.Map;
 public abstract class AbstractCommandFeature<T extends Event> extends AbstractDiscordFeature<T> {
     private final Logger LOG = LoggerFactory.getLogger(AbstractCommandFeature.class);
 
+    protected static final String COMMAND_SUNBOY = "sunboy";
+    protected static final String COMMAND_UFA = "ufa";
+
     private static final String YOUTUBE_CHANNEL_ID_1 = "UC2WNW0NZVyMeEPvtLmScgvQ"; // SUNBOYUNITED
     private static final String YOUTUBE_CHANNEL_ID_2 = "UCBF5sbrlpTYECHMSfPT8wKw"; // Архив гениальных видео
 
@@ -28,28 +33,30 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     protected final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
-    protected String handleCommand(final Message message) {
+    private final ResponseGenerator responseGenerator = BalabobaResponseGenerator.getInstance();
+
+    protected String handleSunboyCommand(final Message message) {
         final String channelId = message.getChannelId().asString();
         final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);
         final String content = message.getContent();
         if (!getWhitelistedChannelsForCommands().contains(channelId)) {
             return StringUtils.EMPTY;
         }
-        return handleCommand(channelId, userName, content);
+        return handleSunboyCommand(channelId, userName, content);
     }
 
-    protected String handleCommand(final String channelId, final String userName, final String content) {
-        return handleCommand(channelId, userName, content, null);
+    protected String handleSunboyCommand(final String channelId, final String userName, final String content) {
+        return handleSunboyCommand(channelId, userName, content, null);
     }
 
-    protected String handleCommand(final String channelId, final String userName, final String content, final String customResponseText) {
+    protected String handleSunboyCommand(final String channelId, final String userName, final String content, final String customResponseText) {
         final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), userName, content);
 
         final String videoURL = youTubeService.getRandomVideo(Map.of(YOUTUBE_CHANNEL_ID_1, 150, YOUTUBE_CHANNEL_ID_2, 50));
         final String responseMessage = StringUtils.isNotBlank(customResponseText)
                 ? customResponseText + StringUtils.SPACE + videoURL
-                : String.format(messageService.getStandardMessageForKey("message.discord.sunboy"), videoURL);
+                : String.format(messageService.getStandardMessageForKey("message.discord.sunboy.response"), videoURL);
 
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseMessage);
         return responseMessage;
@@ -57,5 +64,25 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
 
     protected boolean hasCachedVideo() {
         return youTubeService.getCachedRandomVideo().isPresent();
+    }
+
+    protected String handleUfaCommand(final Message message) {
+        final String channelId = message.getChannelId().asString();
+        final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);
+        final String content = message.getContent();
+        if (!getWhitelistedChannelsForCommands().contains(channelId)) {
+            return StringUtils.EMPTY;
+        }
+        return handleUfaCommand(channelId, userName, content);
+    }
+
+    protected String handleUfaCommand(final String channelId, final String userName, final String content) {
+        final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), userName, content);
+
+        final String responseMessage = responseGenerator.generate(messageService.getStandardMessageForKey("message.discord.ufa.request"), false, true, true, BalabobaResponseGenerator.Style.FOLK_WISDOM);
+
+        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseMessage);
+        return responseMessage + " <:nasozvone:917475873765081148>";
     }
 }
