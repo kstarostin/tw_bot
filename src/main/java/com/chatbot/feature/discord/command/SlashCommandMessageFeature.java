@@ -57,9 +57,11 @@ public class SlashCommandMessageFeature extends AbstractCommandFeature<ChatInput
     }
 
     private Mono<Void> handleUfaCommand(final ChatInputInteractionEvent event, final String channelId, final String userName, final String command) {
+        final Optional<String> textOptional = getOptionalText(event);
+
         event.reply(messageService.getStandardMessageForKey("message.discord.ufa.inprogress")).subscribe();
 
-        final String replyText = handleUfaCommand(channelId, userName, command);
+        final String replyText = textOptional.isEmpty() ? handleUfaCommand(channelId, userName, command) : handleUfaCommand(channelId, userName, command, textOptional.get());
         event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
         return Mono.empty();
     }

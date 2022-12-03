@@ -1,4 +1,12 @@
 {
   "name": "ufa",
-  "description": "Базует с подливой"
+  "description": "Базует с подливой",
+  "options": [
+    {
+      "name": "text",
+      "description": "своя вставка",
+      "type": 3,
+      "required": false
+    }
+  ]
 }
