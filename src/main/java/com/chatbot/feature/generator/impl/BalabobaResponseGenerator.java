@@ -43,12 +43,27 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     }
 
     @Override
-    public String generate(final String message) {
+    public String generate(final String requestMessage, final boolean includeRequest) {
+        return includeRequest ? requestMessage + StringUtils.SPACE + generateByBalaboba(requestMessage, Style.NO_STYLE) : generateByBalaboba(requestMessage, Style.NO_STYLE);
+    }
+
+    @Override
+    public String generate(final String requestMessage, final boolean includeRequest, final Style style) {
+        return includeRequest ? requestMessage + StringUtils.SPACE + generateByBalaboba(requestMessage, style) : generateByBalaboba(requestMessage, style);
+    }
+
+    @Override
+    public String generateSanitized(final String requestMessage, final boolean includeRequest) {
+        return sanitizeResponseMessage(generate(requestMessage, includeRequest));
+    }
+
+    @Override
+    public String generateShortSanitized(final String requestMessage, final boolean includeRequest) {
         String generatedMessage;
         int maxLength = calculateRandomLength();
         int generateCounter = 1;
         do {
-            generatedMessage = shorten(sanitizeMessage(generateWithBalaboba(message)), maxLength);
+            generatedMessage = shorten(generateSanitized(requestMessage, includeRequest), maxLength);
             generateCounter++;
         } while (generatedMessage.length() > maxLength && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
         return generatedMessage;
@@ -59,11 +74,16 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         return GENERATED_MESSAGE_MAX_LENGTHS[random];
     }
 
-    private String sanitizeMessage(final String message) {
+    private String sanitizeResponseMessage(final String message) {
         String sanitizedMessage = message.trim();
-        while (sanitizedMessage.startsWith("-") || sanitizedMessage.startsWith("—")) {
+        while (sanitizedMessage.startsWith("-") || sanitizedMessage.startsWith("—") || sanitizedMessage.startsWith("\"")) {
             sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "-");
             sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "—");
+            sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "\"");
+            sanitizedMessage = sanitizedMessage.trim();
+        }
+        if (sanitizedMessage.endsWith("\"")) {
+            sanitizedMessage = StringUtils.removeEnd(sanitizedMessage, "\"");
             sanitizedMessage = sanitizedMessage.trim();
         }
         if (sanitizedMessage.contains("\n")) {
@@ -72,7 +92,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         return sanitizedMessage;
     }
 
-    private String generateWithBalaboba(final String message) {
+    private String generateByBalaboba(final String requestMessage, final Style style) {
         try {
             final URLConnection http = new URL(BALABOBA_API_URL).openConnection();
             http.setRequestProperty("Content-Type", "application/json");
@@ -80,7 +100,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
             http.setDoInput(true);
             http.connect();
 
-            final String request = createRequest(message, 0, getStyle(), 0);
+            final String request = createRequest(requestMessage + StringUtils.SPACE, 0, style.toString(), 0);
             LOG.info("Balaboba request: " + request);
             http.getOutputStream().write(request.getBytes(StandardCharsets.UTF_8));
 
@@ -112,9 +132,9 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         return requestQuery;
     }
 
-    private String getStyle() {
+    private Style getStyle() {
         //return Stream.of(BalabobaStyle.values()).skip((int) (Set.of(BalabobaStyle.values()).size() * Math.random())).findFirst().orElse(BalabobaStyle.NO_STYLE).toString();
-        return BalabobaStyle.NO_STYLE.toString();
+        return Style.NO_STYLE;
     }
 
     private String shorten(final String message, final int maxLength) {
@@ -135,7 +155,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         return message;
     }
 
-    private enum BalabobaStyle {
+    public enum Style {
         NO_STYLE ("0"),
         CONSPIRACY_THEORIES ("1"),
         TV_REPORTS ("2"),
@@ -152,7 +172,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
 
         private final String style;
 
-        BalabobaStyle(final String style) {
+        Style(final String style) {
             this.style = style;
         }
 

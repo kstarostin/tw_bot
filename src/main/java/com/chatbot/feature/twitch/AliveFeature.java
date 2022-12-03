@@ -43,7 +43,7 @@ public class AliveFeature extends AbstractFeature {
                 dayCacheService.cacheGreeting(userName);
             }
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger(channelName))) {
-            final String responseMessage = balabobaResponseGenerator.generate(sanitizeMessage(message));
+            final String responseMessage = balabobaResponseGenerator.generateShortSanitized(sanitizeRequestMessage(message), false);
             if (StringUtils.isNotEmpty(responseMessage)) {
                 messageService.sendMessageWithDelay(channelName, TAG_CHARACTER + userName + " " + responseMessage, calculateResponseDelayTime(responseMessage));
             }
@@ -71,11 +71,17 @@ public class AliveFeature extends AbstractFeature {
         return random.nextInt(RND_TRIGGER_MIN_PROBABILITY, RND_TRIGGER_MAX_PROBABILITY + 1) <= configurationService.getConfiguration(channelName).getIndependenceRate();
     }
 
-    private String sanitizeMessage(String message) {
-        final String taggedUserName = message.contains(TAG_CHARACTER)
-                ? StringUtils.substringBefore(StringUtils.substringAfter(message, TAG_CHARACTER), StringUtils.SPACE)
-                : StringUtils.EMPTY;
-        return message.replace(TAG_CHARACTER + taggedUserName, StringUtils.EMPTY);
+    private String sanitizeRequestMessage(final String message) {
+        String sanitizedMessage = message;
+        if (sanitizedMessage.contains(TAG_CHARACTER)) {
+            final String taggedUserName = StringUtils.substringBefore(StringUtils.substringAfter(sanitizedMessage, TAG_CHARACTER), StringUtils.SPACE);
+            sanitizedMessage = sanitizedMessage.replace(TAG_CHARACTER + taggedUserName, StringUtils.EMPTY);
+        }
+        if (sanitizedMessage.startsWith(",")) {
+            sanitizedMessage = StringUtils.removeStart(sanitizedMessage, ",");
+        }
+        sanitizedMessage = sanitizedMessage.trim();
+        return sanitizedMessage;
     }
 
     private int calculateResponseDelayTime(final String message) {

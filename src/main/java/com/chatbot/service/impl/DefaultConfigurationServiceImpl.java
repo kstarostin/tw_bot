@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -20,6 +21,7 @@ public class DefaultConfigurationServiceImpl implements ConfigurationService {
 
     private final Logger LOG = LoggerFactory.getLogger(DefaultConfigurationServiceImpl.class);
 
+    private static final String BOT_PATH = "bot";
     private static final String CONFIG_PATH = "config";
     private static final String CHANNELS_PATH = "channels";
     private static final String DEFAULT_CONFIG_NAME = "default";
@@ -62,7 +64,7 @@ public class DefaultConfigurationServiceImpl implements ConfigurationService {
     @Override
     public void loadConfiguration(final String channelName) {
         loadChannelConfiguration(channelName)
-                .or(() -> loadChannelConfiguration(DEFAULT_CONFIG_NAME))
+                .or(this::loadDefaultConfiguration)
                 .ifPresent(configuration -> getConfiguration().getChannelConfigurations().put(channelName.toLowerCase(), configuration));
     }
 
@@ -90,7 +92,7 @@ public class DefaultConfigurationServiceImpl implements ConfigurationService {
     private GlobalConfiguration loadGlobalConfiguration() {
         final String configPath = CONFIG_PATH + File.separator + DEFAULT_CONFIG_NAME + CONFIG_FILE_APPENDER;
         try {
-            final GlobalConfiguration globalConfiguration = loadConfigurationInternally(configPath, GlobalConfiguration.class);
+            final GlobalConfiguration globalConfiguration = loadDefaultConfigurationInternally(configPath, GlobalConfiguration.class);
             LOG.info("Loaded default configuration");
             return globalConfiguration;
         } catch (final Exception e) {
@@ -100,11 +102,22 @@ public class DefaultConfigurationServiceImpl implements ConfigurationService {
         return null;
     }
 
-    private Optional<Configuration> loadChannelConfiguration(final String channelName) {
-        final String channelsPath = DEFAULT_CONFIG_NAME.equals(channelName) ? StringUtils.EMPTY : File.separator + CHANNELS_PATH;
-        final String configPath = CONFIG_PATH + channelsPath + File.separator + channelName.toLowerCase() + CONFIG_FILE_APPENDER;
+    private Optional<Configuration> loadDefaultConfiguration() {
+        final String configPath = CONFIG_PATH + File.separator + DEFAULT_CONFIG_NAME + CONFIG_FILE_APPENDER;
         try {
-            final Configuration configuration = loadConfigurationInternally(configPath, Configuration.class);
+            final Configuration configuration = loadDefaultConfigurationInternally(configPath, Configuration.class);
+            LOG.info("Loaded [{}] configuration", DEFAULT_CONFIG_NAME);
+            return Optional.of(configuration);
+        } catch (final Exception e) {
+            LOG.error("Can't load [{}] configuration", DEFAULT_CONFIG_NAME);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<Configuration> loadChannelConfiguration(final String channelName) {
+        final String configPath = System.getProperty("user.home")  + File.separator + BOT_PATH + File.separator + CONFIG_PATH + File.separator + CHANNELS_PATH + File.separator + channelName.toLowerCase() + CONFIG_FILE_APPENDER;
+        try {
+            final Configuration configuration = loadChannelConfigurationInternally(configPath);
             LOG.info("Loaded [{}] configuration", channelName);
             return Optional.of(configuration);
         } catch (final Exception e) {
@@ -113,13 +126,21 @@ public class DefaultConfigurationServiceImpl implements ConfigurationService {
         return Optional.empty();
     }
 
-    private <T> T loadConfigurationInternally(final String path, Class<T> clazz) throws IOException {
+    private <T> T loadDefaultConfigurationInternally(final String path, Class<T> clazz) throws IOException {
         LOG.debug("Load configuration from the resource [{}] ...", path);
         final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         final InputStream is = classloader.getResourceAsStream(path);
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         final T configuration = mapper.readValue(is, clazz);
         LOG.debug("Loaded configuration from the resource [{}]", path);
+        return configuration;
+    }
+
+    private Configuration loadChannelConfigurationInternally(final String path) throws IOException {
+        LOG.debug("Load configuration from the path [{}] ...", path);
+        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        final Configuration configuration = mapper.readValue(new FileInputStream(path), Configuration.class);
+        LOG.debug("Loaded configuration from the path [{}]", path);
         return configuration;
     }
 
