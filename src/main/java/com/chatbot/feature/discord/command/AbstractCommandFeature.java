@@ -83,6 +83,6 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
         final String responseMessage = responseGenerator.generate(messageService.getStandardMessageForKey("message.discord.ufa.request"), false, true, true, BalabobaResponseGenerator.Style.FOLK_WISDOM);
 
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseMessage);
-        return responseMessage + " <:nasozvone:917475873765081148>";
+        return responseMessage + " <:Basedge:993919651685859349>";
     }
 }
