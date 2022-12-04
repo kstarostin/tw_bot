@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static MessageReactionFeature instance;
@@ -25,10 +26,14 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
      */
     private static final String PAUSEY = "Pausey";
     private static final String POGEY = "Pogey";
+    private static final String DESHOVKA = "deshovka";
     private static final Map<String, Map<String, Long>> CHANNEL_2_EMOTE_MAP = Map.of(
             OMSK_OMSK, Map.of(PAUSEY, 1035132999798358016L, POGEY, 1035133015040462869L),
-            RED_ROOM_ANNOUNCE, Map.of(PAUSEY, 987043617216536596L, POGEY, 980131980039573585L)
+            RED_ROOM_ANNOUNCE, Map.of(PAUSEY, 987043617216536596L, POGEY, 980131980039573585L, DESHOVKA, 950496796948447312L)
     );
+
+    private static final Set<String> NO_STREAM_TODAY_STRING_TOKENS = Set.of("сегодня без", "стрима не будет", "потока не будет", "завтра", "в понедельник", "во вторник", "в среду",
+            "в четверг", "в пятницу", "в субботу", "в воскресенье", "в день после");
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
 
@@ -59,14 +64,22 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY), message.getContent());
         ReactionEmoji reaction = null;
         if (isEveryone(message.getContent())) {
-            reaction = getReaction(channelId, "Pausey", false);
+            if (isNoStreamToday(message.getContent())) {
+                reaction = getReaction(channelId, DESHOVKA, false);
+            } else {
+                reaction = getReaction(channelId, PAUSEY, false);
+            }
             LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         if (hasStreamLink(message.getContent())) {
-            reaction = getReaction(channelId, "Pogey", false);
+            reaction = getReaction(channelId, POGEY, false);
             LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         return reaction != null ? message.addReaction(reaction) : Mono.empty();
+    }
+
+    private boolean isNoStreamToday(final String content) {
+        return NO_STREAM_TODAY_STRING_TOKENS.stream().anyMatch(token -> content.toLowerCase().contains(token));
     }
 
     private ReactionEmoji getReaction(final String channelId, final String reactionName, final boolean isAnimated) {
