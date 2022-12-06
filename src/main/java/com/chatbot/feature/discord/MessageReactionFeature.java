@@ -32,8 +32,8 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
             RED_ROOM_ANNOUNCE, Map.of(PAUSEY, 987043617216536596L, POGEY, 980131980039573585L, DESHOVKA, 950496796948447312L)
     );
 
-    private static final Set<String> NO_STREAM_TODAY_STRING_TOKENS = Set.of("сегодня без", "стрима не будет", "потока не будет", "завтра", "в понедельник", "во вторник", "в среду",
-            "в четверг", "в пятницу", "в субботу", "в воскресенье", "в день после");
+    private static final Set<String> NO_STREAM_TODAY_STRING_TOKENS = Set.of("сегодня без", "стрима не будет", "потока не будет", "не сегодня", "завтра", "в понедельник", "во вторник", "в среду",
+            "в четверг", "в пятницу", "в субботу", "в воскресенье", "в день после", "а вот");
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
 
