@@ -38,13 +38,16 @@ public class DefaultMessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void sendMessage(String channelName, String responseMessage) {
+    public void sendMessage(final String channelName, final String responseMessage) {
         sendMessage(channelName, responseMessage, true);
     }
 
     @Override
     public void sendMessage(final String channelName, final String responseMessage, final boolean isMuteChecked) {
         if (responseMessage.isEmpty()) {
+            return;
+        }
+        if (!configurationService.getBotName().equalsIgnoreCase(channelName) && !configurationService.getConfiguration().getTwitchChannels().contains(channelName)) {
             return;
         }
         if (isMuteChecked && configurationService.getConfiguration(channelName).isMuted()) {

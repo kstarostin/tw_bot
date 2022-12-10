@@ -1,6 +1,8 @@
 package com.chatbot.feature.twitch;
 
+import com.chatbot.service.MessageService;
 import com.chatbot.service.TwitchClientService;
+import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultTwitchClientServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -36,6 +38,8 @@ public class ChatCommandMessageFeature extends AbstractFeature {
 
     private static final String COMMAND_OFF_ARG = "off";
 
+    private static final String COMMAND_SEND_ARG = "send";
+
     private static final String MESSAGE_COMMAND_DEFAULT = "message.command.default";
     private static final String MESSAGE_COMMAND_UNAUTHORIZED = "message.command.unauthorized";
     private static final String MESSAGE_COMMAND_MUTE = "message.command.mute";
@@ -46,6 +50,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private static final int MAX_PROBABILITY = 100;
 
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
+    private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
     public ChatCommandMessageFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
@@ -79,7 +84,12 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     }
 
     private String[] parseCommandArgs(final String message) {
-        return message.replace(COMMAND_SYNTAX, StringUtils.EMPTY).trim().split(StringUtils.SPACE);
+        final String commandContent = message.replace(COMMAND_SYNTAX, StringUtils.EMPTY).trim();
+        if (StringUtils.isNotEmpty(commandContent) && commandContent.matches(COMMAND_SEND_ARG + "\\s[a-zA-Z_\\d]+\\s.+")) {
+            final String[] channelAndMessageToSend = commandContent.replaceFirst(COMMAND_SEND_ARG, StringUtils.EMPTY).trim().split(StringUtils.SPACE, 2);
+            return ArrayUtils.addAll(new String[]{COMMAND_SEND_ARG}, channelAndMessageToSend);
+        }
+        return commandContent.split(StringUtils.SPACE);
     }
 
     private String executeCommand(final String[] args, final String userName, final String channelName) {
@@ -88,15 +98,15 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         }
         switch (args[0].toLowerCase()) {
             case FEATURE_COMMAND_SET_ARG:
-                return executeSetFeatureCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
+                return executeSetFeatureCommand(ArrayUtils.removeElement(args, args[0]), channelName);
             case FEATURE_COMMAND_STATUS_ARG:
-                return executeStatusFeatureCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
+                return executeStatusFeatureCommand(ArrayUtils.removeElement(args, args[0]), channelName);
             case COMMAND_MUTE_ARG:
                 return executeMuteCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_UNMUTE_ARG:
                 return executeUnmuteCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_JOIN_ARG:
-                return executeJoinCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
+                return executeJoinCommand(ArrayUtils.removeElement(args, args[0]), userName);
             case COMMAND_LEAVE_ARG:
                 return executeLeaveCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_LOAD_ARG:
@@ -104,15 +114,17 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             case COMMAND_RESET_ARG:
                 return executeLoadConfigurationCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_CHANNELS_ARG:
-                return executeChannelsCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
+                return executeChannelsCommand(ArrayUtils.removeElement(args, args[0]), userName);
             case COMMAND_OFF_ARG:
                 return executeShutDownCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
+            case COMMAND_SEND_ARG:
+                return executeSendMessageCommand(ArrayUtils.removeElement(args, args[0]));
             default:
                 return StringUtils.EMPTY;
         }
     }
 
-    private String executeSetFeatureCommand(final String[] args, final String userName, final String channelName) {
+    private String executeSetFeatureCommand(final String[] args, final String channelName) {
         if (args.length < 2) {
             return StringUtils.EMPTY;
         }
@@ -147,7 +159,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         }
     }
 
-    private String executeStatusFeatureCommand(final String[] args, final String userName, final String channelName) {
+    private String executeStatusFeatureCommand(final String[] args, final String channelName) {
         if (args.length != 1) {
             return StringUtils.EMPTY;
         }
@@ -239,7 +251,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         }
     }
 
-    private String executeJoinCommand(final String[] args, final String userName, final String channelName) {
+    private String executeJoinCommand(final String[] args, final String userName) {
         if (args.length == 0) {
             return StringUtils.EMPTY; // can't join current channel when bot is not here
         } else if (args.length == 1) {
@@ -299,7 +311,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         return twitchClientService.getTwitchClient().getChat().getChannels().contains(channelName.toLowerCase());
     }
 
-    private String executeChannelsCommand(final String[] args, final String userName, final String channelName) {
+    private String executeChannelsCommand(final String[] args, final String userName) {
         if (args.length > 0) {
             return StringUtils.EMPTY;
         }
@@ -312,5 +324,14 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         } else {
             return String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED));
         }
+    }
+
+    private String executeSendMessageCommand(final String[] args) {
+        if (args.length != 2) {
+            return StringUtils.EMPTY;
+        }
+        // todo validate channel name
+        messageService.sendMessage(args[0].toLowerCase(), args[1]);
+        return messageService.getStandardMessageForKey("message.command.send");
     }
 }
