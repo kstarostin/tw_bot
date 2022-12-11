@@ -60,6 +60,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private static final String MESSAGE_COMMAND_CHANNELS = "message.command.channels.";
     private static final String MESSAGE_COMMAND_SHUTDOWN = "message.command.shutdown.";
     private static final String MESSAGE_COMMAND_SEND = "message.command.send.";
+    private static final String MESSAGE_COMMAND_EMOTE_EMPTY = "message.command.emote.empty.";
 
     private static final String CHANNEL_DEFAULT = "default";
 
@@ -368,23 +369,38 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     }
 
     private String execute7TVCommand(final String[] args, final String userName, final String channelName) {
+        final String emoteMessage;
         if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
-            return "@" + userName + StringUtils.SPACE + twitchEmoteService.getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage = twitchEmoteService.getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        } else {
+            emoteMessage = twitchEmoteService.getChannel7TVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
-        return "@" + userName + StringUtils.SPACE + twitchEmoteService.getChannel7TVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        return StringUtils.isNotEmpty(emoteMessage)
+                ? TAG_CHARACTER + userName + emoteMessage
+                : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_EMOTE_EMPTY + channelName.toLowerCase(), MESSAGE_COMMAND_EMOTE_EMPTY + CHANNEL_DEFAULT);
     }
 
     private String executeBTTVCommand(final String[] args, final String userName, final String channelName) {
+        final String emoteMessage;
         if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
-            return "@" + userName + StringUtils.SPACE + twitchEmoteService.getGlobalBTTVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage = twitchEmoteService.getGlobalBTTVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        } else {
+            emoteMessage = twitchEmoteService.getChannelBTTVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
-        return "@" + userName + StringUtils.SPACE + twitchEmoteService.getChannelBTTVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        return StringUtils.isNotEmpty(emoteMessage)
+                ? TAG_CHARACTER + userName + emoteMessage
+                : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_EMOTE_EMPTY + channelName.toLowerCase(), MESSAGE_COMMAND_EMOTE_EMPTY + CHANNEL_DEFAULT);
     }
 
     private String executeFFZCommand(final String[] args, final String userName, final String channelName) {
+        final String emoteMessage;
         if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
-            return "@" + userName + StringUtils.SPACE + twitchEmoteService.getGlobalFFZEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage = twitchEmoteService.getGlobalFFZEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        } else {
+            emoteMessage = twitchEmoteService.getChannelFFZEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
-        return "@" + userName + StringUtils.SPACE + twitchEmoteService.getChannelFFZEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        return StringUtils.isNotEmpty(emoteMessage)
+                ? TAG_CHARACTER + userName + emoteMessage
+                : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_EMOTE_EMPTY + channelName.toLowerCase(), MESSAGE_COMMAND_EMOTE_EMPTY + CHANNEL_DEFAULT);
     }
 }
