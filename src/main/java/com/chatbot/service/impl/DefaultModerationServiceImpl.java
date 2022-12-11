@@ -73,13 +73,13 @@ public class DefaultModerationServiceImpl implements ModerationService {
     @Override
     public void banUser(final String channelName, final String userName, final String reason) {
         final String command = String.format(messageService.getStandardMessageForKey("command.moderation.ban"), userName, reason);
-        messageService.sendMessage(channelName, command);
+        messageService.sendMessage(channelName, command, null);
     }
 
     @Override
     public void timeoutUser(final String channelName, final String userName, final String reason, final Integer duration) {
         final String command = String.format(messageService.getStandardMessageForKey("command.moderation.timeout"), userName, duration, reason);
-        messageService.sendMessage(channelName, command);
+        messageService.sendMessage(channelName, command, null);
     }
 
     @Override

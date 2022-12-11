@@ -44,7 +44,7 @@ public class ChatModerationFeature extends AbstractFeature {
                 responseMessage = String.format(messageService.getStandardMessageForKey("message.moderation.suspicious"), TAG_CHARACTER + userName);
             }
             if (StringUtils.isNotEmpty(responseMessage)) {
-                messageService.sendMessage(channelName, responseMessage);
+                messageService.sendMessage(channelName, responseMessage, null);
             }
         }
     }

@@ -5,6 +5,7 @@ import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.util.FeatureEnum;
 import com.chatbot.service.MessageService;
+import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,12 +39,12 @@ public class DefaultMessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void sendMessage(final String channelName, final String responseMessage) {
-        sendMessage(channelName, responseMessage, true);
+    public void sendMessage(final String channelName, final String responseMessage, final ChannelMessageEvent event) {
+        sendMessage(channelName, responseMessage, true, event);
     }
 
     @Override
-    public void sendMessage(final String channelName, final String responseMessage, final boolean isMuteChecked) {
+    public void sendMessage(final String channelName, final String responseMessage, final boolean isMuteChecked, final ChannelMessageEvent event) {
         if (responseMessage.isEmpty()) {
             return;
         }
@@ -57,11 +58,15 @@ public class DefaultMessageServiceImpl implements MessageService {
             final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
             LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , configurationService.getBotName(), responseMessage);
         }
-        twitchClientService.getTwitchClient().getChat().sendMessage(channelName, responseMessage);
+        if (event != null) {
+            event.reply(twitchClientService.getTwitchClient().getChat(), responseMessage);
+        } else {
+            twitchClientService.getTwitchClient().getChat().sendMessage(channelName, responseMessage);
+        }
     }
 
     @Override
-    public void sendMessageWithDelay(final String channelName, final String responseMessage, final int delay) {
+    public void sendMessageWithDelay(final String channelName, final String responseMessage, final int delay, final ChannelMessageEvent event) {
         if (configurationService.getConfiguration(channelName).isMuted()) {
             return;
         }
@@ -72,7 +77,7 @@ public class DefaultMessageServiceImpl implements MessageService {
                 new TimerTask() {
                     @Override
                     public void run() {
-                        sendMessage(channelName, responseMessage);
+                        sendMessage(channelName, responseMessage, event);
                     }
                 },
                 delay

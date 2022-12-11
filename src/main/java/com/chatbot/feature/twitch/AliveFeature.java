@@ -11,13 +11,20 @@ import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Random;
 import java.util.SplittableRandom;
 import java.util.stream.IntStream;
 
 public class AliveFeature extends AbstractFeature {
-
     private static final int RND_TRIGGER_MIN_PROBABILITY = 1;
     private static final int RND_TRIGGER_MAX_PROBABILITY = 100;
+
+    private final static MessageType[] RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP = {
+            MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE,
+            MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY,
+            MessageType.SEND_MESSAGE
+    };
+
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
     private final DayCacheService dayCacheService = DefaultDayCacheServiceImpl.getInstance();
@@ -36,16 +43,18 @@ public class AliveFeature extends AbstractFeature {
         if (isCommand(message) || moderationService.isSuspiciousMessage(channelName, message, event.getPermissions())) {
             return;
         }
-        if (isGreetingEnabled(channelName) && !isUserGreeted(userName)) {
-            final String responseMessage = String.format(messageService.getStandardMessageForKey("message.hello." + userName.toLowerCase()), TAG_CHARACTER + userName);
+        if (isGreetingEnabled(channelName) && !isUserGreeted(userName) && !isBotTagged(message)) {
+            String responseMessage = messageService.getStandardMessageForKey("message.hello." + channelName.toLowerCase() + "." + userName.toLowerCase());
+            if (StringUtils.isEmpty(responseMessage)) {
+                responseMessage = messageService.getStandardMessageForKey("message.hello.default." + userName.toLowerCase());
+            }
             if (StringUtils.isNotEmpty(responseMessage)) {
-                messageService.sendMessageWithDelay(channelName, responseMessage, calculateResponseDelayTime(responseMessage));
-                dayCacheService.cacheGreeting(userName);
+                greetWithDelay(channelName, userName, responseMessage, calculateResponseDelayTime(responseMessage), event);
             }
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger(channelName))) {
             final String responseMessage = balabobaResponseGenerator.generate(sanitizeRequestMessage(message), true, true, false);
             if (StringUtils.isNotEmpty(responseMessage)) {
-                messageService.sendMessageWithDelay(channelName, TAG_CHARACTER + userName + " " + responseMessage, calculateResponseDelayTime(responseMessage));
+                sendMessageWithDelay(channelName, userName, responseMessage, calculateResponseDelayTime(responseMessage), event);
             }
         }
     }
@@ -97,5 +106,52 @@ public class AliveFeature extends AbstractFeature {
             divider = dividerArray[(message.length() / maxDelayTime) > 0 ? (message.length() / maxDelayTime) - 1 : 0];
         }
         return message.length() * 1000 / divider;
+    }
+
+    private void greetWithDelay(final String channelName, final String userName, final String message, final int delay, final ChannelMessageEvent event) {
+        String responseMessage = message;
+        ChannelMessageEvent replyEvent = null;
+        switch (getReplyType()) {
+            case SEND_RESPONSE:
+                responseMessage = String.format(responseMessage, TAG_CHARACTER + userName);
+                break;
+            case SEND_REPLY:
+                responseMessage = String.format(responseMessage, StringUtils.EMPTY).trim();
+                replyEvent = event;
+                break;
+            case SEND_MESSAGE:
+                responseMessage = String.format(responseMessage, StringUtils.EMPTY).trim();
+                break;
+        }
+        messageService.sendMessageWithDelay(channelName, responseMessage, delay, replyEvent);
+        dayCacheService.cacheGreeting(userName);
+    }
+
+    private void sendMessageWithDelay(final String channelName, final String userName, final String message, final int delay, final ChannelMessageEvent event) {
+        switch (getReplyType()) {
+            case SEND_RESPONSE:
+                final boolean endsWithTag = new Random().nextInt(10) == 1; // whether tagging is placed in the beginning or in the end of the message; probability is 0.9 for the beginning, 0.1 for the end
+                final boolean isNoTagCharIncluded = new Random().nextInt(20) == 1; // whether tagged name contains @; probability is 0.95 for included, 0.05 for not included
+                final String taggedUserName = isNoTagCharIncluded ? userName : TAG_CHARACTER + userName;
+                messageService.sendMessageWithDelay(channelName, endsWithTag ? (message + StringUtils.SPACE + taggedUserName) : (taggedUserName + StringUtils.SPACE + message), delay, null);
+                break;
+            case SEND_REPLY:
+                messageService.sendMessageWithDelay(channelName, message, delay, event);
+                break;
+            case SEND_MESSAGE:
+                messageService.sendMessageWithDelay(channelName, message, delay, null);
+                break;
+        }
+    }
+
+    private MessageType getReplyType() {
+        int random = new Random().nextInt(RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP.length);
+        return RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP[random];
+    }
+
+    private enum MessageType {
+        SEND_RESPONSE,
+        SEND_REPLY,
+        SEND_MESSAGE;
     }
 }

@@ -16,6 +16,6 @@ public class ChannelNotificationOnSubscriptionFeature extends AbstractFeature {
         if (!isFeatureActive(channelName, FeatureEnum.SUBSCRIPTION) || (isActiveOnLiveStreamOnly(channelName) && !isStreamLive(event.getChannel().getName()))) {
             return;
         }
-        messageService.sendMessage(event.getChannel().getName(), String.format(messageService.getStandardMessageForKey("message.subscription.default"), userName));
+        messageService.sendMessage(event.getChannel().getName(), String.format(messageService.getStandardMessageForKey("message.subscription.default"), userName), null);
     }
 }

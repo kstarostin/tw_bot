@@ -63,15 +63,15 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         final String channelName = event.getChannel().getName();
         final String userName = event.getUser().getName();
         if (!isSuperAdmin(userName) && !isBroadcaster(userName, event.getChannel().getName())) {
-            messageService.sendMessage(channelName, String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED), userName), false);
+            messageService.sendMessage(channelName, String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED), userName), false, null);
         }
         final String[] commandArgs = parseCommandArgs(event.getMessage());
 
         final String responseMessage = executeCommand(commandArgs, userName, channelName);
         if (StringUtils.isNotEmpty(responseMessage)) {
-            messageService.sendMessage(channelName, String.format(responseMessage, userName), false);
+            messageService.sendMessage(channelName, String.format(responseMessage, userName), false, null);
         } else {
-            messageService.sendMessage(channelName, String.format(messageService.getStandardMessageForKey("message.command.error"), userName), false);
+            messageService.sendMessage(channelName, String.format(messageService.getStandardMessageForKey("message.command.error"), userName), false, null);
         }
     }
 
@@ -331,7 +331,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             return StringUtils.EMPTY;
         }
         // todo validate channel name
-        messageService.sendMessage(args[0].toLowerCase(), args[1]);
+        messageService.sendMessage(args[0].toLowerCase(), args[1], null);
         return messageService.getStandardMessageForKey("message.command.send");
     }
 }
