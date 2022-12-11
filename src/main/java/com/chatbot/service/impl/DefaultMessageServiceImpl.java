@@ -90,4 +90,13 @@ public class DefaultMessageServiceImpl implements MessageService {
         final String[] messages = StringUtils.isNotEmpty(propertyMessage) ? propertyMessage.split("\\|") : new String[0];
         return messages.length > 0 ? messages[new Random().nextInt(messages.length)] : StringUtils.EMPTY;
     }
+
+    @Override
+    public String getPersonalizedMessageForKey(final String personalizedKey, final String defaultKey) {
+        final String message = getStandardMessageForKey(personalizedKey);
+        if (StringUtils.isEmpty(message)) {
+            return getStandardMessageForKey(defaultKey);
+        }
+        return message;
+    }
 }

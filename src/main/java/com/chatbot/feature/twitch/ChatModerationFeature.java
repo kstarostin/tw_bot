@@ -31,17 +31,17 @@ public class ChatModerationFeature extends AbstractFeature {
             int violationPoints = calculateViolationPoints(message, event);
 
             if (violationPoints >= getViolationPointsThresholdToBan(channelName)) {
-                final String banReasonMessage = messageService.getStandardMessageForKey("message.moderation.ban.reason");
+                final String banReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.ban.reason." + channelName.toLowerCase(), "message.moderation.ban.reason.default");
                 moderationService.banUser(channelName, event.getUser().getName(), banReasonMessage);
 
-                responseMessage = String.format(messageService.getStandardMessageForKey("message.moderation.ban"), TAG_CHARACTER + userName);
+                responseMessage = String.format(messageService.getPersonalizedMessageForKey("message.moderation.ban." + channelName.toLowerCase(), "message.moderation.ban.default"), TAG_CHARACTER + userName);
             } else if (violationPoints >= getViolationPointsThresholdToTimeout(channelName)) {
-                final String muteReasonMessage = messageService.getStandardMessageForKey("message.moderation.timeout.reason");
+                final String muteReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.timeout.reason." + channelName.toLowerCase(), "message.moderation.timeout.reason.default");
                 moderationService.timeoutUser(channelName, event.getUser().getName(), muteReasonMessage, getAutoTimeoutTimeSeconds(channelName));
 
-                responseMessage = String.format(messageService.getStandardMessageForKey("message.moderation.timeout"), TAG_CHARACTER + userName);
+                responseMessage = String.format(messageService.getPersonalizedMessageForKey("message.moderation.timeout." + channelName.toLowerCase(), "message.moderation.timeout.default"), TAG_CHARACTER + userName);
             } else {
-                responseMessage = String.format(messageService.getStandardMessageForKey("message.moderation.suspicious"), TAG_CHARACTER + userName);
+                responseMessage = String.format(messageService.getPersonalizedMessageForKey("message.moderation.suspicious." + channelName.toLowerCase(), "message.moderation.suspicious.default"), TAG_CHARACTER + userName);
             }
             if (StringUtils.isNotEmpty(responseMessage)) {
                 messageService.sendMessage(channelName, responseMessage, null);

@@ -40,11 +40,19 @@ public class ChatCommandMessageFeature extends AbstractFeature {
 
     private static final String COMMAND_SEND_ARG = "send";
 
-    private static final String MESSAGE_COMMAND_DEFAULT = "message.command.default";
-    private static final String MESSAGE_COMMAND_UNAUTHORIZED = "message.command.unauthorized";
-    private static final String MESSAGE_COMMAND_MUTE = "message.command.mute";
-    private static final String MESSAGE_COMMAND_UNMUTE = "message.command.unmute";
-    private static final String MESSAGE_COMMAND_LOAD_CONFIGURATION = "message.command.load.configuration";
+    private static final String MESSAGE_COMMAND_DEFAULT = "message.command.default.";
+    private static final String MESSAGE_COMMAND_UNAUTHORIZED = "message.command.unauthorized.";
+    private static final String MESSAGE_COMMAND_ERROR = "message.command.error.";
+    private static final String MESSAGE_COMMAND_MUTE = "message.command.mute.";
+    private static final String MESSAGE_COMMAND_UNMUTE = "message.command.unmute.";
+    private static final String MESSAGE_COMMAND_JOIN = "message.command.join.";
+    private static final String MESSAGE_COMMAND_LEAVE = "message.command.leave.";
+    private static final String MESSAGE_COMMAND_LOAD_CONFIGURATION = "message.command.load.configuration.";
+    private static final String MESSAGE_COMMAND_CHANNELS = "message.command.channels.";
+    private static final String MESSAGE_COMMAND_SHUTDOWN = "message.command.shutdown.";
+    private static final String MESSAGE_COMMAND_SEND = "message.command.send.";
+
+    private static final String CHANNEL_DEFAULT = "default";
 
     private static final int MIN_PROBABILITY = 0;
     private static final int MAX_PROBABILITY = 100;
@@ -63,7 +71,8 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         final String channelName = event.getChannel().getName();
         final String userName = event.getUser().getName();
         if (!isSuperAdmin(userName) && !isBroadcaster(userName, event.getChannel().getName())) {
-            messageService.sendMessage(channelName, String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED), userName), false, null);
+            final String message = messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT);
+            messageService.sendMessage(channelName, String.format(message, userName), false, null);
         }
         final String[] commandArgs = parseCommandArgs(event.getMessage());
 
@@ -71,7 +80,8 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         if (StringUtils.isNotEmpty(responseMessage)) {
             messageService.sendMessage(channelName, String.format(responseMessage, userName), false, null);
         } else {
-            messageService.sendMessage(channelName, String.format(messageService.getStandardMessageForKey("message.command.error"), userName), false, null);
+            final String errorMessage = messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_ERROR + channelName.toLowerCase(), MESSAGE_COMMAND_ERROR + CHANNEL_DEFAULT);
+            messageService.sendMessage(channelName, String.format(errorMessage, userName), false, null);
         }
     }
 
@@ -106,7 +116,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             case COMMAND_UNMUTE_ARG:
                 return executeUnmuteCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_JOIN_ARG:
-                return executeJoinCommand(ArrayUtils.removeElement(args, args[0]), userName);
+                return executeJoinCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_LEAVE_ARG:
                 return executeLeaveCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_LOAD_ARG:
@@ -114,11 +124,11 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             case COMMAND_RESET_ARG:
                 return executeLoadConfigurationCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_CHANNELS_ARG:
-                return executeChannelsCommand(ArrayUtils.removeElement(args, args[0]), userName);
+                return executeChannelsCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_OFF_ARG:
                 return executeShutDownCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_SEND_ARG:
-                return executeSendMessageCommand(ArrayUtils.removeElement(args, args[0]));
+                return executeSendMessageCommand(ArrayUtils.removeElement(args, args[0]), channelName);
             default:
                 return StringUtils.EMPTY;
         }
@@ -140,10 +150,10 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         switch (args[1]) {
             case FEATURE_COMMAND_ON_ARG:
                 features.forEach(feature -> botFeatureService.setTwitchFeatureStatus(channelName, feature, true));
-                return messageService.getStandardMessageForKey(MESSAGE_COMMAND_DEFAULT);
+                return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_DEFAULT + channelName.toLowerCase(), MESSAGE_COMMAND_DEFAULT + CHANNEL_DEFAULT);
             case FEATURE_COMMAND_OFF_ARG:
                 features.forEach(feature -> botFeatureService.setTwitchFeatureStatus(channelName, feature, false));
-                return messageService.getStandardMessageForKey(MESSAGE_COMMAND_DEFAULT);
+                return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_DEFAULT + channelName.toLowerCase(), MESSAGE_COMMAND_DEFAULT + CHANNEL_DEFAULT);
             default:
                 if (StringUtils.isNumeric(args[1])) {
                     int probability = NumberUtils.toInt(args[1]);
@@ -153,7 +163,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
                         probability = MAX_PROBABILITY;
                     }
                     configurationService.getConfiguration(channelName).setIndependenceRate(probability);
-                    return messageService.getStandardMessageForKey(MESSAGE_COMMAND_DEFAULT);
+                    return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_DEFAULT + channelName.toLowerCase(), MESSAGE_COMMAND_DEFAULT + CHANNEL_DEFAULT);
                 }
                 return StringUtils.EMPTY;
         }
@@ -203,21 +213,27 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private String executeMuteUnmuteCommand(final String[] args, final String userName, final String channelName, final boolean isMuted) {
         if (args.length == 0) {
             configurationService.getConfiguration(channelName).setMuted(isMuted);
-            return messageService.getStandardMessageForKey(isMuted ? MESSAGE_COMMAND_MUTE : MESSAGE_COMMAND_UNMUTE);
+            return isMuted
+                    ? messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_MUTE + channelName.toLowerCase(), MESSAGE_COMMAND_MUTE + CHANNEL_DEFAULT)
+                    : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNMUTE + channelName.toLowerCase(), MESSAGE_COMMAND_UNMUTE + CHANNEL_DEFAULT);
         } else if (args.length == 1) {
             if (COMMAND_ALL_ARG.equalsIgnoreCase(args[0])) {
                 if (isSuperAdmin(userName)) {
                     configurationService.getConfiguration().getChannelConfigurations().values().forEach(configuration -> configuration.setMuted(isMuted));
-                    return messageService.getStandardMessageForKey(isMuted ? MESSAGE_COMMAND_MUTE : MESSAGE_COMMAND_UNMUTE);
+                    return isMuted
+                            ? messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_MUTE + channelName.toLowerCase(), MESSAGE_COMMAND_MUTE + CHANNEL_DEFAULT)
+                            : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNMUTE + channelName.toLowerCase(), MESSAGE_COMMAND_UNMUTE + CHANNEL_DEFAULT);
                 } else {
-                    return String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED));
+                    return String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT));
                 }
             } else if (isChannelJoined(args[0].toLowerCase())) {
                 if (isSuperAdmin(userName)) {
                     configurationService.getConfiguration(args[0].toLowerCase()).setMuted(isMuted);
-                    return messageService.getStandardMessageForKey(isMuted ? MESSAGE_COMMAND_MUTE : MESSAGE_COMMAND_UNMUTE);
+                    return isMuted
+                            ? messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_MUTE + channelName.toLowerCase(), MESSAGE_COMMAND_MUTE + CHANNEL_DEFAULT)
+                            : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNMUTE + channelName.toLowerCase(), MESSAGE_COMMAND_UNMUTE + CHANNEL_DEFAULT);
                 } else {
-                    return String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED));
+                    return String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT));
                 }
             } else {
                 return StringUtils.EMPTY;
@@ -233,7 +249,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         }
         if (isSuperAdmin(userName)) {
             try {
-                return messageService.getStandardMessageForKey("message.command.shutdown");
+                return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_SHUTDOWN + channelName.toLowerCase(), MESSAGE_COMMAND_SHUTDOWN + CHANNEL_DEFAULT);
             } finally {
                 new Timer().schedule(
                         new TimerTask() {
@@ -251,16 +267,16 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         }
     }
 
-    private String executeJoinCommand(final String[] args, final String userName) {
+    private String executeJoinCommand(final String[] args, final String userName, final String channelName) {
         if (args.length == 0) {
             return StringUtils.EMPTY; // can't join current channel when bot is not here
         } else if (args.length == 1) {
             if (isSuperAdmin(userName)) {
                 // todo validate channel name
                 channelService.joinChannel(args[0].toLowerCase());
-                return messageService.getStandardMessageForKey("message.command.join") + StringUtils.SPACE + args[0].toLowerCase();
+                return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_JOIN + channelName.toLowerCase(), MESSAGE_COMMAND_JOIN + CHANNEL_DEFAULT) + StringUtils.SPACE + args[0].toLowerCase();
             } else {
-                return String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED));
+                return String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT));
             }
         } else {
             return StringUtils.EMPTY;
@@ -270,17 +286,17 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private String executeLeaveCommand(final String[] args, final String userName, final String channelName) {
         if (args.length == 0) {
             channelService.leaveChannel(channelName); // leave current channel
-            return messageService.getStandardMessageForKey("message.command.leave") + StringUtils.SPACE + channelName;
+            return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_LEAVE + channelName.toLowerCase(), MESSAGE_COMMAND_LEAVE + CHANNEL_DEFAULT) + StringUtils.SPACE + channelName;
         } else if (args.length == 1) {
             if (isSuperAdmin(userName)) {
                 if (isChannelJoined(args[0].toLowerCase())) {
                     channelService.leaveChannel(args[0].toLowerCase());
-                    return messageService.getStandardMessageForKey("message.command.leave") + StringUtils.SPACE + args[0].toLowerCase();
+                    return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_LEAVE + channelName.toLowerCase(), MESSAGE_COMMAND_LEAVE + CHANNEL_DEFAULT) + StringUtils.SPACE + args[0].toLowerCase();
                 } else {
                     return StringUtils.EMPTY;
                 }
             } else {
-                return String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED));
+                return String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT));
             }
         } else {
             return StringUtils.EMPTY;
@@ -290,17 +306,17 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private String executeLoadConfigurationCommand(final String[] args, final String userName, final String channelName) {
         if (args.length == 0) {
             configurationService.loadConfiguration(channelName);
-            return messageService.getStandardMessageForKey(MESSAGE_COMMAND_LOAD_CONFIGURATION) + StringUtils.SPACE + channelName;
+            return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_LOAD_CONFIGURATION + channelName.toLowerCase(), MESSAGE_COMMAND_LOAD_CONFIGURATION + CHANNEL_DEFAULT) + StringUtils.SPACE + channelName;
         } else if (args.length == 1) {
             if (isSuperAdmin(userName)) {
                 if (isChannelJoined(args[0].toLowerCase())) {
                     configurationService.loadConfiguration(channelName);
-                    return messageService.getStandardMessageForKey(MESSAGE_COMMAND_LOAD_CONFIGURATION) + StringUtils.SPACE + args[0].toLowerCase();
+                    return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_LOAD_CONFIGURATION + channelName.toLowerCase(), MESSAGE_COMMAND_LOAD_CONFIGURATION + CHANNEL_DEFAULT) + StringUtils.SPACE + args[0].toLowerCase();
                 } else {
                     return StringUtils.EMPTY;
                 }
             } else {
-                return String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED));
+                return String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT));
             }
         } else {
             return StringUtils.EMPTY;
@@ -311,7 +327,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         return twitchClientService.getTwitchClient().getChat().getChannels().contains(channelName.toLowerCase());
     }
 
-    private String executeChannelsCommand(final String[] args, final String userName) {
+    private String executeChannelsCommand(final String[] args, final String userName, final String channelName) {
         if (args.length > 0) {
             return StringUtils.EMPTY;
         }
@@ -320,18 +336,18 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             twitchClientService.getTwitchClient().getChat().getChannels().forEach(channel -> {
                 messageBuilder.append(channel).append(" | ");
             });
-            return messageService.getStandardMessageForKey("message.command.channels") + StringUtils.SPACE + StringUtils.chop(messageBuilder.toString().trim());
+            return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_CHANNELS + channelName.toLowerCase(), MESSAGE_COMMAND_CHANNELS + CHANNEL_DEFAULT) + StringUtils.SPACE + StringUtils.chop(messageBuilder.toString().trim());
         } else {
-            return String.format(messageService.getStandardMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED));
+            return String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT));
         }
     }
 
-    private String executeSendMessageCommand(final String[] args) {
+    private String executeSendMessageCommand(final String[] args, final String channelName) {
         if (args.length != 2) {
             return StringUtils.EMPTY;
         }
         // todo validate channel name
         messageService.sendMessage(args[0].toLowerCase(), args[1], null);
-        return messageService.getStandardMessageForKey("message.command.send");
+        return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_SEND + channelName.toLowerCase(), MESSAGE_COMMAND_SEND + CHANNEL_DEFAULT);
     }
 }

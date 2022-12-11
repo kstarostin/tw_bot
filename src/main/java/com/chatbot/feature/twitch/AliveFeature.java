@@ -44,10 +44,7 @@ public class AliveFeature extends AbstractFeature {
             return;
         }
         if (isGreetingEnabled(channelName) && !isUserGreeted(userName) && !isBotTagged(message)) {
-            String responseMessage = messageService.getStandardMessageForKey("message.hello." + channelName.toLowerCase() + "." + userName.toLowerCase());
-            if (StringUtils.isEmpty(responseMessage)) {
-                responseMessage = messageService.getStandardMessageForKey("message.hello.default." + userName.toLowerCase());
-            }
+            final String responseMessage = messageService.getPersonalizedMessageForKey("message.hello." + channelName.toLowerCase() + "." + userName.toLowerCase(), "message.hello.default." + userName.toLowerCase());
             if (StringUtils.isNotEmpty(responseMessage)) {
                 greetWithDelay(channelName, userName, responseMessage, calculateResponseDelayTime(responseMessage), event);
             }
