@@ -129,7 +129,7 @@ public class DefaultMessageServiceImpl implements MessageService {
                     splitMessages.add(shortenedMessage);
                 }
             }
-            return splitMessages.stream().map(StringBuilder::toString).collect(Collectors.toList());
+            return splitMessages.stream().map(sb -> sb.toString().trim()).collect(Collectors.toList());
         } else {
             return List.of(message);
         }

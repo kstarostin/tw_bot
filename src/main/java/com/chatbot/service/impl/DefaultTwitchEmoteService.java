@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DefaultTwitchEmoteService implements TwitchEmoteService {
@@ -55,6 +56,24 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     public List<SevenTVEmote> getChannel7TVEmotes(final String channelName) {
         final String requestUrl = API_URL_7TV + API_CHANNEL_EMOTES_PATH_7TV.replace(USER_PATH_VAR, channelName.toLowerCase());
         return get7TVEmotes(requestUrl);
+    }
+
+    @Override
+    public List<SevenTVEmote> getGlobalBTTVEmotes() {
+        return Collections.emptyList(); // todo implement
+    }
+    @Override
+    public List<SevenTVEmote> getChannelBTTVEmotes(String channelName) {
+        return Collections.emptyList(); // todo implement
+    }
+
+    @Override
+    public List<SevenTVEmote> getGlobalFFZEmotes() {
+        return Collections.emptyList(); // todo implement
+    }
+    @Override
+    public List<SevenTVEmote> getChannelFFZEmotes(String channelName) {
+        return Collections.emptyList(); // todo implement
     }
 
     private List<SevenTVEmote> get7TVEmotes(final String url) {

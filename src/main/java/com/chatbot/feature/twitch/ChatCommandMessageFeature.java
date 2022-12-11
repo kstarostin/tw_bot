@@ -45,6 +45,8 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private static final String COMMAND_SEND_ARG = "send";
 
     private static final String COMMAND_7TV_ARG = "7tv";
+    private static final String COMMAND_BTTV_ARG = "bttv";
+    private static final String COMMAND_FFZ_ARG = "ffz";
     private static final String COMMAND_GLOBAL_ARG = "global";
 
     private static final String MESSAGE_COMMAND_DEFAULT = "message.command.default.";
@@ -138,7 +140,11 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             case COMMAND_SEND_ARG:
                 return executeSendMessageCommand(ArrayUtils.removeElement(args, args[0]), channelName);
             case COMMAND_7TV_ARG:
-                return execute7TvCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
+                return execute7TVCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
+            case COMMAND_BTTV_ARG:
+                return executeBTTVCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
+            case COMMAND_FFZ_ARG:
+                return executeFFZCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             default:
                 return StringUtils.EMPTY;
         }
@@ -361,10 +367,24 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_SEND + channelName.toLowerCase(), MESSAGE_COMMAND_SEND + CHANNEL_DEFAULT);
     }
 
-    private String execute7TvCommand(final String[] args, final String userName, final String channelName) {
+    private String execute7TVCommand(final String[] args, final String userName, final String channelName) {
         if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
             return "@" + userName + StringUtils.SPACE + twitchEmoteService.getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return "@" + userName + StringUtils.SPACE + twitchEmoteService.getChannel7TVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+    }
+
+    private String executeBTTVCommand(final String[] args, final String userName, final String channelName) {
+        if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
+            return "@" + userName + StringUtils.SPACE + twitchEmoteService.getGlobalBTTVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        }
+        return "@" + userName + StringUtils.SPACE + twitchEmoteService.getChannelBTTVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+    }
+
+    private String executeFFZCommand(final String[] args, final String userName, final String channelName) {
+        if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
+            return "@" + userName + StringUtils.SPACE + twitchEmoteService.getGlobalFFZEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        }
+        return "@" + userName + StringUtils.SPACE + twitchEmoteService.getChannelFFZEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
     }
 }
