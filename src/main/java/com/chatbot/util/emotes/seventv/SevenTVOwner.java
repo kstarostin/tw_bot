@@ -1,11 +1,11 @@
 package com.chatbot.util.emotes.seventv;
 
-public class SevenTVEmoteOwner {
+public class SevenTVOwner {
     private String id;
     private String twitch_id;
     private String login;
     private String display_name;
-    private SevenTVEmoteOwnerRole role;
+    private SevenTVRole role;
 
     public String getId() {
         return id;
@@ -39,11 +39,11 @@ public class SevenTVEmoteOwner {
         this.display_name = display_name;
     }
 
-    public SevenTVEmoteOwnerRole getRole() {
+    public SevenTVRole getRole() {
         return role;
     }
 
-    public void setRole(SevenTVEmoteOwnerRole role) {
+    public void setRole(SevenTVRole role) {
         this.role = role;
     }
 }

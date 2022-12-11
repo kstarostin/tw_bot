@@ -1,11 +1,17 @@
 package com.chatbot.service.impl;
 
 import com.chatbot.service.TwitchEmoteService;
+import com.chatbot.util.emotes.ffz.FFZ;
+import com.chatbot.util.emotes.ffz.FFZEmoticon;
+import com.chatbot.util.emotes.ffz.FFZGlobal;
+import com.chatbot.util.emotes.ffz.FFZRootObject;
 import com.chatbot.util.emotes.seventv.SevenTVEmote;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +26,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DefaultTwitchEmoteService implements TwitchEmoteService {
     private static DefaultTwitchEmoteService instance;
@@ -33,6 +43,16 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     private static final String API_URL_7TV = "https://api.7tv.app/v2/";
     private static final String API_CHANNEL_EMOTES_PATH_7TV = "users/" + USER_PATH_VAR + "/emotes";
     private static final String API_GLOBAL_EMOTES_PATH_7TV = "emotes/global";
+
+    private static final String API_URL_FFZ = "https://api.frankerfacez.com/v1/";
+    private static final String API_ROOM_PATH_FFZ = "room/" + USER_PATH_VAR;
+    private static final String API_GLOBAL_EMOTES_PATH_FFZ = "set/global";
+
+    private static final String API_URL_BTTV = "https://api.betterttv.net/3/";
+    private static final String API_CHANNEL_EMOTES_PATH_BTTV = "cached/users/twitch/" + USER_PATH_VAR;
+    private static final String API_GLOBAL_EMOTES_PATH_BTTV = "cached/emotes/global";
+
+    private static final Set<Long> FFZ_SET_ID_LIST_TO_IGNORE = Set.of(4330L);
 
     final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -60,20 +80,26 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
 
     @Override
     public List<SevenTVEmote> getGlobalBTTVEmotes() {
-        return Collections.emptyList(); // todo implement
-    }
-    @Override
-    public List<SevenTVEmote> getChannelBTTVEmotes(String channelName) {
+        final String requestUrl = API_URL_BTTV + API_GLOBAL_EMOTES_PATH_BTTV;
         return Collections.emptyList(); // todo implement
     }
 
     @Override
-    public List<SevenTVEmote> getGlobalFFZEmotes() {
+    public List<SevenTVEmote> getChannelBTTVEmotes(final String channelName) {
+        final String requestUrl = API_URL_BTTV + API_CHANNEL_EMOTES_PATH_BTTV.replace(USER_PATH_VAR, channelName.toLowerCase());
         return Collections.emptyList(); // todo implement
     }
+
     @Override
-    public List<SevenTVEmote> getChannelFFZEmotes(String channelName) {
-        return Collections.emptyList(); // todo implement
+    public List<FFZEmoticon> getGlobalFFZEmotes() {
+        final String requestUrl = API_URL_FFZ + API_GLOBAL_EMOTES_PATH_FFZ;
+        return getFFZEmotes(requestUrl, FFZGlobal.class);
+    }
+
+    @Override
+    public List<FFZEmoticon> getChannelFFZEmotes(final String channelName) {
+        final String requestUrl = API_URL_FFZ + API_ROOM_PATH_FFZ.replace(USER_PATH_VAR, channelName.toLowerCase());
+        return getFFZEmotes(requestUrl, FFZ.class);
     }
 
     private List<SevenTVEmote> get7TVEmotes(final String url) {
@@ -86,6 +112,24 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
                     emotes.add(objectMapper.readValue(jsonArray.getJSONObject(i).toString(), SevenTVEmote.class));
                 }
             }
+        } catch (final Exception e) {
+            LOG.error("Error: ", e);
+        }
+        return emotes;
+    }
+
+    private <T extends FFZRootObject> List<FFZEmoticon> getFFZEmotes(final String url, final Class<T> rootClass) {
+        final List<FFZEmoticon> emotes = new ArrayList<>();
+        try {
+            doTrustToCertificates();
+            final JSONObject json = new JSONObject(IOUtils.toString(new URL(url), StandardCharsets.UTF_8));
+            final T ffz = objectMapper.readValue(json.toString(), rootClass);
+            emotes.addAll(CollectionUtils.emptyIfNull(ffz.getSets().values()).stream()
+                    .filter(set -> !FFZ_SET_ID_LIST_TO_IGNORE.contains(set.getId()))
+                    .map(set -> Arrays.asList(set.getEmoticons()))
+                    .flatMap(Collection::stream)
+                    .filter(emoticon -> !emoticon.isHidden())
+                    .collect(Collectors.toList()));
         } catch (final Exception e) {
             LOG.error("Error: ", e);
         }

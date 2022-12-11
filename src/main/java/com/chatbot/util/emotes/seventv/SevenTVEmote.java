@@ -3,7 +3,7 @@ package com.chatbot.util.emotes.seventv;
 public class SevenTVEmote {
     private String id;
     private String name;
-    private SevenTVEmoteOwner owner;
+    private SevenTVOwner owner;
     private long visibility;
     //private String[] visibility_simple;
     private String mime;
@@ -30,11 +30,11 @@ public class SevenTVEmote {
         this.name = name;
     }
 
-    public SevenTVEmoteOwner getOwner() {
+    public SevenTVOwner getOwner() {
         return owner;
     }
 
-    public void setOwner(SevenTVEmoteOwner owner) {
+    public void setOwner(SevenTVOwner owner) {
         this.owner = owner;
     }
 

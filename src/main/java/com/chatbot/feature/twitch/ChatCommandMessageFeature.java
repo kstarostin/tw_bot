@@ -7,6 +7,7 @@ import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultTwitchClientServiceImpl;
 import com.chatbot.service.impl.DefaultTwitchEmoteService;
 import com.chatbot.util.FeatureEnum;
+import com.chatbot.util.emotes.ffz.FFZEmoticon;
 import com.chatbot.util.emotes.seventv.SevenTVEmote;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
@@ -376,7 +377,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             emoteMessage = twitchEmoteService.getChannel7TVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return StringUtils.isNotEmpty(emoteMessage)
-                ? TAG_CHARACTER + userName + emoteMessage
+                ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage
                 : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_EMOTE_EMPTY + channelName.toLowerCase(), MESSAGE_COMMAND_EMOTE_EMPTY + CHANNEL_DEFAULT);
     }
 
@@ -388,19 +389,19 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             emoteMessage = twitchEmoteService.getChannelBTTVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return StringUtils.isNotEmpty(emoteMessage)
-                ? TAG_CHARACTER + userName + emoteMessage
+                ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage
                 : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_EMOTE_EMPTY + channelName.toLowerCase(), MESSAGE_COMMAND_EMOTE_EMPTY + CHANNEL_DEFAULT);
     }
 
     private String executeFFZCommand(final String[] args, final String userName, final String channelName) {
         final String emoteMessage;
         if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
-            emoteMessage = twitchEmoteService.getGlobalFFZEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage = twitchEmoteService.getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
         } else {
-            emoteMessage = twitchEmoteService.getChannelFFZEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage = twitchEmoteService.getChannelFFZEmotes(channelName).stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return StringUtils.isNotEmpty(emoteMessage)
-                ? TAG_CHARACTER + userName + emoteMessage
+                ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage
                 : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_EMOTE_EMPTY + channelName.toLowerCase(), MESSAGE_COMMAND_EMOTE_EMPTY + CHANNEL_DEFAULT);
     }
 }

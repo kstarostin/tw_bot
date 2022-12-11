@@ -1,6 +1,6 @@
 package com.chatbot.util.emotes.seventv;
 
-public class SevenTVEmoteOwnerRole {
+public class SevenTVRole {
     private String id;
     private String name;
     private long position;
