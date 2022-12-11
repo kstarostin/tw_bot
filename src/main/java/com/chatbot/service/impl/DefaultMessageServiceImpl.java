@@ -11,10 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
 
 
 public class DefaultMessageServiceImpl implements MessageService {
@@ -23,6 +26,8 @@ public class DefaultMessageServiceImpl implements MessageService {
     private final Logger LOG = LoggerFactory.getLogger(DefaultMessageServiceImpl.class);
 
     private static final String DATE_FORMAT = "dd-MM-yyyy HH:mm:ss";
+
+    private static final int MAX_MESSAGE_LENGTH = 450;
 
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
@@ -58,11 +63,21 @@ public class DefaultMessageServiceImpl implements MessageService {
             final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
             LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , configurationService.getBotName(), responseMessage);
         }
-        if (event != null) {
-            event.reply(twitchClientService.getTwitchClient().getChat(), responseMessage);
+        final List<String> messageParts = new ArrayList<>();
+
+        if (responseMessage.length() > MAX_MESSAGE_LENGTH) {
+            messageParts.addAll(splitByMaxLength(responseMessage));
         } else {
-            twitchClientService.getTwitchClient().getChat().sendMessage(channelName, responseMessage);
+            messageParts.add(responseMessage);
         }
+
+        messageParts.forEach(part -> {
+            if (event != null) {
+                event.reply(twitchClientService.getTwitchClient().getChat(), part);
+            } else {
+                twitchClientService.getTwitchClient().getChat().sendMessage(channelName, part);
+            }
+        });
     }
 
     @Override
@@ -98,5 +113,25 @@ public class DefaultMessageServiceImpl implements MessageService {
             return getStandardMessageForKey(defaultKey);
         }
         return message;
+    }
+
+    private List<String> splitByMaxLength(final String message) {
+        final String[] words = message.split("\\s+");
+        if (words.length > 1) {
+            final List<StringBuilder> splitMessages = new ArrayList<>();
+            StringBuilder shortenedMessage = new StringBuilder();
+            splitMessages.add(shortenedMessage);
+            for (final String word : words) {
+                if (shortenedMessage.length() + word.length() + 1 <= MAX_MESSAGE_LENGTH) {
+                    shortenedMessage.append(word).append(StringUtils.SPACE);
+                } else if (StringUtils.isNotEmpty(shortenedMessage.toString())) {
+                    shortenedMessage = new StringBuilder();
+                    splitMessages.add(shortenedMessage);
+                }
+            }
+            return splitMessages.stream().map(StringBuilder::toString).collect(Collectors.toList());
+        } else {
+            return List.of(message);
+        }
     }
 }

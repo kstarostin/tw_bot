@@ -2,9 +2,12 @@ package com.chatbot.feature.twitch;
 
 import com.chatbot.service.MessageService;
 import com.chatbot.service.TwitchClientService;
+import com.chatbot.service.TwitchEmoteService;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultTwitchClientServiceImpl;
+import com.chatbot.service.impl.DefaultTwitchEmoteService;
 import com.chatbot.util.FeatureEnum;
+import com.chatbot.util.emotes.seventv.SevenTVEmote;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.lang3.ArrayUtils;
@@ -14,6 +17,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
 
 public class ChatCommandMessageFeature extends AbstractFeature {
     private static final String FEATURE_COMMAND_SET_ARG = "set";
@@ -40,6 +44,9 @@ public class ChatCommandMessageFeature extends AbstractFeature {
 
     private static final String COMMAND_SEND_ARG = "send";
 
+    private static final String COMMAND_7TV_ARG = "7tv";
+    private static final String COMMAND_GLOBAL_ARG = "global";
+
     private static final String MESSAGE_COMMAND_DEFAULT = "message.command.default.";
     private static final String MESSAGE_COMMAND_UNAUTHORIZED = "message.command.unauthorized.";
     private static final String MESSAGE_COMMAND_ERROR = "message.command.error.";
@@ -59,6 +66,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
 
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
+    private final TwitchEmoteService twitchEmoteService = DefaultTwitchEmoteService.getInstance();
 
     public ChatCommandMessageFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
@@ -129,6 +137,8 @@ public class ChatCommandMessageFeature extends AbstractFeature {
                 return executeShutDownCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_SEND_ARG:
                 return executeSendMessageCommand(ArrayUtils.removeElement(args, args[0]), channelName);
+            case COMMAND_7TV_ARG:
+                return execute7TvCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             default:
                 return StringUtils.EMPTY;
         }
@@ -349,5 +359,12 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         // todo validate channel name
         messageService.sendMessage(args[0].toLowerCase(), args[1], null);
         return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_SEND + channelName.toLowerCase(), MESSAGE_COMMAND_SEND + CHANNEL_DEFAULT);
+    }
+
+    private String execute7TvCommand(final String[] args, final String userName, final String channelName) {
+        if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
+            return "@" + userName + StringUtils.SPACE + twitchEmoteService.getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        }
+        return "@" + userName + StringUtils.SPACE + twitchEmoteService.getChannel7TVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
     }
 }
