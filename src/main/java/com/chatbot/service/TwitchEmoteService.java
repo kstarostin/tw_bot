@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface TwitchEmoteService {
     List<SevenTVEmote> getGlobal7TVEmotes();
-    List<SevenTVEmote> getChannel7TVEmotes(String channelName);
+    List<SevenTVEmote> getChannel7TVEmotes(String channelId);
     List<BTTVEmote> getGlobalBTTVEmotes();
     List<BTTVEmote> getChannelBTTVEmotes(String channelId);
     List<FFZEmoticon> getGlobalFFZEmotes();
-    List<FFZEmoticon> getChannelFFZEmotes(String channelName);
+    List<FFZEmoticon> getChannelFFZEmotes(String channelId);
 }

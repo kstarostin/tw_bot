@@ -39,18 +39,18 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
 
     private final Logger LOG = LoggerFactory.getLogger(DefaultTwitchEmoteService.class);
 
-    private static final String USER_PATH_VAR = "${user}";
+    private static final String USER_ID_PATH_VAR = "${userId}";
 
     private static final String API_URL_7TV = "https://api.7tv.app/v2/";
-    private static final String API_CHANNEL_EMOTES_PATH_7TV = "users/" + USER_PATH_VAR + "/emotes";
+    private static final String API_CHANNEL_EMOTES_PATH_7TV = "users/" + USER_ID_PATH_VAR + "/emotes";
     private static final String API_GLOBAL_EMOTES_PATH_7TV = "emotes/global";
 
     private static final String API_URL_FFZ = "https://api.frankerfacez.com/v1/";
-    private static final String API_ROOM_PATH_FFZ = "room/" + USER_PATH_VAR;
+    private static final String API_ROOM_PATH_FFZ = "room/id/" + USER_ID_PATH_VAR;
     private static final String API_GLOBAL_EMOTES_PATH_FFZ = "set/global";
 
     private static final String API_URL_BTTV = "https://api.betterttv.net/3/";
-    private static final String API_CHANNEL_EMOTES_PATH_BTTV = "cached/users/twitch/" + USER_PATH_VAR;
+    private static final String API_CHANNEL_EMOTES_PATH_BTTV = "cached/users/twitch/" + USER_ID_PATH_VAR;
     private static final String API_GLOBAL_EMOTES_PATH_BTTV = "cached/emotes/global";
 
     private static final Set<Long> FFZ_SET_ID_LIST_TO_IGNORE = Set.of(4330L);
@@ -74,8 +74,8 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     }
 
     @Override
-    public List<SevenTVEmote> getChannel7TVEmotes(final String channelName) {
-        final String requestUrl = API_URL_7TV + API_CHANNEL_EMOTES_PATH_7TV.replace(USER_PATH_VAR, channelName.toLowerCase());
+    public List<SevenTVEmote> getChannel7TVEmotes(final String channelId) {
+        final String requestUrl = API_URL_7TV + API_CHANNEL_EMOTES_PATH_7TV.replace(USER_ID_PATH_VAR, channelId.toLowerCase());
         return get7TVEmotes(requestUrl);
     }
 
@@ -99,7 +99,7 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
 
     @Override
     public List<BTTVEmote> getChannelBTTVEmotes(final String channelId) {
-        final String requestUrl = API_URL_BTTV + API_CHANNEL_EMOTES_PATH_BTTV.replace(USER_PATH_VAR, channelId.toLowerCase());
+        final String requestUrl = API_URL_BTTV + API_CHANNEL_EMOTES_PATH_BTTV.replace(USER_ID_PATH_VAR, channelId.toLowerCase());
         final List<BTTVEmote> emotes = new ArrayList<>();
         try {
             doTrustToCertificates();
@@ -119,8 +119,8 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     }
 
     @Override
-    public List<FFZEmoticon> getChannelFFZEmotes(final String channelName) {
-        final String requestUrl = API_URL_FFZ + API_ROOM_PATH_FFZ.replace(USER_PATH_VAR, channelName.toLowerCase());
+    public List<FFZEmoticon> getChannelFFZEmotes(final String channelId) {
+        final String requestUrl = API_URL_FFZ + API_ROOM_PATH_FFZ.replace(USER_ID_PATH_VAR, channelId.toLowerCase());
         return getFFZEmotes(requestUrl, FFZ.class);
     }
 
