@@ -1,6 +1,8 @@
 package com.chatbot.service.impl;
 
 import com.chatbot.service.TwitchEmoteService;
+import com.chatbot.util.emotes.bttv.BTTV;
+import com.chatbot.util.emotes.bttv.BTTVEmote;
 import com.chatbot.util.emotes.ffz.FFZ;
 import com.chatbot.util.emotes.ffz.FFZEmoticon;
 import com.chatbot.util.emotes.ffz.FFZGlobal;
@@ -28,7 +30,6 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -79,15 +80,36 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     }
 
     @Override
-    public List<SevenTVEmote> getGlobalBTTVEmotes() {
+    public List<BTTVEmote> getGlobalBTTVEmotes() {
         final String requestUrl = API_URL_BTTV + API_GLOBAL_EMOTES_PATH_BTTV;
-        return Collections.emptyList(); // todo implement
+        final List<BTTVEmote> emotes = new ArrayList<>();
+        try {
+            doTrustToCertificates();
+            final JSONArray jsonArray = new JSONArray(IOUtils.toString(new URL(requestUrl), StandardCharsets.UTF_8));
+            if (jsonArray.length() > 0) {
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    emotes.add(objectMapper.readValue(jsonArray.getJSONObject(i).toString(), BTTVEmote.class));
+                }
+            }
+        } catch (final Exception e) {
+            LOG.error("Error: ", e);
+        }
+        return emotes;
     }
 
     @Override
-    public List<SevenTVEmote> getChannelBTTVEmotes(final String channelName) {
-        final String requestUrl = API_URL_BTTV + API_CHANNEL_EMOTES_PATH_BTTV.replace(USER_PATH_VAR, channelName.toLowerCase());
-        return Collections.emptyList(); // todo implement
+    public List<BTTVEmote> getChannelBTTVEmotes(final String channelId) {
+        final String requestUrl = API_URL_BTTV + API_CHANNEL_EMOTES_PATH_BTTV.replace(USER_PATH_VAR, channelId.toLowerCase());
+        final List<BTTVEmote> emotes = new ArrayList<>();
+        try {
+            doTrustToCertificates();
+            final JSONObject json = new JSONObject(IOUtils.toString(new URL(requestUrl), StandardCharsets.UTF_8));
+            final BTTV bttv = objectMapper.readValue(json.toString(), BTTV.class);
+            emotes.addAll(CollectionUtils.emptyIfNull(Arrays.asList(bttv.getSharedEmotes())));
+        } catch (final Exception e) {
+            LOG.error("Error: ", e);
+        }
+        return emotes;
     }
 
     @Override

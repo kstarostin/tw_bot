@@ -7,6 +7,7 @@ import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultTwitchClientServiceImpl;
 import com.chatbot.service.impl.DefaultTwitchEmoteService;
 import com.chatbot.util.FeatureEnum;
+import com.chatbot.util.emotes.bttv.BTTVEmote;
 import com.chatbot.util.emotes.ffz.FFZEmoticon;
 import com.chatbot.util.emotes.seventv.SevenTVEmote;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -80,6 +81,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         if (!isCommand(event.getMessage())) {
             return;
         }
+        final String channelId = event.getChannel().getId();
         final String channelName = event.getChannel().getName();
         final String userName = event.getUser().getName();
         if (!isSuperAdmin(userName) && !isBroadcaster(userName, event.getChannel().getName())) {
@@ -88,7 +90,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         }
         final String[] commandArgs = parseCommandArgs(event.getMessage());
 
-        final String responseMessage = executeCommand(commandArgs, userName, channelName);
+        final String responseMessage = executeCommand(commandArgs, userName, channelId, channelName);
         if (StringUtils.isNotEmpty(responseMessage)) {
             messageService.sendMessage(channelName, String.format(responseMessage, userName), false, null);
         } else {
@@ -114,7 +116,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         return commandContent.split(StringUtils.SPACE);
     }
 
-    private String executeCommand(final String[] args, final String userName, final String channelName) {
+    private String executeCommand(final String[] args, final String userName, final String channelId, final String channelName) {
         if (args.length == 0) {
             return StringUtils.EMPTY;
         }
@@ -144,7 +146,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             case COMMAND_7TV_ARG:
                 return execute7TVCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             case COMMAND_BTTV_ARG:
-                return executeBTTVCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
+                return executeBTTVCommand(ArrayUtils.removeElement(args, args[0]), userName, channelId, channelName);
             case COMMAND_FFZ_ARG:
                 return executeFFZCommand(ArrayUtils.removeElement(args, args[0]), userName, channelName);
             default:
@@ -381,12 +383,12 @@ public class ChatCommandMessageFeature extends AbstractFeature {
                 : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_EMOTE_EMPTY + channelName.toLowerCase(), MESSAGE_COMMAND_EMOTE_EMPTY + CHANNEL_DEFAULT);
     }
 
-    private String executeBTTVCommand(final String[] args, final String userName, final String channelName) {
+    private String executeBTTVCommand(final String[] args, final String userName, final String channelId, final String channelName) {
         final String emoteMessage;
         if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
-            emoteMessage = twitchEmoteService.getGlobalBTTVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage = twitchEmoteService.getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
         } else {
-            emoteMessage = twitchEmoteService.getChannelBTTVEmotes(channelName).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage = twitchEmoteService.getChannelBTTVEmotes(channelId).stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
         }
         return StringUtils.isNotEmpty(emoteMessage)
                 ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage
