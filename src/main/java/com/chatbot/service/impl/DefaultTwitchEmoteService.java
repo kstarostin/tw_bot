@@ -1,5 +1,7 @@
 package com.chatbot.service.impl;
 
+import com.chatbot.service.ConfigurationService;
+import com.chatbot.service.TwitchClientService;
 import com.chatbot.service.TwitchEmoteService;
 import com.chatbot.util.emotes.bttv.BTTV;
 import com.chatbot.util.emotes.bttv.BTTVEmote;
@@ -10,6 +12,8 @@ import com.chatbot.util.emotes.ffz.FFZRootObject;
 import com.chatbot.util.emotes.seventv.SevenTVEmote;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.twitch4j.helix.domain.Emote;
+import com.github.twitch4j.helix.domain.EmoteList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
@@ -30,6 +34,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -56,6 +61,9 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     private static final Set<Long> FFZ_SET_ID_LIST_TO_IGNORE = Set.of(4330L);
 
     final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
+    private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
 
     private DefaultTwitchEmoteService() {
     }
@@ -122,6 +130,28 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     public List<FFZEmoticon> getChannelFFZEmotes(final String channelId) {
         final String requestUrl = API_URL_FFZ + API_ROOM_PATH_FFZ.replace(USER_ID_PATH_VAR, channelId.toLowerCase());
         return getFFZEmotes(requestUrl, FFZ.class);
+    }
+
+    @Override
+    public List<Emote> getGlobalTwitchEmotes() {
+        final String autToken = configurationService.getCredentialProperties().getProperty("twitch.credentials.access.token");
+        try {
+            return twitchClientService.getTwitchHelixClient().getGlobalEmotes(autToken).execute().getEmotes();
+        } catch (final Exception e) {
+            LOG.error("Error: ", e);
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<Emote> getChannelTwitchEmotes(final String channelId) {
+        final String autToken = configurationService.getCredentialProperties().getProperty("twitch.credentials.access.token");
+        try {
+            return twitchClientService.getTwitchHelixClient().getChannelEmotes(autToken, channelId).execute().getEmotes();
+        } catch (final Exception e) {
+            LOG.error("Error: ", e);
+        }
+        return Collections.emptyList();
     }
 
     private List<SevenTVEmote> get7TVEmotes(final String url) {
