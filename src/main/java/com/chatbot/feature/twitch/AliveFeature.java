@@ -2,9 +2,9 @@ package com.chatbot.feature.twitch;
 
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.ResponseGenerator;
-import com.chatbot.service.DayCacheService;
+import com.chatbot.service.PeriodCacheService;
 import com.chatbot.service.ModerationService;
-import com.chatbot.service.impl.DefaultDayCacheServiceImpl;
+import com.chatbot.service.impl.DefaultPeriodCacheServiceImpl;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -27,7 +27,7 @@ public class AliveFeature extends AbstractFeature {
 
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
-    private final DayCacheService dayCacheService = DefaultDayCacheServiceImpl.getInstance();
+    private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
 
     public AliveFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
@@ -43,7 +43,7 @@ public class AliveFeature extends AbstractFeature {
         if (isCommand(message) || moderationService.isSuspiciousMessage(channelName, message, event.getPermissions())) {
             return;
         }
-        if (isGreetingEnabled(channelName) && !isUserGreeted(userName) && !isBotTagged(message)) {
+        if (isGreetingEnabled(channelName) && !isUserGreeted(channelName, userName) && !isBotTagged(message)) {
             final String responseMessage = messageService.getPersonalizedMessageForKey("message.hello." + channelName.toLowerCase() + "." + userName.toLowerCase(), "message.hello.default." + userName.toLowerCase());
             if (StringUtils.isNotEmpty(responseMessage)) {
                 greetWithDelay(channelName, userName, responseMessage, calculateResponseDelayTime(responseMessage), event);
@@ -60,8 +60,8 @@ public class AliveFeature extends AbstractFeature {
         return StringUtils.containsIgnoreCase(message, configurationService.getBotName());
     }
 
-    private boolean isUserGreeted(final String userName) {
-        return dayCacheService.getCachedGreetings().isPresent() && dayCacheService.getCachedGreetings().get().contains(userName);
+    private boolean isUserGreeted(final String channelName, final String userName) {
+        return cacheService.getCachedGreetings(channelName).isPresent() && cacheService.getCachedGreetings(channelName).get().contains(userName);
     }
 
     private boolean isGreetingEnabled(final String channelName) {
@@ -121,7 +121,7 @@ public class AliveFeature extends AbstractFeature {
                 break;
         }
         messageService.sendMessageWithDelay(channelName, responseMessage, delay, replyEvent);
-        dayCacheService.cacheGreeting(userName);
+        cacheService.cacheGreeting(channelName, userName);
     }
 
     private void sendMessageWithDelay(final String channelName, final String userName, final String message, final int delay, final ChannelMessageEvent event) {

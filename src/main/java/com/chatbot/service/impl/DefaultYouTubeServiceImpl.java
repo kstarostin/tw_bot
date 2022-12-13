@@ -1,6 +1,6 @@
 package com.chatbot.service.impl;
 
-import com.chatbot.service.DayCacheService;
+import com.chatbot.service.PeriodCacheService;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.YouTubeService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -47,7 +47,7 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
     private GoogleCredential googleCredential;
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
-    private final DayCacheService dayCacheService = DefaultDayCacheServiceImpl.getInstance();
+    private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
 
     private DefaultYouTubeServiceImpl() {
     }
@@ -70,7 +70,7 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
 
     @Override
     public Optional<String> getCachedRandomVideo() {
-        return dayCacheService.getCachedYtVideo();
+        return cacheService.getCachedYtVideo();
     }
 
     private String getRandomVideoFromYuoTube(final Map<String, Integer> channels) {
@@ -129,7 +129,7 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
             String videoURL = StringUtils.EMPTY;
             if (StringUtils.isNotEmpty(videoId)) {
                 videoURL = String.format("https://www.youtube.com/watch?v=%s", videoId);
-                dayCacheService.cacheYtVideo(videoURL);
+                cacheService.cacheYtVideo(videoURL);
             }
             return videoURL;
         } catch (final GoogleJsonResponseException e) {

@@ -1,6 +1,7 @@
 package com.chatbot.service.impl;
 
 import com.chatbot.service.ConfigurationService;
+import com.chatbot.service.PeriodCacheService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.service.TwitchEmoteService;
 import com.chatbot.util.emotes.bttv.BTTV;
@@ -13,7 +14,6 @@ import com.chatbot.util.emotes.seventv.SevenTVEmote;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.twitch4j.helix.domain.Emote;
-import com.github.twitch4j.helix.domain.EmoteList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
@@ -34,8 +34,8 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +43,8 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     private static DefaultTwitchEmoteService instance;
 
     private final Logger LOG = LoggerFactory.getLogger(DefaultTwitchEmoteService.class);
+
+    private static final String GLOBAL = "global";
 
     private static final String USER_ID_PATH_VAR = "${userId}";
 
@@ -64,6 +66,7 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
 
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
+    private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
 
     private DefaultTwitchEmoteService() {
     }
@@ -78,29 +81,38 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     @Override
     public List<SevenTVEmote> getGlobal7TVEmotes() {
         final String requestUrl = API_URL_7TV + API_GLOBAL_EMOTES_PATH_7TV;
-        return get7TVEmotes(requestUrl);
+        return get7TVEmotes(GLOBAL, requestUrl);
     }
 
     @Override
     public List<SevenTVEmote> getChannel7TVEmotes(final String channelId) {
         final String requestUrl = API_URL_7TV + API_CHANNEL_EMOTES_PATH_7TV.replace(USER_ID_PATH_VAR, channelId.toLowerCase());
-        return get7TVEmotes(requestUrl);
+        return get7TVEmotes(channelId, requestUrl);
     }
 
     @Override
     public List<BTTVEmote> getGlobalBTTVEmotes() {
         final String requestUrl = API_URL_BTTV + API_GLOBAL_EMOTES_PATH_BTTV;
         final List<BTTVEmote> emotes = new ArrayList<>();
-        try {
-            doTrustToCertificates();
-            final JSONArray jsonArray = new JSONArray(IOUtils.toString(new URL(requestUrl), StandardCharsets.UTF_8));
-            if (jsonArray.length() > 0) {
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    emotes.add(objectMapper.readValue(jsonArray.getJSONObject(i).toString(), BTTVEmote.class));
+        final Optional<List> globalEmotesOptional = cacheService.getCachedEmotes(GLOBAL, EmoteProvider.BTTV_GLOBAL, DefaultPeriodCacheServiceImpl.CachePeriod.DAY);
+        if (globalEmotesOptional.isPresent()) {
+            LOG.debug("Global BTTV emotes loaded from the cache...");
+            emotes.addAll(globalEmotesOptional.get());
+        } else {
+            try {
+                doTrustToCertificates();
+                final JSONArray jsonArray = new JSONArray(IOUtils.toString(new URL(requestUrl), StandardCharsets.UTF_8));
+                if (jsonArray.length() > 0) {
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        emotes.add(objectMapper.readValue(jsonArray.getJSONObject(i).toString(), BTTVEmote.class));
+                    }
                 }
+            } catch (final Exception e) {
+                LOG.error("Error: " + e.getMessage());
+                LOG.debug("Error details: ", e);
             }
-        } catch (final Exception e) {
-            LOG.error("Error: ", e);
+            LOG.debug("Global BTTV emotes loaded from API...");
+            cacheService.cacheEmotes(GLOBAL, EmoteProvider.BTTV_GLOBAL, emotes, DefaultPeriodCacheServiceImpl.CachePeriod.DAY);
         }
         return emotes;
     }
@@ -109,13 +121,22 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     public List<BTTVEmote> getChannelBTTVEmotes(final String channelId) {
         final String requestUrl = API_URL_BTTV + API_CHANNEL_EMOTES_PATH_BTTV.replace(USER_ID_PATH_VAR, channelId.toLowerCase());
         final List<BTTVEmote> emotes = new ArrayList<>();
-        try {
-            doTrustToCertificates();
-            final JSONObject json = new JSONObject(IOUtils.toString(new URL(requestUrl), StandardCharsets.UTF_8));
-            final BTTV bttv = objectMapper.readValue(json.toString(), BTTV.class);
-            emotes.addAll(CollectionUtils.emptyIfNull(Arrays.asList(bttv.getSharedEmotes())));
-        } catch (final Exception e) {
-            LOG.error("Error: ", e);
+        final Optional<List> channelEmotesOptional = cacheService.getCachedEmotes(channelId, EmoteProvider.BTTV_CHANNEL, DefaultPeriodCacheServiceImpl.CachePeriod.MINUTE);
+        if (channelEmotesOptional.isPresent()) {
+            LOG.debug("Channel BTTV emotes loaded from the cache...");
+            emotes.addAll(channelEmotesOptional.get());
+        } else {
+            try {
+                doTrustToCertificates();
+                final JSONObject json = new JSONObject(IOUtils.toString(new URL(requestUrl), StandardCharsets.UTF_8));
+                final BTTV bttv = objectMapper.readValue(json.toString(), BTTV.class);
+                emotes.addAll(CollectionUtils.emptyIfNull(Arrays.asList(bttv.getSharedEmotes())));
+            } catch (final Exception e) {
+                LOG.error("Error: " + e.getMessage());
+                LOG.debug("Error details: ", e);
+            }
+            LOG.debug("Channel BTTV emotes loaded from API...");
+            cacheService.cacheEmotes(channelId, EmoteProvider.BTTV_CHANNEL, emotes, DefaultPeriodCacheServiceImpl.CachePeriod.MINUTE);
         }
         return emotes;
     }
@@ -123,67 +144,109 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     @Override
     public List<FFZEmoticon> getGlobalFFZEmotes() {
         final String requestUrl = API_URL_FFZ + API_GLOBAL_EMOTES_PATH_FFZ;
-        return getFFZEmotes(requestUrl, FFZGlobal.class);
+        return getFFZEmotes(GLOBAL, requestUrl, FFZGlobal.class);
     }
 
     @Override
     public List<FFZEmoticon> getChannelFFZEmotes(final String channelId) {
         final String requestUrl = API_URL_FFZ + API_ROOM_PATH_FFZ.replace(USER_ID_PATH_VAR, channelId.toLowerCase());
-        return getFFZEmotes(requestUrl, FFZ.class);
+        return getFFZEmotes(channelId, requestUrl, FFZ.class);
     }
 
     @Override
     public List<Emote> getGlobalTwitchEmotes() {
-        final String autToken = configurationService.getCredentialProperties().getProperty("twitch.credentials.access.token");
-        try {
-            return twitchClientService.getTwitchHelixClient().getGlobalEmotes(autToken).execute().getEmotes();
-        } catch (final Exception e) {
-            LOG.error("Error: ", e);
+        final List<Emote> globalTwitchEmotes = new ArrayList<>();
+        final Optional<List> globalEmotesOptional = cacheService.getCachedEmotes(GLOBAL, EmoteProvider.TWITCH_GLOBAL, DefaultPeriodCacheServiceImpl.CachePeriod.DAY);
+        if (globalEmotesOptional.isPresent()) {
+            LOG.debug("Global Twitch emotes loaded from the cache...");
+            globalTwitchEmotes.addAll(globalEmotesOptional.get());
+        } else {
+            final String autToken = configurationService.getCredentialProperties().getProperty("twitch.credentials.access.token");
+            try {
+                globalTwitchEmotes.addAll(twitchClientService.getTwitchHelixClient().getGlobalEmotes(autToken).execute().getEmotes());
+            } catch (final Exception e) {
+                LOG.error("Error: " + e.getMessage());
+                LOG.debug("Error details: ", e);
+            }
+            LOG.debug("Global Twitch emotes loaded from API...");
+            cacheService.cacheEmotes(GLOBAL, EmoteProvider.TWITCH_GLOBAL, globalTwitchEmotes, DefaultPeriodCacheServiceImpl.CachePeriod.DAY);
         }
-        return Collections.emptyList();
+        return globalTwitchEmotes;
     }
 
     @Override
     public List<Emote> getChannelTwitchEmotes(final String channelId) {
-        final String autToken = configurationService.getCredentialProperties().getProperty("twitch.credentials.access.token");
-        try {
-            return twitchClientService.getTwitchHelixClient().getChannelEmotes(autToken, channelId).execute().getEmotes();
-        } catch (final Exception e) {
-            LOG.error("Error: ", e);
+        final List<Emote> channelTwitchEmotes = new ArrayList<>();
+        final Optional<List> channelEmotesOptional = cacheService.getCachedEmotes(channelId, EmoteProvider.TWITCH_CHANNEL, DefaultPeriodCacheServiceImpl.CachePeriod.MINUTE);
+        if (channelEmotesOptional.isPresent()) {
+            LOG.debug("Channel Twitch emotes loaded from the cache...");
+            channelTwitchEmotes.addAll(channelEmotesOptional.get());
+        } else {
+            final String autToken = configurationService.getCredentialProperties().getProperty("twitch.credentials.access.token");
+            try {
+                channelTwitchEmotes.addAll(twitchClientService.getTwitchHelixClient().getChannelEmotes(autToken, channelId).execute().getEmotes());
+            } catch (final Exception e) {
+                LOG.error("Error: " + e.getMessage());
+                LOG.debug("Error details: ", e);
+            }
+            LOG.debug("Channel Twitch emotes loaded from API...");
+            cacheService.cacheEmotes(channelId, EmoteProvider.TWITCH_CHANNEL, channelTwitchEmotes, DefaultPeriodCacheServiceImpl.CachePeriod.MINUTE);
         }
-        return Collections.emptyList();
+        return channelTwitchEmotes;
     }
 
-    private List<SevenTVEmote> get7TVEmotes(final String url) {
+    private List<SevenTVEmote> get7TVEmotes(final String channelId, final String url) {
         final List<SevenTVEmote> emotes = new ArrayList<>();
-        try {
-            doTrustToCertificates();
-            final JSONArray jsonArray = new JSONArray(IOUtils.toString(new URL(url), StandardCharsets.UTF_8));
-            if (jsonArray.length() > 0) {
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    emotes.add(objectMapper.readValue(jsonArray.getJSONObject(i).toString(), SevenTVEmote.class));
+        final DefaultPeriodCacheServiceImpl.CachePeriod period = GLOBAL.equals(channelId) ? DefaultPeriodCacheServiceImpl.CachePeriod.DAY : DefaultPeriodCacheServiceImpl.CachePeriod.MINUTE;
+        final EmoteProvider provider = GLOBAL.equals(channelId) ? EmoteProvider.SEVEN_TV_GLOBAL : EmoteProvider.SEVEN_TV_CHANNEL;
+        final Optional<List> emotesOptional = cacheService.getCachedEmotes(channelId, provider, period);
+        if (emotesOptional.isPresent()) {
+            LOG.debug("{} 7TV emotes loaded from the cache...", GLOBAL.equals(channelId) ? "Global" : "Channel");
+            emotes.addAll(emotesOptional.get());
+        } else {
+            try {
+                doTrustToCertificates();
+                final JSONArray jsonArray = new JSONArray(IOUtils.toString(new URL(url), StandardCharsets.UTF_8));
+                if (jsonArray.length() > 0) {
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        emotes.add(objectMapper.readValue(jsonArray.getJSONObject(i).toString(), SevenTVEmote.class));
+                    }
                 }
+            } catch (final Exception e) {
+                LOG.error("Error: " + e.getMessage());
+                LOG.debug("Error details: ", e);
             }
-        } catch (final Exception e) {
-            LOG.error("Error: ", e);
+            LOG.debug("{} 7TV emotes loaded from API...", GLOBAL.equals(channelId) ? "Global" : "Channel");
+            cacheService.cacheEmotes(channelId, provider, emotes, period);
         }
         return emotes;
     }
 
-    private <T extends FFZRootObject> List<FFZEmoticon> getFFZEmotes(final String url, final Class<T> rootClass) {
+    private <T extends FFZRootObject> List<FFZEmoticon> getFFZEmotes(final String channelId, final String url, final Class<T> rootClass) {
         final List<FFZEmoticon> emotes = new ArrayList<>();
-        try {
-            doTrustToCertificates();
-            final JSONObject json = new JSONObject(IOUtils.toString(new URL(url), StandardCharsets.UTF_8));
-            final T ffz = objectMapper.readValue(json.toString(), rootClass);
-            emotes.addAll(CollectionUtils.emptyIfNull(ffz.getSets().values()).stream()
-                    .filter(set -> !FFZ_SET_ID_LIST_TO_IGNORE.contains(set.getId()))
-                    .map(set -> Arrays.asList(set.getEmoticons()))
-                    .flatMap(Collection::stream)
-                    .filter(emoticon -> !emoticon.isHidden())
-                    .collect(Collectors.toList()));
-        } catch (final Exception e) {
-            LOG.error("Error: ", e);
+        final DefaultPeriodCacheServiceImpl.CachePeriod period = GLOBAL.equals(channelId) ? DefaultPeriodCacheServiceImpl.CachePeriod.DAY : DefaultPeriodCacheServiceImpl.CachePeriod.HOUR;
+        final EmoteProvider provider = GLOBAL.equals(channelId) ? EmoteProvider.FFZ_GLOBAL : EmoteProvider.FFZ_CHANNEL;
+        final Optional<List> emotesOptional = cacheService.getCachedEmotes(channelId, provider, period);
+        if (emotesOptional.isPresent()) {
+            LOG.debug("{} FFZ emotes loaded from the cache...", GLOBAL.equals(channelId) ? "Global" : "Channel");
+            emotes.addAll(emotesOptional.get());
+        } else {
+            try {
+                doTrustToCertificates();
+                final JSONObject json = new JSONObject(IOUtils.toString(new URL(url), StandardCharsets.UTF_8));
+                final T ffz = objectMapper.readValue(json.toString(), rootClass);
+                emotes.addAll(CollectionUtils.emptyIfNull(ffz.getSets().values()).stream()
+                        .filter(set -> !FFZ_SET_ID_LIST_TO_IGNORE.contains(set.getId()))
+                        .map(set -> Arrays.asList(set.getEmoticons()))
+                        .flatMap(Collection::stream)
+                        .filter(emoticon -> !emoticon.isHidden())
+                        .collect(Collectors.toList()));
+            } catch (final Exception e) {
+                LOG.error("Error: " + e.getMessage());
+                LOG.debug("Error details: ", e);
+            }
+            LOG.debug("{} FFZ emotes loaded from API...", GLOBAL.equals(channelId) ? "Global" : "Channel");
+            cacheService.cacheEmotes(channelId, provider, emotes, period);
         }
         return emotes;
     }
@@ -219,5 +282,16 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
                     }
                 }
         };
+    }
+
+    public enum EmoteProvider {
+        TWITCH_CHANNEL,
+        TWITCH_GLOBAL,
+        FFZ_CHANNEL,
+        FFZ_GLOBAL,
+        BTTV_CHANNEL,
+        BTTV_GLOBAL,
+        SEVEN_TV_CHANNEL,
+        SEVEN_TV_GLOBAL
     }
 }
