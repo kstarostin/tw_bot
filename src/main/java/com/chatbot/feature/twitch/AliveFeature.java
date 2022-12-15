@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.SplittableRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -39,6 +40,7 @@ public class AliveFeature extends AbstractFeature {
     private static final String USERNAME_TOKEN = "${name}";
     private static final String GREETING_TOKEN = "${greeting}";
     private static final String ADDITION_TOKEN = "${addition}";
+    private static final Set<String> IGNORED_USERS_FOR_GREETING = Set.of("nightbot");
 
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
@@ -60,7 +62,7 @@ public class AliveFeature extends AbstractFeature {
         if (isCommand(message) || moderationService.isSuspiciousMessage(channelName, message, event.getPermissions())) {
             return;
         }
-        if (isGreetingEnabled(channelName) && !isUserGreeted(channelName, userName) && !isBotTagged(message)) {
+        if (isGreetingEnabled(channelName) && !isUserGreeted(channelName, userName) && !isUserIgnored(userName) && !isBotTagged(message)) {
             final String responseMessage = applyEmotes(channelId, buildGreetingText(userName), 3, GREETING, POG, HAPPY);
             greetWithDelay(channelName, userName, responseMessage, calculateResponseDelayTime(responseMessage), event);
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger(channelName))) {
@@ -77,6 +79,10 @@ public class AliveFeature extends AbstractFeature {
 
     private boolean isUserGreeted(final String channelName, final String userName) {
         return cacheService.getCachedGreetings(channelName).isPresent() && cacheService.getCachedGreetings(channelName).get().contains(userName);
+    }
+
+    private boolean isUserIgnored(final String userName) {
+        return IGNORED_USERS_FOR_GREETING.contains(userName.toLowerCase());
     }
 
     private boolean isGreetingEnabled(final String channelName) {
