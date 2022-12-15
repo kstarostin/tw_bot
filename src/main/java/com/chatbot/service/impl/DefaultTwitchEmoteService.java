@@ -108,7 +108,6 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
                     }
                 }
             } catch (final Exception e) {
-                LOG.error("Error: " + e.getMessage());
                 LOG.debug("Error details: ", e);
             }
             LOG.debug("Global BTTV emotes loaded from API...");
@@ -132,7 +131,6 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
                 final BTTV bttv = objectMapper.readValue(json.toString(), BTTV.class);
                 emotes.addAll(CollectionUtils.emptyIfNull(Arrays.asList(bttv.getSharedEmotes())));
             } catch (final Exception e) {
-                LOG.error("Error: " + e.getMessage());
                 LOG.debug("Error details: ", e);
             }
             LOG.debug("Channel BTTV emotes loaded from API...");
@@ -165,7 +163,6 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
             try {
                 globalTwitchEmotes.addAll(twitchClientService.getTwitchHelixClient().getGlobalEmotes(autToken).execute().getEmotes());
             } catch (final Exception e) {
-                LOG.error("Error: " + e.getMessage());
                 LOG.debug("Error details: ", e);
             }
             LOG.debug("Global Twitch emotes loaded from API...");
@@ -186,13 +183,25 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
             try {
                 channelTwitchEmotes.addAll(twitchClientService.getTwitchHelixClient().getChannelEmotes(autToken, channelId).execute().getEmotes());
             } catch (final Exception e) {
-                LOG.error("Error: " + e.getMessage());
                 LOG.debug("Error details: ", e);
             }
             LOG.debug("Channel Twitch emotes loaded from API...");
             cacheService.cacheEmotes(channelId, EmoteProvider.TWITCH_CHANNEL, channelTwitchEmotes, DefaultPeriodCacheServiceImpl.CachePeriod.MINUTE);
         }
         return channelTwitchEmotes;
+    }
+
+    @Override
+    public Set<String> getValidEmoteNames(final String channelId) {
+        final Set<String> emotesNames = getGlobalTwitchEmotes().stream().map(Emote::getName).collect(Collectors.toSet());
+        emotesNames.addAll(getChannelTwitchEmotes(channelId).stream().map(Emote::getName).collect(Collectors.toSet()));
+        emotesNames.addAll(getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.toSet()));
+        emotesNames.addAll(getChannelBTTVEmotes(channelId).stream().map(BTTVEmote::getCode).collect(Collectors.toSet()));
+        emotesNames.addAll(getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
+        emotesNames.addAll(getChannelFFZEmotes(channelId).stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
+        emotesNames.addAll(getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
+        emotesNames.addAll(getChannel7TVEmotes(channelId).stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
+        return emotesNames;
     }
 
     private List<SevenTVEmote> get7TVEmotes(final String channelId, final String url) {
@@ -213,7 +222,6 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
                     }
                 }
             } catch (final Exception e) {
-                LOG.error("Error: " + e.getMessage());
                 LOG.debug("Error details: ", e);
             }
             LOG.debug("{} 7TV emotes loaded from API...", GLOBAL.equals(channelId) ? "Global" : "Channel");
@@ -242,7 +250,6 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
                         .filter(emoticon -> !emoticon.isHidden())
                         .collect(Collectors.toList()));
             } catch (final Exception e) {
-                LOG.error("Error: " + e.getMessage());
                 LOG.debug("Error details: ", e);
             }
             LOG.debug("{} FFZ emotes loaded from API...", GLOBAL.equals(channelId) ? "Global" : "Channel");

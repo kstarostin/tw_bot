@@ -4,16 +4,27 @@ import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.service.PeriodCacheService;
 import com.chatbot.service.ModerationService;
+import com.chatbot.service.TwitchEmoteService;
 import com.chatbot.service.impl.DefaultPeriodCacheServiceImpl;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
+import com.chatbot.service.impl.DefaultTwitchEmoteService;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.SplittableRandom;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.chatbot.util.emotes.BotEmote.Sets.GREETING;
+import static com.chatbot.util.emotes.BotEmote.Sets.HAPPY;
+import static com.chatbot.util.emotes.BotEmote.Sets.POG;
 
 public class AliveFeature extends AbstractFeature {
     private static final int RND_TRIGGER_MIN_PROBABILITY = 1;
@@ -25,15 +36,21 @@ public class AliveFeature extends AbstractFeature {
             MessageType.SEND_MESSAGE
     };
 
+    private static final String USERNAME_TOKEN = "${name}";
+    private static final String GREETING_TOKEN = "${greeting}";
+    private static final String ADDITION_TOKEN = "${addition}";
+
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
     private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
+    private final TwitchEmoteService twitchEmoteService = DefaultTwitchEmoteService.getInstance();
 
     public AliveFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
     }
 
     public void onChannelMessage(final ChannelMessageEvent event) {
+        final String channelId = event.getChannel().getId();
         final String channelName = event.getChannel().getName();
         final String userName = event.getUser().getName();
         if (!isFeatureActive(channelName, FeatureEnum.ALIVE) || (isActiveOnLiveStreamOnly(channelName) && !isStreamLive(event.getChannel().getName()))) {
@@ -44,10 +61,8 @@ public class AliveFeature extends AbstractFeature {
             return;
         }
         if (isGreetingEnabled(channelName) && !isUserGreeted(channelName, userName) && !isBotTagged(message)) {
-            final String responseMessage = messageService.getPersonalizedMessageForKey("message.hello." + channelName.toLowerCase() + "." + userName.toLowerCase(), "message.hello.default." + userName.toLowerCase());
-            if (StringUtils.isNotEmpty(responseMessage)) {
-                greetWithDelay(channelName, userName, responseMessage, calculateResponseDelayTime(responseMessage), event);
-            }
+            final String responseMessage = applyEmotes(channelId, buildGreetingText(userName), 3, GREETING, POG, HAPPY);
+            greetWithDelay(channelName, userName, responseMessage, calculateResponseDelayTime(responseMessage), event);
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomTrigger(channelName))) {
             final String responseMessage = balabobaResponseGenerator.generate(sanitizeRequestMessage(message), true, true, false);
             if (StringUtils.isNotEmpty(responseMessage)) {
@@ -75,6 +90,55 @@ public class AliveFeature extends AbstractFeature {
     private boolean isRandomTrigger(final String channelName) {
         final SplittableRandom random = new SplittableRandom();
         return random.nextInt(RND_TRIGGER_MIN_PROBABILITY, RND_TRIGGER_MAX_PROBABILITY + 1) <= configurationService.getConfiguration(channelName).getIndependenceRate();
+    }
+
+    private String buildGreetingText(final String userName) {
+        final List<String> greetingTokens = Arrays.asList(USERNAME_TOKEN, GREETING_TOKEN, ADDITION_TOKEN);
+        Collections.shuffle(greetingTokens);
+        final StringBuilder sb = new StringBuilder();
+        final boolean startsWithTag = getRandomIntExponentially(2, 2) == 0;
+        if (startsWithTag) {
+            sb.append("%s").append(StringUtils.SPACE);
+        }
+        greetingTokens.forEach(token -> {
+            final int exponent = ADDITION_TOKEN.equals(token) ? 3 : 2;
+            if (getRandomIntExponentially(2, exponent) == 0) {
+                sb.append(StringUtils.SPACE).append(token);
+            }
+        });
+        if (!startsWithTag) {
+            sb.append(StringUtils.SPACE).append("%s");
+        }
+        String messageTemplate = sb.toString();
+        for (final String token : greetingTokens) {
+            final String replacement = messageService.getPersonalizedMessageForKey("message.greeting." + token + "." + userName.toLowerCase(), "message.greeting." + token + ".default");
+            messageTemplate = messageTemplate.replace(token, replacement);
+        }
+        return messageTemplate.replaceAll(" +", StringUtils.SPACE).trim();
+    }
+
+    @SafeVarargs
+    private String applyEmotes(final String channelId, final String originalText, final int maxNumber, final List<String>... emoteSets) {
+        final int setNumber = getRandomIntExponentially(emoteSets.length, 2);
+        final int number = getRandomIntExponentially(maxNumber, 2) + 1;
+
+        final List<String> selectedSet = emoteSets[setNumber].parallelStream().filter(emote -> twitchEmoteService.getValidEmoteNames(channelId).contains(emote)).collect(Collectors.toList());
+
+        final StringBuilder emotePart = new StringBuilder();
+        for (int i = 0; i < number; i++) {
+            final int index = getRandomIntExponentially(selectedSet.size(), 2);
+            emotePart.append(StringUtils.SPACE).append(selectedSet.get(index));
+        }
+        return StringUtils.isNotBlank(originalText) ? originalText + emotePart : emotePart.toString().trim();
+    }
+
+    private int getRandomIntExponentially(final int bound, final int exponent) {
+        final List<Integer> results = new ArrayList<>();
+        for (int i = 0, j = bound; i < bound; i++, j--) {
+            final int numberOfCopies = (int) Math.pow(j, exponent);
+            results.addAll(Collections.nCopies(numberOfCopies, i));
+        }
+        return results.get(new Random().nextInt(results.size()));
     }
 
     private String sanitizeRequestMessage(final String message) {
