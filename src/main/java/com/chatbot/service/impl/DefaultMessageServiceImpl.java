@@ -44,12 +44,13 @@ public class DefaultMessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void sendMessage(final String channelName, final String responseMessage, final ChannelMessageEvent event) {
-        sendMessage(channelName, responseMessage, true, event);
+    public void sendMessage(final String channelName, final MessageBuilder messageBuilder, final ChannelMessageEvent event) {
+        sendMessage(channelName, messageBuilder, true, event);
     }
 
     @Override
-    public void sendMessage(final String channelName, final String responseMessage, final boolean isMuteChecked, final ChannelMessageEvent event) {
+    public void sendMessage(final String channelName, final MessageBuilder messageBuilder, final boolean isMuteChecked, final ChannelMessageEvent event) {
+        final String responseMessage = messageBuilder.toString();
         if (responseMessage.isEmpty()) {
             return;
         }
@@ -81,18 +82,18 @@ public class DefaultMessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void sendMessageWithDelay(final String channelName, final String responseMessage, final int delay, final ChannelMessageEvent event) {
+    public void sendMessageWithDelay(final String channelName, final MessageBuilder messageBuilder, final int delay, final ChannelMessageEvent event) {
         if (configurationService.getConfiguration(channelName).isMuted()) {
             return;
         }
-        if (responseMessage.isEmpty()) {
+        if (messageBuilder.toString().isEmpty()) {
             return;
         }
         new Timer().schedule(
                 new TimerTask() {
                     @Override
                     public void run() {
-                        sendMessage(channelName, responseMessage, event);
+                        sendMessage(channelName, messageBuilder, event);
                     }
                 },
                 delay
@@ -115,6 +116,11 @@ public class DefaultMessageServiceImpl implements MessageService {
         return message;
     }
 
+    @Override
+    public MessageBuilder getMessageBuilder() {
+        return new MessageBuilder();
+    }
+
     private List<String> splitByMaxLength(final String message) {
         final String[] words = message.split("\\s+");
         if (words.length > 1) {
@@ -132,6 +138,60 @@ public class DefaultMessageServiceImpl implements MessageService {
             return splitMessages.stream().map(sb -> sb.toString().trim()).collect(Collectors.toList());
         } else {
             return List.of(message);
+        }
+    }
+
+    public class MessageBuilder {
+        private String tag;
+        private boolean startsWithTag;
+        private String text;
+        private String emotes;
+
+        private MessageBuilder() {
+        }
+
+        public MessageBuilder withUserTag(final String tag) {
+            this.tag = tag;
+            this.startsWithTag = true;
+            return this;
+        }
+
+        public MessageBuilder withUserTag(final String tag, final boolean startsWithTag) {
+            this.tag = tag;
+            this.startsWithTag = startsWithTag;
+            return this;
+        }
+
+        public MessageBuilder withText(final String text) {
+            this.text = text;
+            return this;
+        }
+
+        public MessageBuilder withEmotes(final String emotes) {
+            this.emotes = emotes;
+            return this;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder();
+            if (startsWithTag && StringUtils.isNotEmpty(tag)) {
+                sb.append(tag);
+            }
+            if (StringUtils.isNotEmpty(text)) {
+                sb.append(StringUtils.SPACE).append(text);
+            }
+            if (StringUtils.isNotEmpty(emotes)) {
+                sb.append(StringUtils.SPACE).append(emotes);
+            }
+            if (!startsWithTag && StringUtils.isNotEmpty(tag)) {
+                sb.append(StringUtils.SPACE).append(tag);
+            }
+            return sb.toString().trim();
+        }
+
+        public boolean isNotEmpty() {
+            return StringUtils.isNotEmpty(tag) || StringUtils.isNotEmpty(text) || StringUtils.isNotEmpty(emotes);
         }
     }
 }

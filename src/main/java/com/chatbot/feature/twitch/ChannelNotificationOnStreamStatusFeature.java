@@ -1,6 +1,5 @@
 package com.chatbot.feature.twitch;
 
-import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.eventsub.events.StreamOfflineEvent;
 import com.github.twitch4j.eventsub.events.StreamOnlineEvent;
@@ -22,7 +21,7 @@ public class ChannelNotificationOnStreamStatusFeature extends AbstractFeature {
         if (StringUtils.isEmpty(notificationMessage)) {
             notificationMessage = messageService.getStandardMessageForKey("message.stream.online.default");
         }
-        messageService.sendMessage(event.getBroadcasterUserLogin(), notificationMessage, null);
+        messageService.sendMessage(event.getBroadcasterUserLogin(), messageService.getMessageBuilder().withText(notificationMessage), null);
     }
 
     public void onStreamOffline(final StreamOfflineEvent event) {
@@ -34,6 +33,6 @@ public class ChannelNotificationOnStreamStatusFeature extends AbstractFeature {
         if (StringUtils.isEmpty(notificationMessage)) {
             notificationMessage = messageService.getStandardMessageForKey("message.stream.offline.default");
         }
-        messageService.sendMessage(event.getBroadcasterUserLogin(), notificationMessage, null);
+        messageService.sendMessage(event.getBroadcasterUserLogin(), messageService.getMessageBuilder().withText(notificationMessage), null);
     }
 }

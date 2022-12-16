@@ -87,18 +87,23 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         final String channelId = event.getChannel().getId();
         final String channelName = event.getChannel().getName();
         final String userName = event.getUser().getName();
+
         if (!isSuperAdmin(userName) && !isBroadcaster(userName, event.getChannel().getName())) {
-            final String message = messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT);
-            messageService.sendMessage(channelName, String.format(message, userName), false, null);
+            final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder()
+                    .withUserTag(TAG_CHARACTER + userName)
+                    .withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT));
+            messageService.sendMessage(channelName, messageBuilder, false, null);
         }
         final String[] commandArgs = parseCommandArgs(event.getMessage());
 
-        final String responseMessage = executeCommand(commandArgs, userName, channelId, channelName);
-        if (StringUtils.isNotEmpty(responseMessage)) {
-            messageService.sendMessage(channelName, String.format(responseMessage, userName), false, null);
+        final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder()
+                .withText(executeCommand(commandArgs, userName, channelId, channelName));
+        if (messageBuilder.isNotEmpty()) {
+            messageService.sendMessage(channelName, messageBuilder.withUserTag(TAG_CHARACTER + userName), false, null);
         } else {
-            final String errorMessage = messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_ERROR + channelName.toLowerCase(), MESSAGE_COMMAND_ERROR + CHANNEL_DEFAULT);
-            messageService.sendMessage(channelName, String.format(errorMessage, userName), false, null);
+            messageBuilder.withUserTag(TAG_CHARACTER + userName)
+                    .withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_ERROR + channelName.toLowerCase(), MESSAGE_COMMAND_ERROR + CHANNEL_DEFAULT));
+            messageService.sendMessage(channelName, messageBuilder, false, null);
         }
     }
 
@@ -208,7 +213,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         if (!Set.of(FeatureEnum.values()).containsAll(features)) {
             return StringUtils.EMPTY;
         }
-        final StringBuilder messageBuilder = new StringBuilder("%s ");
+        final StringBuilder messageBuilder = new StringBuilder();
         if (FEATURE_COMMAND_ALL_ARG.equalsIgnoreCase(args[0])) {
             messageBuilder.append(configurationService.getConfiguration(channelName).isMuted() ? "muted" : "unmuted").append(" | ");
         }
@@ -373,7 +378,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             return StringUtils.EMPTY;
         }
         // todo validate channel name
-        messageService.sendMessage(args[0].toLowerCase(), args[1], null);
+        messageService.sendMessage(args[0].toLowerCase(), messageService.getMessageBuilder().withText(args[1]), null);
         return messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_SEND + channelName.toLowerCase(), MESSAGE_COMMAND_SEND + CHANNEL_DEFAULT);
     }
 

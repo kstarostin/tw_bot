@@ -30,6 +30,8 @@ public interface BotEmote {
         List<String> CONFUSION = List.of(SevenTVChannel.Okayeg, SevenTVChannel.KEKWait, SevenTVChannel.CheNaxyi, SevenTVChannel.XyliHuh, SevenTVChannel.Pausey,
                 SevenTVChannel.roflanUpalo, SevenTVChannel.FeelsSpecialMan, SevenTVChannel.XyliSnes, SevenTVChannel.deshovka, SevenTVChannel.xyliNado, SevenTVChannel.XyliChel,
                 SevenTVGlobal.WAYTOODANK, SevenTVGlobal.Stare, SevenTVGlobal.FeelsWeirdMan, BTTVChannel.Ebaka, TwitchGlobal.RlyTho);
+
+        List<List<String>> ALL_SETS = List.of(HAPPY, POG, COOL, LAUGH, DANCE, SAD, GREETING, CONFUSION);
     }
 
     interface TwitchGlobal {

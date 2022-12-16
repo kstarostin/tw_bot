@@ -1,6 +1,7 @@
 package com.chatbot.feature.twitch;
 
 import com.chatbot.service.ModerationService;
+import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -27,24 +28,27 @@ public class ChatModerationFeature extends AbstractFeature {
         final String userName = event.getUser().getName();
         final String message = event.getMessage();
         if (moderationService.isSuspiciousMessage(channelName, message, event.getPermissions())) {
-            final String responseMessage;
+            final DefaultMessageServiceImpl.MessageBuilder responseBuilder = messageService.getMessageBuilder();
             int violationPoints = calculateViolationPoints(message, event);
 
             if (violationPoints >= getViolationPointsThresholdToBan(channelName)) {
                 final String banReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.ban.reason." + channelName.toLowerCase(), "message.moderation.ban.reason.default");
                 moderationService.banUser(channelName, event.getUser().getName(), banReasonMessage);
 
-                responseMessage = String.format(messageService.getPersonalizedMessageForKey("message.moderation.ban." + channelName.toLowerCase(), "message.moderation.ban.default"), TAG_CHARACTER + userName);
+                responseBuilder.withText(messageService.getPersonalizedMessageForKey("message.moderation.ban." + channelName.toLowerCase(), "message.moderation.ban.default"));
+                responseBuilder.withUserTag(TAG_CHARACTER + userName);
             } else if (violationPoints >= getViolationPointsThresholdToTimeout(channelName)) {
                 final String muteReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.timeout.reason." + channelName.toLowerCase(), "message.moderation.timeout.reason.default");
                 moderationService.timeoutUser(channelName, event.getUser().getName(), muteReasonMessage, getAutoTimeoutTimeSeconds(channelName));
 
-                responseMessage = String.format(messageService.getPersonalizedMessageForKey("message.moderation.timeout." + channelName.toLowerCase(), "message.moderation.timeout.default"), TAG_CHARACTER + userName);
+                responseBuilder.withText(messageService.getPersonalizedMessageForKey("message.moderation.timeout." + channelName.toLowerCase(), "message.moderation.timeout.default"));
+                responseBuilder.withUserTag(TAG_CHARACTER + userName);
             } else {
-                responseMessage = String.format(messageService.getPersonalizedMessageForKey("message.moderation.suspicious." + channelName.toLowerCase(), "message.moderation.suspicious.default"), TAG_CHARACTER + userName);
+                responseBuilder.withText(messageService.getPersonalizedMessageForKey("message.moderation.suspicious." + channelName.toLowerCase(), "message.moderation.suspicious.default"));
+                responseBuilder.withUserTag(TAG_CHARACTER + userName);
             }
-            if (StringUtils.isNotEmpty(responseMessage)) {
-                messageService.sendMessage(channelName, responseMessage, null);
+            if (responseBuilder.isNotEmpty()) {
+                messageService.sendMessage(channelName, responseBuilder, null);
             }
         }
     }
