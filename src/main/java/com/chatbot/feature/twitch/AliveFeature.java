@@ -11,20 +11,31 @@ import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.service.impl.DefaultRandomizerServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
+import com.github.twitch4j.chat.events.AbstractChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
-import java.util.SplittableRandom;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.chatbot.util.emotes.BotEmote.Sets.*;
 
 public class AliveFeature extends AbstractFeature {
+    private final Logger LOG = LoggerFactory.getLogger(AliveFeature.class);
+
     private static final int RND_TRIGGER_MIN_PROBABILITY = 1;
     private static final int RND_TRIGGER_MAX_PROBABILITY = 100;
 
@@ -42,6 +53,11 @@ public class AliveFeature extends AbstractFeature {
 
     private static final Set<String> USER_FRIEND_LIST = Set.of("0mskbird", "yura_atlet", "1skybox1", "chenushka", "hereticjz", "skvdee", "svetloholmov", "prof_133", "kiber_bober",
             "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013");
+
+    private static final int MIN_CHATTING_RATE = 1;
+    private static final int MAX_CHATTING_RATE = 10;
+
+    private static final Map<String, Queue<ChannelMessageEvent>> MESSAGE_HISTORY_MAP = new HashMap<>();
 
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
@@ -63,6 +79,8 @@ public class AliveFeature extends AbstractFeature {
         if (isCommand(message) || moderationService.isSuspiciousMessage(channelName, message, event.getPermissions())) {
             return;
         }
+        rememberMessageEventForChannelId(channelId, event);
+
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder();
         if (isGreetingResponse(channelName, userName, message)) {
             responseMessageBuilder.withText(buildGreetingText(userName));
@@ -76,8 +94,17 @@ public class AliveFeature extends AbstractFeature {
                 responseMessageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 3, emoteSet));
                 messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
             }
-        } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomBotTrigger(channelName))) {
-            responseMessageBuilder.withText(balabobaResponseGenerator.generate(sanitizeRequestMessage(message), true, true, false))
+        } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomBotTrigger(channelId, channelName))) {
+            List<ChannelMessageEvent> lastMessages = new ArrayList<>(getLastMessageEventsForChannelIdAndUserName(channelId, userName));
+            if (lastMessages.size() < 3) {
+                lastMessages = new ArrayList<>(getLastMessageEventsForChannelId(channelId));
+            }
+            Collections.reverse(lastMessages);
+            lastMessages = lastMessages.stream().limit(3).collect(Collectors.toList());
+
+            final String requestMessage = lastMessages.stream().map(AbstractChannelMessageEvent::getMessage).collect(Collectors.joining(StringUtils.SPACE));
+
+            responseMessageBuilder.withText(balabobaResponseGenerator.generate(sanitizeRequestMessage(requestMessage), true, true, false))
                     .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 2, CONFUSION, HAPPY));
             if (responseMessageBuilder.isNotEmpty()) {
                 sendMessageWithDelay(channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
@@ -135,9 +162,12 @@ public class AliveFeature extends AbstractFeature {
         return !message.contains(TAG_CHARACTER);
     }
 
-    private boolean isRandomBotTrigger(final String channelName) {
-        final SplittableRandom random = new SplittableRandom();
-        return random.nextInt(RND_TRIGGER_MIN_PROBABILITY, RND_TRIGGER_MAX_PROBABILITY + 1) <= configurationService.getConfiguration(channelName).getIndependenceRate();
+    private boolean isRandomBotTrigger(final String channelId, final String channelName) {
+        //final SplittableRandom random = new SplittableRandom();
+        //return random.nextInt(RND_TRIGGER_MIN_PROBABILITY, RND_TRIGGER_MAX_PROBABILITY + 1) <= configurationService.getConfiguration(channelName).getIndependenceRate();
+        final int chattingRate = calculateCurrentChattingRate(channelId);
+        final int subtract = chattingRate - MIN_CHATTING_RATE;
+        return randomizerService.rollDice(MAX_CHATTING_RATE - subtract) == 0;
     }
 
     private String buildGreetingText(final String userName) {
@@ -230,5 +260,33 @@ public class AliveFeature extends AbstractFeature {
         SEND_RESPONSE,
         SEND_REPLY,
         SEND_MESSAGE;
+    }
+
+    private int calculateCurrentChattingRate(final String channelId) {
+        final Queue<ChannelMessageEvent> lastMessageEvents = getLastMessageEventsForChannelId(channelId);
+        if (CollectionUtils.isEmpty(lastMessageEvents)) {
+            return MIN_CHATTING_RATE;
+        }
+        final Calendar lastMinute = Calendar.getInstance();
+        lastMinute.add(Calendar.MINUTE, -1);
+        final int rate =  Math.min((int) lastMessageEvents.stream().filter(messageEvent -> messageEvent.getFiredAt().after(lastMinute)).count(), MAX_CHATTING_RATE);
+        LOG.info("Current chatting rate [" + rate + "]");
+        return rate;
+    }
+
+    private void rememberMessageEventForChannelId(final String channelId, final ChannelMessageEvent messageEvent) {
+        final Queue<ChannelMessageEvent> lastMessageEvents = getLastMessageEventsForChannelId(channelId);
+        lastMessageEvents.add(messageEvent);
+        MESSAGE_HISTORY_MAP.put(channelId, lastMessageEvents);
+    }
+
+    private Queue<ChannelMessageEvent> getLastMessageEventsForChannelIdAndUserName(final String channelId, final String userName) {
+        return getLastMessageEventsForChannelId(channelId).stream()
+                .filter(event -> userName.equals(event.getUser().getName()))
+                .collect(Collectors.toCollection(() -> new CircularFifoQueue<>(10)));
+    }
+
+    private Queue<ChannelMessageEvent> getLastMessageEventsForChannelId(final String channelId) {
+        return MESSAGE_HISTORY_MAP.containsKey(channelId) ? MESSAGE_HISTORY_MAP.get(channelId) : new CircularFifoQueue<>(10);
     }
 }
