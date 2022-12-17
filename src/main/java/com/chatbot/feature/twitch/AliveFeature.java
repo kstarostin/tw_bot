@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -53,6 +54,10 @@ public class AliveFeature extends AbstractFeature {
 
     private static final Set<String> USER_FRIEND_LIST = Set.of("0mskbird", "yura_atlet", "1skybox1", "chenushka", "hereticjz", "skvdee", "svetloholmov", "prof_133", "kiber_bober",
             "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013");
+
+    private static final Set<String> ADDITIONAL_BOT_TAG_NAMES = Set.of("бот", "бота", "боту", "ботом", "боте",
+            "омск", "омска", "омску", "омском", "омске",
+            "омский", "омского", "омскому", "омским");
 
     private static final int MIN_CHATTING_RATE = 1;
     private static final int MAX_CHATTING_RATE = 10;
@@ -95,16 +100,7 @@ public class AliveFeature extends AbstractFeature {
                 messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
             }
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomBotTrigger(channelId, channelName))) {
-            List<ChannelMessageEvent> lastMessages = new ArrayList<>(getLastMessageEventsForChannelIdAndUserName(channelId, userName));
-            if (lastMessages.size() < 3) {
-                lastMessages = new ArrayList<>(getLastMessageEventsForChannelId(channelId));
-            }
-            Collections.reverse(lastMessages);
-            lastMessages = lastMessages.stream().limit(3).collect(Collectors.toList());
-
-            final String requestMessage = lastMessages.stream().map(AbstractChannelMessageEvent::getMessage).collect(Collectors.joining(StringUtils.SPACE));
-
-            responseMessageBuilder.withText(balabobaResponseGenerator.generate(sanitizeRequestMessage(requestMessage), true, true, false))
+            responseMessageBuilder.withText(generateResponseText(channelId, channelName))
                     .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 2, CONFUSION, HAPPY));
             if (responseMessageBuilder.isNotEmpty()) {
                 sendMessageWithDelay(channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
@@ -133,7 +129,17 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private boolean isBotTagged(final String message) {
-        return StringUtils.containsIgnoreCase(message, configurationService.getBotName());
+        final Set<String> tags = new HashSet<>(ADDITIONAL_BOT_TAG_NAMES);
+        tags.add(configurationService.getBotName());
+        for (String tag : tags) {
+            if (message.equalsIgnoreCase(tag)
+                    || message.toLowerCase().startsWith(tag.toLowerCase() + StringUtils.SPACE)
+                    || message.toLowerCase().contains(StringUtils.SPACE + tag.toLowerCase() + StringUtils.SPACE)
+                    || message.toLowerCase().endsWith(StringUtils.SPACE + tag.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isEmoteOnlyMessage(final String channelId, final String message) {
@@ -186,6 +192,19 @@ public class AliveFeature extends AbstractFeature {
             messageTemplate = messageTemplate.replace(token, replacement);
         }
         return messageTemplate.replaceAll(" +", StringUtils.SPACE).trim();
+    }
+
+    private String generateResponseText(final String channelId, final String userName) {
+        List<ChannelMessageEvent> lastMessages = new ArrayList<>(getLastMessageEventsForChannelIdAndUserName(channelId, userName));
+        if (lastMessages.size() < 3) {
+            lastMessages = new ArrayList<>(getLastMessageEventsForChannelId(channelId));
+        }
+        Collections.reverse(lastMessages);
+        lastMessages = lastMessages.stream().limit(3).collect(Collectors.toList());
+
+        final String requestMessage = lastMessages.stream().map(AbstractChannelMessageEvent::getMessage).collect(Collectors.joining(StringUtils.SPACE));
+
+        return balabobaResponseGenerator.generate(sanitizeRequestMessage(requestMessage), true, true, false);
     }
 
     private String sanitizeRequestMessage(final String message) {
