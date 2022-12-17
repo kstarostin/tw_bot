@@ -18,4 +18,7 @@ public interface TwitchEmoteService {
     List<Emote> getGlobalTwitchEmotes();
     List<Emote> getChannelTwitchEmotes(String channelId);
     Set<String> getValidEmoteNames(String channelId);
+    @SuppressWarnings("unchecked")
+    String buildEmoteLine(String channelId, int maxNumberOfEmotes, List<String>... emoteSets);
+    boolean isEmote(String channelId, String text);
 }

@@ -4,10 +4,12 @@ import com.chatbot.service.BotFeatureService;
 import com.chatbot.service.ChannelService;
 import com.chatbot.service.MessageService;
 import com.chatbot.service.ConfigurationService;
+import com.chatbot.service.TwitchEmoteService;
 import com.chatbot.service.impl.DefaultBotFeatureServiceImpl;
 import com.chatbot.service.impl.DefaultChannelServiceImpl;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
+import com.chatbot.service.impl.DefaultTwitchEmoteServiceImpl;
 import com.chatbot.util.FeatureEnum;
 
 public abstract class AbstractFeature {
@@ -19,8 +21,8 @@ public abstract class AbstractFeature {
     protected final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     protected final ChannelService channelService = DefaultChannelServiceImpl.getInstance();
     private final BotFeatureService featureService = DefaultBotFeatureServiceImpl.getInstance();
-
     protected final MessageService messageService = DefaultMessageServiceImpl.getInstance();
+    protected final TwitchEmoteService twitchEmoteService = DefaultTwitchEmoteServiceImpl.getInstance();
 
     protected boolean isFeatureActive(final String channelName, final FeatureEnum featureEnum) {
         return featureService.isTwitchFeatureActive(channelName, featureEnum);

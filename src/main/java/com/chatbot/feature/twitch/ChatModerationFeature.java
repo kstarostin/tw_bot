@@ -6,9 +6,12 @@ import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.chatbot.util.emotes.BotEmote.Sets.CONFUSION;
+import static com.chatbot.util.emotes.BotEmote.Sets.COOL;
+import static com.chatbot.util.emotes.BotEmote.Sets.HAPPY;
 
 public class ChatModerationFeature extends AbstractFeature {
 
@@ -25,8 +28,10 @@ public class ChatModerationFeature extends AbstractFeature {
         if (!isFeatureActive(channelName, FeatureEnum.MODERATOR) || (isActiveOnLiveStreamOnly(channelName) && !isStreamLive(event.getChannel().getName())) || !moderationService.isBotModeratorOnChannel(event.getChannel().getName())) {
             return;
         }
+        final String channelId = event.getChannel().getId();
         final String userName = event.getUser().getName();
         final String message = event.getMessage();
+
         if (moderationService.isSuspiciousMessage(channelName, message, event.getPermissions())) {
             final DefaultMessageServiceImpl.MessageBuilder responseBuilder = messageService.getMessageBuilder();
             int violationPoints = calculateViolationPoints(message, event);
@@ -35,17 +40,18 @@ public class ChatModerationFeature extends AbstractFeature {
                 final String banReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.ban.reason." + channelName.toLowerCase(), "message.moderation.ban.reason.default");
                 moderationService.banUser(channelName, event.getUser().getName(), banReasonMessage);
 
-                responseBuilder.withText(messageService.getPersonalizedMessageForKey("message.moderation.ban." + channelName.toLowerCase(), "message.moderation.ban.default"));
-                responseBuilder.withUserTag(TAG_CHARACTER + userName);
+                responseBuilder.withUserTag(TAG_CHARACTER + userName)
+                        .withText(messageService.getPersonalizedMessageForKey("message.moderation.ban." + channelName.toLowerCase(), "message.moderation.ban.default"))
+                        .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, COOL));
             } else if (violationPoints >= getViolationPointsThresholdToTimeout(channelName)) {
                 final String muteReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.timeout.reason." + channelName.toLowerCase(), "message.moderation.timeout.reason.default");
                 moderationService.timeoutUser(channelName, event.getUser().getName(), muteReasonMessage, getAutoTimeoutTimeSeconds(channelName));
 
-                responseBuilder.withText(messageService.getPersonalizedMessageForKey("message.moderation.timeout." + channelName.toLowerCase(), "message.moderation.timeout.default"));
-                responseBuilder.withUserTag(TAG_CHARACTER + userName);
+                responseBuilder.withUserTag(TAG_CHARACTER + userName)
+                        .withText(messageService.getPersonalizedMessageForKey("message.moderation.timeout." + channelName.toLowerCase(), "message.moderation.timeout.default"))
+                        .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, HAPPY));;
             } else {
-                responseBuilder.withText(messageService.getPersonalizedMessageForKey("message.moderation.suspicious." + channelName.toLowerCase(), "message.moderation.suspicious.default"));
-                responseBuilder.withUserTag(TAG_CHARACTER + userName);
+                responseBuilder.withUserTag(TAG_CHARACTER + userName).withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, CONFUSION));
             }
             if (responseBuilder.isNotEmpty()) {
                 messageService.sendMessage(channelName, responseBuilder, null);

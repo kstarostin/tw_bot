@@ -67,12 +67,12 @@ public class DefaultPeriodCacheServiceImpl implements PeriodCacheService {
     }
 
     @Override
-    public void cacheEmotes(final String channelName, final DefaultTwitchEmoteService.EmoteProvider provider, final List emoteList, final CachePeriod period) {
-        Map<DefaultTwitchEmoteService.EmoteProvider, List> emotesPerProviderPerChannel;
+    public void cacheEmotes(final String channelName, final DefaultTwitchEmoteServiceImpl.EmoteProvider provider, final List emoteList, final CachePeriod period) {
+        Map<DefaultTwitchEmoteServiceImpl.EmoteProvider, List> emotesPerProviderPerChannel;
         final String cacheName = CACHE_EMOTES + channelName;
 
-        final Optional<PeriodCache<Long, Map<DefaultTwitchEmoteService.EmoteProvider, List>>> emotesMinuteCacheOptional =
-                getCacheByName(cacheName, (Class<Map<DefaultTwitchEmoteService.EmoteProvider, List>>) (Class<?>) Map.class);
+        final Optional<PeriodCache<Long, Map<DefaultTwitchEmoteServiceImpl.EmoteProvider, List>>> emotesMinuteCacheOptional =
+                getCacheByName(cacheName, (Class<Map<DefaultTwitchEmoteServiceImpl.EmoteProvider, List>>) (Class<?>) Map.class);
 
         if (emotesMinuteCacheOptional.isPresent()) {
             emotesPerProviderPerChannel = emotesMinuteCacheOptional.get().getDayCache().get(getCacheKeyForPeriod(period));
@@ -91,10 +91,10 @@ public class DefaultPeriodCacheServiceImpl implements PeriodCacheService {
     }
 
     @Override
-    public Optional<List> getCachedEmotes(final String channelName, final DefaultTwitchEmoteService.EmoteProvider provider, final CachePeriod period) {
+    public Optional<List> getCachedEmotes(final String channelName, final DefaultTwitchEmoteServiceImpl.EmoteProvider provider, final CachePeriod period) {
         final String cacheName = CACHE_EMOTES + channelName;
-        final Optional<PeriodCache<Long, Map<DefaultTwitchEmoteService.EmoteProvider, List>>> emotesMinuteCacheOptional =
-                getCacheByName(cacheName, (Class<Map<DefaultTwitchEmoteService.EmoteProvider, List>>) (Class<?>) Map.class);
+        final Optional<PeriodCache<Long, Map<DefaultTwitchEmoteServiceImpl.EmoteProvider, List>>> emotesMinuteCacheOptional =
+                getCacheByName(cacheName, (Class<Map<DefaultTwitchEmoteServiceImpl.EmoteProvider, List>>) (Class<?>) Map.class);
         return emotesMinuteCacheOptional
                 .map(longMapPeriodCache -> longMapPeriodCache.getDayCache().get(getCacheKeyForPeriod(period)))
                 .map(emoteMap -> emoteMap.get(provider));

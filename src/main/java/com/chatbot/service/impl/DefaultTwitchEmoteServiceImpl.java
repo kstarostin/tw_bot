@@ -2,6 +2,7 @@ package com.chatbot.service.impl;
 
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.PeriodCacheService;
+import com.chatbot.service.RandomizerService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.service.TwitchEmoteService;
 import com.chatbot.util.emotes.bttv.BTTV;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.twitch4j.helix.domain.Emote;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -39,10 +41,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DefaultTwitchEmoteService implements TwitchEmoteService {
-    private static DefaultTwitchEmoteService instance;
+public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
+    private static DefaultTwitchEmoteServiceImpl instance;
 
-    private final Logger LOG = LoggerFactory.getLogger(DefaultTwitchEmoteService.class);
+    private final Logger LOG = LoggerFactory.getLogger(DefaultTwitchEmoteServiceImpl.class);
 
     private static final String GLOBAL = "global";
 
@@ -67,13 +69,14 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
+    private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
 
-    private DefaultTwitchEmoteService() {
+    private DefaultTwitchEmoteServiceImpl() {
     }
 
-    public static synchronized DefaultTwitchEmoteService getInstance() {
+    public static synchronized DefaultTwitchEmoteServiceImpl getInstance() {
         if (instance == null) {
-            instance = new DefaultTwitchEmoteService();
+            instance = new DefaultTwitchEmoteServiceImpl();
         }
         return instance;
     }
@@ -202,6 +205,27 @@ public class DefaultTwitchEmoteService implements TwitchEmoteService {
         emotesNames.addAll(getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
         emotesNames.addAll(getChannel7TVEmotes(channelId).stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
         return emotesNames;
+    }
+
+    @SafeVarargs
+    @Override
+    public final String buildEmoteLine(final String channelId, final int maxNumberOfEmotes, final List<String>... emoteSets) {
+        final int setNumber = randomizerService.rollDiceExponentially(emoteSets.length, 2);
+        final int numberOfEmotes = randomizerService.rollDiceExponentially(maxNumberOfEmotes, 2) + 1;
+
+        final List<String> selectedSet = emoteSets[setNumber].parallelStream().filter(emote -> isEmote(channelId, emote)).collect(Collectors.toList());
+
+        final StringBuilder emotePart = new StringBuilder();
+        for (int i = 0; i < numberOfEmotes; i++) {
+            final int index = randomizerService.rollDiceExponentially(selectedSet.size(), 2);
+            emotePart.append(StringUtils.SPACE).append(selectedSet.get(index));
+        }
+        return emotePart.toString().trim();
+    }
+
+    @Override
+    public boolean isEmote(final String channelId, final String text) {
+        return getValidEmoteNames(channelId).contains(text);
     }
 
     private List<SevenTVEmote> get7TVEmotes(final String channelId, final String url) {

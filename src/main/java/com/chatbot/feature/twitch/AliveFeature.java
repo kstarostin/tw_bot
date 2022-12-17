@@ -4,25 +4,22 @@ import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.service.PeriodCacheService;
 import com.chatbot.service.ModerationService;
-import com.chatbot.service.TwitchEmoteService;
+import com.chatbot.service.RandomizerService;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultPeriodCacheServiceImpl;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
-import com.chatbot.service.impl.DefaultTwitchEmoteService;
+import com.chatbot.service.impl.DefaultRandomizerServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.SplittableRandom;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.chatbot.util.emotes.BotEmote.Sets.*;
@@ -33,21 +30,23 @@ public class AliveFeature extends AbstractFeature {
 
     private final static MessageType[] RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP = {
             MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE,
-            MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE,
-            MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY,
+            MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE,
+            MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE,
+            MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY,
             MessageType.SEND_MESSAGE
     };
 
     private static final String USERNAME_TOKEN = "${name}";
     private static final String GREETING_TOKEN = "${greeting}";
     private static final String ADDITION_TOKEN = "${addition}";
+
     private static final Set<String> USER_FRIEND_LIST = Set.of("0mskbird", "yura_atlet", "1skybox1", "chenushka", "hereticjz", "skvdee", "svetloholmov", "prof_133", "kiber_bober",
             "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013");
 
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
     private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
-    private final TwitchEmoteService twitchEmoteService = DefaultTwitchEmoteService.getInstance();
+    private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
 
     public AliveFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
@@ -67,19 +66,19 @@ public class AliveFeature extends AbstractFeature {
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder();
         if (isGreetingResponse(channelName, userName, message)) {
             responseMessageBuilder.withText(buildGreetingText(userName));
-            if (getRandomIntExponentially(2, 2) == 0) {
-                responseMessageBuilder.withEmotes(buildEmotes(channelId, 3, GREETING, POG, HAPPY));
+            if (randomizerService.flipCoin(2)) {
+                responseMessageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 3, GREETING, POG, HAPPY));
             }
             greetWithDelay(channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
         } else if (isEmoteOnlyMessage(channelId, message)) {
             final List<String> emoteSet = getEmoteSet(message);
-            if (CollectionUtils.isNotEmpty(emoteSet) && getRandomIntExponentially(2, 2) == 1) {
-                responseMessageBuilder.withEmotes(buildEmotes(channelId, 3, emoteSet));
+            if (CollectionUtils.isNotEmpty(emoteSet) && !randomizerService.flipCoin(2)) {
+                responseMessageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 3, emoteSet));
                 messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
             }
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomBotTrigger(channelName))) {
             responseMessageBuilder.withText(balabobaResponseGenerator.generate(sanitizeRequestMessage(message), true, true, false))
-                    .withEmotes(buildEmotes(channelId, 2, CONFUSION, HAPPY));
+                    .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 2, CONFUSION, HAPPY));
             if (responseMessageBuilder.isNotEmpty()) {
                 sendMessageWithDelay(channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
             }
@@ -103,7 +102,7 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private boolean isRandomGreeting() {
-        return getRandomIntExponentially(2, 3) == 1;
+        return !randomizerService.flipCoin(3);
     }
 
     private boolean isBotTagged(final String message) {
@@ -113,7 +112,7 @@ public class AliveFeature extends AbstractFeature {
     private boolean isEmoteOnlyMessage(final String channelId, final String message) {
         final String[] messageTokens = message.split(StringUtils.SPACE);
         for (final String token : messageTokens) {
-            if (!isEmote(channelId, token)) {
+            if (!twitchEmoteService.isEmote(channelId, token)) {
                 return false;
             }
         }
@@ -132,10 +131,6 @@ public class AliveFeature extends AbstractFeature {
         return Collections.emptyList();
     }
 
-    private boolean isEmote(final String channelId, final String text) {
-        return twitchEmoteService.getValidEmoteNames(channelId).contains(text);
-    }
-
     private boolean isNoOneTagged(final String message) {
         return !message.contains(TAG_CHARACTER);
     }
@@ -151,7 +146,7 @@ public class AliveFeature extends AbstractFeature {
         final StringBuilder sb = new StringBuilder();
         greetingTokens.forEach(token -> {
             final int exponent = ADDITION_TOKEN.equals(token) ? 3 : 2;
-            if (getRandomIntExponentially(2, exponent) == 0) {
+            if (randomizerService.flipCoin(exponent)) {
                 sb.append(StringUtils.SPACE).append(token);
             }
         });
@@ -161,30 +156,6 @@ public class AliveFeature extends AbstractFeature {
             messageTemplate = messageTemplate.replace(token, replacement);
         }
         return messageTemplate.replaceAll(" +", StringUtils.SPACE).trim();
-    }
-
-    @SafeVarargs
-    private String buildEmotes(final String channelId, final int maxNumberOfEmotes, final List<String>... emoteSets) {
-        final int setNumber = getRandomIntExponentially(emoteSets.length, 2);
-        final int numberOfEmotes = getRandomIntExponentially(maxNumberOfEmotes, 2) + 1;
-
-        final List<String> selectedSet = emoteSets[setNumber].parallelStream().filter(emote -> isEmote(channelId, emote)).collect(Collectors.toList());
-
-        final StringBuilder emotePart = new StringBuilder();
-        for (int i = 0; i < numberOfEmotes; i++) {
-            final int index = getRandomIntExponentially(selectedSet.size(), 2);
-            emotePart.append(StringUtils.SPACE).append(selectedSet.get(index));
-        }
-        return emotePart.toString().trim();
-    }
-
-    private int getRandomIntExponentially(final int bound, final int exponent) {
-        final List<Integer> results = new ArrayList<>();
-        for (int i = 0, j = bound; i < bound; i++, j--) {
-            final int numberOfCopies = (int) Math.pow(j, exponent);
-            results.addAll(Collections.nCopies(numberOfCopies, i));
-        }
-        return results.get(new Random().nextInt(results.size()));
     }
 
     private String sanitizeRequestMessage(final String message) {
@@ -220,7 +191,7 @@ public class AliveFeature extends AbstractFeature {
         ChannelMessageEvent replyEvent = null;
         switch (getReplyType()) {
             case SEND_RESPONSE:
-                final boolean startsWithTag = getRandomIntExponentially(2, 2) == 0;
+                final boolean startsWithTag = randomizerService.flipCoin(2);
                 messageBuilder.withUserTag(TAG_CHARACTER + userName, startsWithTag);
                 break;
             case SEND_REPLY:
@@ -236,8 +207,8 @@ public class AliveFeature extends AbstractFeature {
     private void sendMessageWithDelay(final String channelName, final String userName, final DefaultMessageServiceImpl.MessageBuilder messageBuilder, final int delay, final ChannelMessageEvent event) {
         switch (getReplyType()) {
             case SEND_RESPONSE:
-                final boolean startsWithTag = getRandomIntExponentially(2, 2) == 0;
-                final boolean isNoTagCharIncluded = getRandomIntExponentially(4, 2) == 1;
+                final boolean startsWithTag = randomizerService.flipCoin(2);
+                final boolean isNoTagCharIncluded = !randomizerService.flipCoin(4);
                 final String tag = isNoTagCharIncluded ? userName : TAG_CHARACTER + userName;
                 messageBuilder.withUserTag(tag, startsWithTag);
                 messageService.sendMessageWithDelay(channelName, messageBuilder, delay, null);
@@ -252,8 +223,7 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private MessageType getReplyType() {
-        int random = new Random().nextInt(RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP.length);
-        return RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP[random];
+        return RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP[randomizerService.rollDice(RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP.length)];
     }
 
     private enum MessageType {

@@ -1,9 +1,12 @@
 package com.chatbot.feature.twitch;
 
+import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.eventsub.events.StreamOfflineEvent;
 import com.github.twitch4j.eventsub.events.StreamOnlineEvent;
-import org.apache.commons.lang3.StringUtils;
+
+import static com.chatbot.util.emotes.BotEmote.Sets.POG;
+import static com.chatbot.util.emotes.BotEmote.Sets.SAD;
 
 public class ChannelNotificationOnStreamStatusFeature extends AbstractFeature {
 
@@ -13,26 +16,26 @@ public class ChannelNotificationOnStreamStatusFeature extends AbstractFeature {
     }
 
     public void onStreamOnline(final StreamOnlineEvent event) {
+        final String channelId = event.getBroadcasterUserId();
         final String channelName = event.getBroadcasterUserLogin();
         /*if (!isFeatureActive(channelName, FeatureEnum.STREAM)) {
             return;
         }*/
-        String notificationMessage = messageService.getStandardMessageForKey("message.stream.online." + channelName.toLowerCase());
-        if (StringUtils.isEmpty(notificationMessage)) {
-            notificationMessage = messageService.getStandardMessageForKey("message.stream.online.default");
-        }
-        messageService.sendMessage(event.getBroadcasterUserLogin(), messageService.getMessageBuilder().withText(notificationMessage), null);
+        final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder()
+                .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, POG))
+                .withText(messageService.getPersonalizedMessageForKey("message.stream.online." + channelName.toLowerCase(), "message.stream.online.default"));
+        messageService.sendMessage(event.getBroadcasterUserLogin(), messageBuilder, null);
     }
 
     public void onStreamOffline(final StreamOfflineEvent event) {
+        final String channelId = event.getBroadcasterUserId();
         final String channelName = event.getBroadcasterUserLogin();
         /*if (!isFeatureActive(channelName, FeatureEnum.STREAM)) {
             return;
         }*/
-        String notificationMessage = messageService.getStandardMessageForKey("message.stream.offline." + channelName.toLowerCase());
-        if (StringUtils.isEmpty(notificationMessage)) {
-            notificationMessage = messageService.getStandardMessageForKey("message.stream.offline.default");
-        }
-        messageService.sendMessage(event.getBroadcasterUserLogin(), messageService.getMessageBuilder().withText(notificationMessage), null);
+        final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder()
+                .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, SAD))
+                .withText(messageService.getPersonalizedMessageForKey("message.stream.offline." + channelName.toLowerCase(), "message.stream.offline.default"));
+        messageService.sendMessage(event.getBroadcasterUserLogin(), messageBuilder, null);
     }
 }

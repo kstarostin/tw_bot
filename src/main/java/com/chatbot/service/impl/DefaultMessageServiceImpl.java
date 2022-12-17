@@ -2,6 +2,7 @@ package com.chatbot.service.impl;
 
 import com.chatbot.service.BotFeatureService;
 import com.chatbot.service.ConfigurationService;
+import com.chatbot.service.RandomizerService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.util.FeatureEnum;
 import com.chatbot.service.MessageService;
@@ -14,7 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
@@ -32,6 +32,7 @@ public class DefaultMessageServiceImpl implements MessageService {
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
+    private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
 
     private DefaultMessageServiceImpl() {
     }
@@ -104,7 +105,7 @@ public class DefaultMessageServiceImpl implements MessageService {
     public String getStandardMessageForKey(final String key) {
         final String propertyMessage = configurationService.getProperties("messages/messages.properties").getProperty(key);
         final String[] messages = StringUtils.isNotEmpty(propertyMessage) ? propertyMessage.split("\\|") : new String[0];
-        return messages.length > 0 ? messages[new Random().nextInt(messages.length)] : StringUtils.EMPTY;
+        return messages.length > 0 ? messages[randomizerService.rollDice(messages.length)] : StringUtils.EMPTY;
     }
 
     @Override
