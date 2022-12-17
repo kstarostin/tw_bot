@@ -4,11 +4,11 @@ import java.util.List;
 
 public interface BotEmote {
     interface Sets {
-        List<String> HAPPY = List.of(SevenTVChannel.Okayge, SevenTVChannel.Basedge, SevenTVChannel.PepeChill, SevenTVChannel.Starege, SevenTVChannel.MmmHmm, SevenTVChannel.Zaebis,
-                BTTVChannel.OkayChamp, SevenTVGlobal.Gayge, SevenTVGlobal.peepoHappy, SevenTVChannel.Clueless, SevenTVGlobal.FeelsOkayMan, BTTVGlobal.FeelsGoodMan,
+        List<String> HAPPY = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.Okayge, SevenTVChannel.Basedge, SevenTVChannel.PepeChill, SevenTVChannel.Starege, SevenTVChannel.MmmHmm,
+                SevenTVChannel.Zaebis, BTTVChannel.OkayChamp, SevenTVGlobal.Gayge, SevenTVGlobal.peepoHappy, SevenTVChannel.Clueless, SevenTVGlobal.FeelsOkayMan, BTTVGlobal.FeelsGoodMan,
                 BTTVGlobal.FeelsAmazingMan, TwitchGlobal.SUBprise, TwitchGlobal.TriHard, TwitchGlobal.FourHead, TwitchGlobal.BloodTrail, TwitchGlobal.SmileyFace38);
 
-        List<String> POG = List.of(SevenTVChannel.Pogey, SevenTVChannel.stalkPog, SevenTVChannel.SHTO, TwitchGlobal.PogChamp);
+        List<String> POG = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.Pogey, SevenTVChannel.stalkPog, SevenTVChannel.SHTO, TwitchGlobal.PogChamp);
 
         List<String> COOL = List.of(SevenTVGlobal.EZ, SevenTVChannel.Basedge, BTTVGlobal.KappaCool, SevenTVChannel.KKool, SevenTVChannel.Siga, TwitchGlobal.GlitchCat,
                 TwitchGlobal.CoolCat, TwitchGlobal.DatSheffy, TwitchGlobal.DxCat);
@@ -20,9 +20,9 @@ public interface BotEmote {
                 SevenTVChannel.peepoDJ, SevenTVChannel.slavPls2, SevenTVChannel.hoSway, SevenTVChannel.DDoomer, BTTVChannel.roflanTanec, SevenTVChannel.freemanTanec,
                 SevenTVChannel.pepeGuitar, SevenTVGlobal.PartyParrot, SevenTVGlobal.PepePls, SevenTVGlobal.AlienDance, SevenTVGlobal.RareParrot);
 
-        List<String> SAD = List.of(SevenTVChannel.Sadge, SevenTVChannel.FeelsRainMan, SevenTVChannel.TrollDespair, SevenTVChannel.KEKWait, BTTVChannel.NotOkayChamp,
-                SevenTVChannel.Aware, SevenTVChannel.Despairge, SevenTVChannel.Siga, SevenTVChannel.sunboyDespair, SevenTVGlobal.peepoSad, SevenTVGlobal.FeelsStrongMan,
-                TwitchGlobal.PoroSad, TwitchGlobal.BibleThump, TwitchGlobal.SmileyFace36);
+        List<String> SAD = List.of(SevenTVChannel.jvcrSad, SevenTVChannel.Sadge, SevenTVChannel.FeelsRainMan, SevenTVChannel.TrollDespair, SevenTVChannel.KEKWait,
+                BTTVChannel.NotOkayChamp, SevenTVChannel.Aware, SevenTVChannel.Despairge, SevenTVChannel.Siga, SevenTVChannel.sunboyDespair, SevenTVGlobal.peepoSad,
+                SevenTVGlobal.FeelsStrongMan, TwitchGlobal.PoroSad, TwitchGlobal.BibleThump, TwitchGlobal.SmileyFace36);
 
         List<String> GREETING = List.of(SevenTVChannel.XyliWave, SevenTVChannel.ZdarovaZaebal, SevenTVChannel.KKomrade, SevenTVChannel.noxSorry, TwitchGlobal.FutureMan,
                 TwitchGlobal.PotFriend, TwitchGlobal.KonCha, TwitchGlobal.VoHiYo, TwitchGlobal.HeyGuys);
@@ -31,7 +31,11 @@ public interface BotEmote {
                 SevenTVChannel.roflanUpalo, SevenTVChannel.FeelsSpecialMan, SevenTVChannel.XyliSnes, SevenTVChannel.deshovka, SevenTVChannel.xyliNado, SevenTVChannel.XyliChel,
                 SevenTVGlobal.WAYTOODANK, SevenTVGlobal.Stare, SevenTVGlobal.FeelsWeirdMan, BTTVChannel.Ebaka, TwitchGlobal.RlyTho);
 
-        List<List<String>> ALL_SETS = List.of(HAPPY, POG, COOL, LAUGH, DANCE, SAD, GREETING, CONFUSION);
+        List<String> SCARY = List.of(SevenTVChannel.jvcrS, SevenTVChannel.monkaStop, SevenTVChannel.monkaChrist, BTTVChannel.Ebaka, TwitchGlobal.WutFace);
+
+        List<String> FAVOURITE = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.jvcrEbalo, SevenTVChannel.jvcrS, SevenTVChannel.jvcrSad);
+
+        List<List<String>> ALL_SETS = List.of(HAPPY, POG, COOL, LAUGH, DANCE, SAD, GREETING, CONFUSION, SCARY, FAVOURITE);
     }
 
     interface TwitchGlobal {
@@ -567,5 +571,9 @@ public interface BotEmote {
         String Kippah = "Kippah";
         String XyliVoyage = "XyliVoyage";
         String Shiza = "Shiza";
+        String jvcrPog = "jvcrPog";
+        String jvcrS = "jvcrS";
+        String jvcrSad = "jvcrSad";
+        String jvcrEbalo = "jvcrEbalo";
     }
 }
