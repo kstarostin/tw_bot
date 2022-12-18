@@ -100,12 +100,14 @@ public class AliveFeature extends AbstractFeature {
                 final Calendar sentAt = Calendar.getInstance();
                 sentAt.add(Calendar.MILLISECOND, delay);
                 saveBotMessageForChannelId(channelId, new BotMessage(responseMessageBuilder.toString(), sentAt));
+                cacheService.cacheGreeting(channelName, userName);
             }
         } else if (isBotTagged(message) || (isNoOneTagged(message) && isBotTriggeredIndependently(channelId))) {
             responseMessageBuilder.withText(generateResponseText(channelId, channelName))
                     .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 2, CONFUSION, HAPPY));
             if (responseMessageBuilder.isNotEmpty()) {
                 sendMessageWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
+                cacheService.cacheGreeting(channelName, userName);
             }
         }
     }
