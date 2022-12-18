@@ -106,7 +106,9 @@ public class AliveFeature extends AbstractFeature {
             responseMessageBuilder.withText(generateResponseText(channelId, channelName))
                     .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 2, CONFUSION, HAPPY));
             if (responseMessageBuilder.isNotEmpty()) {
-                sendMessageWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
+                //final int delay = /*calculateResponseDelayTime(responseMessageBuilder)*/ 0; todo check whether it is still needed here
+                final int delay = 0;
+                sendMessageWithDelay(channelId, channelName, userName, responseMessageBuilder, delay, event);
                 cacheService.cacheGreeting(channelName, userName);
             }
         }
@@ -222,22 +224,36 @@ public class AliveFeature extends AbstractFeature {
         Collections.reverse(lastMessages);
         lastMessages = lastMessages.stream().limit(3).collect(Collectors.toList());
 
-        final String requestMessage = lastMessages.stream().map(AbstractChannelMessageEvent::getMessage).collect(Collectors.joining(StringUtils.SPACE));
-
-        return balabobaResponseGenerator.generate(sanitizeRequestMessage(requestMessage), true, true, false);
+        final String requestMessage = sanitizeRequestMessage(channelId, lastMessages.stream().map(AbstractChannelMessageEvent::getMessage).collect(Collectors.joining(StringUtils.SPACE)));
+        return StringUtils.isNotBlank(requestMessage)
+                ? balabobaResponseGenerator.generate(requestMessage, true, true, false)
+                : StringUtils.EMPTY;
     }
 
-    private String sanitizeRequestMessage(final String message) {
-        String sanitizedMessage = message;
-        if (sanitizedMessage.contains(TAG_CHARACTER)) {
-            final String taggedUserName = StringUtils.substringBefore(StringUtils.substringAfter(sanitizedMessage, TAG_CHARACTER), StringUtils.SPACE);
-            sanitizedMessage = sanitizedMessage.replace(TAG_CHARACTER + taggedUserName, StringUtils.EMPTY);
+    private String sanitizeRequestMessage(final String channelId, final String message) {
+        final int maxLength = 100;
+        final String[] words =  message.trim().split(StringUtils.SPACE);
+        final List<String> sanitizedWords = Arrays.stream(words)
+                .filter(word -> !word.startsWith(TAG_CHARACTER))
+                .filter(word -> !StringUtils.containsAnyIgnoreCase(word, configurationService.getBotName()))
+                .filter(word -> !twitchEmoteService.isEmote(channelId, word))
+                .collect(Collectors.toList());
+        if (sanitizedWords.isEmpty()) {
+            return StringUtils.EMPTY;
         }
-        if (sanitizedMessage.startsWith(",")) {
-            sanitizedMessage = StringUtils.removeStart(sanitizedMessage, ",");
+        String sanitizedMessage = String.join(StringUtils.SPACE, sanitizedWords);
+        final StringBuilder sanitizedMessageBuilder = new StringBuilder();
+        for (final String word : sanitizedWords) {
+            if (sanitizedMessageBuilder.length() + word.length() + 1 < maxLength) {
+                sanitizedMessageBuilder.append(word).append(StringUtils.SPACE);
+            } else if (StringUtils.isNotEmpty(sanitizedMessageBuilder.toString())) {
+                sanitizedMessage = sanitizedMessageBuilder.toString();
+                break;
+            } else {
+                return (sanitizedMessage.length() > maxLength ? sanitizedMessage.substring(0, maxLength) : sanitizedMessage).trim() + ".";
+            }
         }
-        sanitizedMessage = sanitizedMessage.trim();
-        return sanitizedMessage;
+        return sanitizedMessage.trim() + ".";
     }
 
     private int calculateResponseDelayTime(final DefaultMessageServiceImpl.MessageBuilder messageBuilder) {
@@ -298,7 +314,8 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private MessageType getReplyType() {
-        return RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP[randomizerService.rollDice(RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP.length)];
+        //return RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP[randomizerService.rollDice(RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP.length)];
+        return MessageType.SEND_RESPONSE; // todo fix response to reply chain
     }
 
     private int calculateCurrentChattingRate(final String channelId) {

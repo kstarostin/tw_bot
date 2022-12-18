@@ -90,6 +90,10 @@ public class DefaultMessageServiceImpl implements MessageService {
         if (messageBuilder.toString().isEmpty()) {
             return;
         }
+        if (delay == 0) {
+            sendMessage(channelName, messageBuilder, event);
+            return;
+        }
         new Timer().schedule(
                 new TimerTask() {
                     @Override
