@@ -182,11 +182,11 @@ public class DefaultMessageServiceImpl implements MessageService {
             if (StringUtils.isNotEmpty(text)) {
                 sb.append(StringUtils.SPACE).append(text);
             }
-            if (StringUtils.isNotEmpty(emotes)) {
-                sb.append(StringUtils.SPACE).append(emotes);
-            }
             if (!startsWithTag && StringUtils.isNotEmpty(tag)) {
                 sb.append(StringUtils.SPACE).append(tag);
+            }
+            if (StringUtils.isNotEmpty(emotes)) {
+                sb.append(StringUtils.SPACE).append(emotes);
             }
             return sb.toString().trim();
         }
