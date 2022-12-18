@@ -19,7 +19,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -36,9 +35,6 @@ import static com.chatbot.util.emotes.BotEmote.Sets.*;
 
 public class AliveFeature extends AbstractFeature {
     private final Logger LOG = LoggerFactory.getLogger(AliveFeature.class);
-
-    private static final int RND_TRIGGER_MIN_PROBABILITY = 1;
-    private static final int RND_TRIGGER_MAX_PROBABILITY = 100;
 
     private final static MessageType[] RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP = {
             MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE,
@@ -62,7 +58,9 @@ public class AliveFeature extends AbstractFeature {
     private static final int MIN_CHATTING_RATE = 1;
     private static final int MAX_CHATTING_RATE = 10;
 
-    private static final Map<String, Queue<ChannelMessageEvent>> MESSAGE_HISTORY_MAP = new HashMap<>();
+    // Chat caches
+    private static final Map<String, Queue<ChannelMessageEvent>> CHAT_MESSAGE_HISTORY_MAP = new HashMap<>();
+    private static final Map<String, Queue<BotMessage>> BOT_MESSAGE_HISTORY_MAP = new HashMap<>();
 
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
@@ -84,7 +82,7 @@ public class AliveFeature extends AbstractFeature {
         if (isCommand(message) || moderationService.isSuspiciousMessage(channelName, message, event.getPermissions())) {
             return;
         }
-        rememberMessageEventForChannelId(channelId, event);
+        saveChatMessageEventForChannelId(channelId, event);
 
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder();
         if (isGreetingResponse(channelName, userName, message)) {
@@ -92,18 +90,22 @@ public class AliveFeature extends AbstractFeature {
             if (randomizerService.flipCoin(2)) {
                 responseMessageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 3, GREETING, POG, HAPPY));
             }
-            greetWithDelay(channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
+            greetWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
         } else if (isEmoteOnlyMessage(channelId, message)) {
             final List<String> emoteSet = getEmoteSet(message);
-            if (CollectionUtils.isNotEmpty(emoteSet) && !randomizerService.flipCoin(2)) {
+            if (CollectionUtils.isNotEmpty(emoteSet) && isBotTriggeredIndependently(channelId)) {
                 responseMessageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 3, emoteSet));
+                final int delay = calculateResponseDelayTime(responseMessageBuilder);
                 messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
+                final Calendar sentAt = Calendar.getInstance();
+                sentAt.add(Calendar.MILLISECOND, delay);
+                saveBotMessageForChannelId(channelId, new BotMessage(responseMessageBuilder.toString(), sentAt));
             }
-        } else if (isBotTagged(message) || (isNoOneTagged(message) && isRandomBotTrigger(channelId, channelName))) {
+        } else if (isBotTagged(message) || (isNoOneTagged(message) && isBotTriggeredIndependently(channelId))) {
             responseMessageBuilder.withText(generateResponseText(channelId, channelName))
                     .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 2, CONFUSION, HAPPY));
             if (responseMessageBuilder.isNotEmpty()) {
-                sendMessageWithDelay(channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
+                sendMessageWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
             }
         }
     }
@@ -131,6 +133,7 @@ public class AliveFeature extends AbstractFeature {
     private boolean isBotTagged(final String message) {
         final Set<String> tags = new HashSet<>(ADDITIONAL_BOT_TAG_NAMES);
         tags.add(configurationService.getBotName());
+        tags.add(TAG_CHARACTER + configurationService.getBotName());
         for (String tag : tags) {
             if (message.equalsIgnoreCase(tag)
                     || message.toLowerCase().startsWith(tag.toLowerCase() + StringUtils.SPACE)
@@ -168,12 +171,23 @@ public class AliveFeature extends AbstractFeature {
         return !message.contains(TAG_CHARACTER);
     }
 
-    private boolean isRandomBotTrigger(final String channelId, final String channelName) {
-        //final SplittableRandom random = new SplittableRandom();
-        //return random.nextInt(RND_TRIGGER_MIN_PROBABILITY, RND_TRIGGER_MAX_PROBABILITY + 1) <= configurationService.getConfiguration(channelName).getIndependenceRate();
+    private boolean isBotTriggeredIndependently(final String channelId) {
         final int chattingRate = calculateCurrentChattingRate(channelId);
         final int subtract = chattingRate - MIN_CHATTING_RATE;
+        int secondsToCheck = 60 - chattingRate * 3;
+
+        LOG.info(String.format("Current chatting rate [%d], independent response probability [%s], last bot message must be [%d] seconds ago",
+                chattingRate, chattingRate * 10 + "%", secondsToCheck));
+        if (hasMessagesSentInChannelSince(channelId, secondsToCheck)) {
+            return false;
+        }
         return randomizerService.rollDice(MAX_CHATTING_RATE - subtract) == 0;
+    }
+
+    private boolean hasMessagesSentInChannelSince(final String channelId, final int lastSeconds) {
+        final Calendar timePoint = Calendar.getInstance();
+        timePoint.add(Calendar.SECOND, -lastSeconds);
+        return getLastBotMessagesForChannelId(channelId).stream().anyMatch(botMessage -> botMessage.getPostedAt().after(timePoint));
     }
 
     private String buildGreetingText(final String userName) {
@@ -195,9 +209,13 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private String generateResponseText(final String channelId, final String userName) {
-        List<ChannelMessageEvent> lastMessages = new ArrayList<>(getLastMessageEventsForChannelIdAndUserName(channelId, userName));
+        List<ChannelMessageEvent> lastMessages = getLastChatMessageEventsForChannelIdAndUserName(channelId, userName).stream()
+                .filter(event -> !isEmoteOnlyMessage(channelId, event.getMessage()))
+                .collect(Collectors.toList());
         if (lastMessages.size() < 3) {
-            lastMessages = new ArrayList<>(getLastMessageEventsForChannelId(channelId));
+            lastMessages = getLastChatMessageEventsForChannelId(channelId).stream()
+                    .filter(event -> !isEmoteOnlyMessage(channelId, event.getMessage()))
+                    .collect(Collectors.toList());
         }
         Collections.reverse(lastMessages);
         lastMessages = lastMessages.stream().limit(3).collect(Collectors.toList());
@@ -221,8 +239,8 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private int calculateResponseDelayTime(final DefaultMessageServiceImpl.MessageBuilder messageBuilder) {
-        final int minDelayTime = 3;
-        final int maxDelayTime = 15;
+        final int minDelayTime = 1;
+        final int maxDelayTime = 7;
         final int[] dividerArray = IntStream.range(minDelayTime, maxDelayTime + 1).toArray();
         final int divider;
         final String message = messageBuilder.toString();
@@ -236,7 +254,7 @@ public class AliveFeature extends AbstractFeature {
         return message.length() * 1000 / divider;
     }
 
-    private void greetWithDelay(final String channelName, final String userName, final DefaultMessageServiceImpl.MessageBuilder messageBuilder, final int delay, final ChannelMessageEvent event) {
+    private void greetWithDelay(final String channelId, final String channelName, final String userName, final DefaultMessageServiceImpl.MessageBuilder messageBuilder, final int delay, final ChannelMessageEvent event) {
         ChannelMessageEvent replyEvent = null;
         switch (getReplyType()) {
             case SEND_RESPONSE:
@@ -250,10 +268,13 @@ public class AliveFeature extends AbstractFeature {
                 break;
         }
         messageService.sendMessageWithDelay(channelName, messageBuilder, delay, replyEvent);
+        final Calendar sentAt = Calendar.getInstance();
+        sentAt.add(Calendar.MILLISECOND, delay);
+        saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.toString(), sentAt));
         cacheService.cacheGreeting(channelName, userName);
     }
 
-    private void sendMessageWithDelay(final String channelName, final String userName, final DefaultMessageServiceImpl.MessageBuilder messageBuilder, final int delay, final ChannelMessageEvent event) {
+    private void sendMessageWithDelay(final String channelId, final String channelName, final String userName, final DefaultMessageServiceImpl.MessageBuilder messageBuilder, final int delay, final ChannelMessageEvent event) {
         switch (getReplyType()) {
             case SEND_RESPONSE:
                 final boolean startsWithTag = randomizerService.flipCoin(2);
@@ -269,43 +290,86 @@ public class AliveFeature extends AbstractFeature {
                 messageService.sendMessageWithDelay(channelName, messageBuilder, delay, null);
                 break;
         }
+        final Calendar sentAt = Calendar.getInstance();
+        sentAt.add(Calendar.MILLISECOND, delay);
+        saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.toString(), sentAt));
     }
 
     private MessageType getReplyType() {
         return RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP[randomizerService.rollDice(RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP.length)];
     }
 
-    private enum MessageType {
-        SEND_RESPONSE,
-        SEND_REPLY,
-        SEND_MESSAGE;
-    }
-
     private int calculateCurrentChattingRate(final String channelId) {
-        final Queue<ChannelMessageEvent> lastMessageEvents = getLastMessageEventsForChannelId(channelId);
+        final Queue<ChannelMessageEvent> lastMessageEvents = getLastChatMessageEventsForChannelId(channelId);
         if (CollectionUtils.isEmpty(lastMessageEvents)) {
             return MIN_CHATTING_RATE;
         }
         final Calendar lastMinute = Calendar.getInstance();
         lastMinute.add(Calendar.MINUTE, -1);
         final int rate =  Math.min((int) lastMessageEvents.stream().filter(messageEvent -> messageEvent.getFiredAt().after(lastMinute)).count(), MAX_CHATTING_RATE);
-        LOG.info("Current chatting rate [" + rate + "]");
+        LOG.debug("Calculated chatting rate [" + rate + "]");
         return rate;
     }
 
-    private void rememberMessageEventForChannelId(final String channelId, final ChannelMessageEvent messageEvent) {
-        final Queue<ChannelMessageEvent> lastMessageEvents = getLastMessageEventsForChannelId(channelId);
+    private void saveChatMessageEventForChannelId(final String channelId, final ChannelMessageEvent messageEvent) {
+        final Queue<ChannelMessageEvent> lastMessageEvents = getLastChatMessageEventsForChannelId(channelId);
         lastMessageEvents.add(messageEvent);
-        MESSAGE_HISTORY_MAP.put(channelId, lastMessageEvents);
+        CHAT_MESSAGE_HISTORY_MAP.put(channelId, lastMessageEvents);
     }
 
-    private Queue<ChannelMessageEvent> getLastMessageEventsForChannelIdAndUserName(final String channelId, final String userName) {
-        return getLastMessageEventsForChannelId(channelId).stream()
+    private Queue<ChannelMessageEvent> getLastChatMessageEventsForChannelIdAndUserName(final String channelId, final String userName) {
+        return getLastChatMessageEventsForChannelId(channelId).stream()
                 .filter(event -> userName.equals(event.getUser().getName()))
                 .collect(Collectors.toCollection(() -> new CircularFifoQueue<>(10)));
     }
 
-    private Queue<ChannelMessageEvent> getLastMessageEventsForChannelId(final String channelId) {
-        return MESSAGE_HISTORY_MAP.containsKey(channelId) ? MESSAGE_HISTORY_MAP.get(channelId) : new CircularFifoQueue<>(10);
+    private Queue<ChannelMessageEvent> getLastChatMessageEventsForChannelId(final String channelId) {
+        return CHAT_MESSAGE_HISTORY_MAP.containsKey(channelId) ? CHAT_MESSAGE_HISTORY_MAP.get(channelId) : new CircularFifoQueue<>(10);
+    }
+
+    private void saveBotMessageForChannelId(final String channelId, final BotMessage botMessage) {
+        final Queue<BotMessage> lastMessages = getLastBotMessagesForChannelId(channelId);
+        lastMessages.add(botMessage);
+        BOT_MESSAGE_HISTORY_MAP.put(channelId, lastMessages);
+    }
+
+    private Queue<BotMessage> getLastBotMessagesForChannelId(final String channelId) {
+        return BOT_MESSAGE_HISTORY_MAP.containsKey(channelId) ? BOT_MESSAGE_HISTORY_MAP.get(channelId) : new CircularFifoQueue<>(10);
+    }
+
+    private class BotMessage {
+        private String message;
+        private Calendar postedAt;
+
+        public BotMessage(final String message) {
+            this(message, Calendar.getInstance());
+        }
+
+        public BotMessage(final String message, Calendar postedAt) {
+            this.message = message;
+            this.postedAt = postedAt;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public Calendar getPostedAt() {
+            return postedAt;
+        }
+
+        public void setPostedAt(Calendar postedAt) {
+            this.postedAt = postedAt;
+        }
+    }
+
+    private enum MessageType {
+        SEND_RESPONSE,
+        SEND_REPLY,
+        SEND_MESSAGE;
     }
 }
