@@ -27,12 +27,13 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
     private static final String PAUSEY = "Pausey";
     private static final String POGEY = "Pogey";
     private static final String DESHOVKA = "deshovka";
+    private static final String KIPPAH = "Kippah";
     private static final Map<String, Map<String, Long>> CHANNEL_2_EMOTE_MAP = Map.of(
             OMSK_OMSK, Map.of(PAUSEY, 1035132999798358016L, POGEY, 1035133015040462869L),
-            RED_ROOM_ANNOUNCE, Map.of(PAUSEY, 987043617216536596L, POGEY, 980131980039573585L, DESHOVKA, 950496796948447312L)
+            RED_ROOM_ANNOUNCE, Map.of(PAUSEY, 987043617216536596L, POGEY, 980131980039573585L, DESHOVKA, 950496796948447312L, KIPPAH, 1054071733017133197L)
     );
 
-    private static final Set<String> NO_STREAM_TODAY_STRING_TOKENS = Set.of("сегодня без", "стрима не будет", "потока не будет", "не сегодня", "завтра", "в понедельник", "во вторник", "в среду",
+    private static final Set<String> NO_STREAM_TODAY_STRING_TOKENS = Set.of("сегодня без", "сегодня не", "не будет", "не сегодня", "завтра", "в понедельник", "во вторник", "в среду",
             "в четверг", "в пятницу", "в субботу", "в воскресенье", "в день после", "а вот");
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
@@ -65,7 +66,7 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         ReactionEmoji reaction = null;
         if (isEveryone(message.getContent())) {
             if (isNoStreamToday(message.getContent())) {
-                reaction = getReaction(channelId, DESHOVKA, false);
+                reaction = getReaction(channelId, KIPPAH, false);
             } else {
                 reaction = getReaction(channelId, PAUSEY, false);
             }
