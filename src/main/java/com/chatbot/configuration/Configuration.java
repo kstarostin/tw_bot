@@ -15,8 +15,8 @@ public class Configuration {
     private boolean muted;
     private Set<String> activeFeatures;
     private boolean userGreetingEnabled;
-    private int independenceRate;
     private List<String> messageWhitelistedPermissions;
+    private List<String> additionalBotTagNames;
     private boolean checkModeratorPermissions;
     private int moderationWordNumberThreshold;
     private int violationPointsThresholdForTimeout;
@@ -56,20 +56,20 @@ public class Configuration {
         this.userGreetingEnabled = userGreetingEnabled;
     }
 
-    public int getIndependenceRate() {
-        return independenceRate;
-    }
-
-    public void setIndependenceRate(int independenceRate) {
-        this.independenceRate = independenceRate;
-    }
-
     public List<String> getMessageWhitelistedPermissions() {
         return messageWhitelistedPermissions;
     }
 
     public void setMessageWhitelistedPermissions(List<String> messageWhitelistedPermissions) {
         this.messageWhitelistedPermissions = messageWhitelistedPermissions;
+    }
+
+    public List<String> getAdditionalBotTagNames() {
+        return additionalBotTagNames;
+    }
+
+    public void setAdditionalBotTagNames(List<String> additionalBotTagNames) {
+        this.additionalBotTagNames = additionalBotTagNames;
     }
 
     public boolean isCheckModeratorPermissions() {

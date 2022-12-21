@@ -20,10 +20,25 @@ active_features:
     - ALIVE
 
 ## FEATURE: ALIVE
-# Defines whether Bot welcomes chat users (if welcome message is available for them)
-user_greeting_enabled: false
-# Defines what is probability from 0 to 100 of a random message from bot in Alive mode
-independence_rate: 5
+# Defines whether Bot welcomes chat users
+user_greeting_enabled: true
+# Channel permissions of users for skipping moderation
+additional_bot_tag_names:
+    - бот
+    - бота
+    - боту
+    - ботом
+    - боте
+    - омск
+    - омска
+    - омску
+    - омском
+    - омске
+    - омский
+    - омского
+    - омскому
+    - омским
+    - bot
 
 
 ## FEATURE: MODERATOR

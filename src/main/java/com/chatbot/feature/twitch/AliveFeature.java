@@ -51,10 +51,6 @@ public class AliveFeature extends AbstractFeature {
     private static final Set<String> USER_FRIEND_LIST = Set.of("0mskbird", "yura_atlet", "1skybox1", "chenushka", "hereticjz", "skvdee", "svetloholmov", "prof_133", "kiber_bober",
             "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013");
 
-    private static final Set<String> ADDITIONAL_BOT_TAG_NAMES = Set.of("бот", "бота", "боту", "ботом", "боте",
-            "омск", "омска", "омску", "омском", "омске",
-            "омский", "омского", "омскому", "омским");
-
     private static final int MIN_CHATTING_RATE = 1;
     private static final int MAX_CHATTING_RATE = 10;
 
@@ -102,11 +98,12 @@ public class AliveFeature extends AbstractFeature {
                 saveBotMessageForChannelId(channelId, new BotMessage(responseMessageBuilder.toString(), sentAt));
                 cacheService.cacheGreeting(channelName, userName);
             }
-        } else if (isBotTagged(message) || (isNoOneTagged(message) && isBotTriggeredIndependently(channelId))) {
-            responseMessageBuilder.withText(generateResponseText(channelId, channelName))
-                    .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 2, CONFUSION, HAPPY));
+        } else if (isBotTagged(channelName, message) || (isNoOneTagged(message) && isBotTriggeredIndependently(channelId))) {
+            responseMessageBuilder.withText(generateResponseText(channelId, channelName));
+            if (randomizerService.flipCoin(3)) {
+                responseMessageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 2, CONFUSION, HAPPY));
+            }
             if (responseMessageBuilder.isNotEmpty()) {
-                //final int delay = /*calculateResponseDelayTime(responseMessageBuilder)*/ 0; todo check whether it is still needed here
                 final int delay = 0;
                 sendMessageWithDelay(channelId, channelName, userName, responseMessageBuilder, delay, event);
                 cacheService.cacheGreeting(channelName, userName);
@@ -115,7 +112,7 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private boolean isGreetingResponse(final String channelName, final String userName, final String message) {
-        return isGreetingEnabled(channelName) && !isUserGreeted(channelName, userName) && (isUserInFriendList(userName) || isRandomGreeting()) && !isBotTagged(message);
+        return isGreetingEnabled(channelName) && !isUserGreeted(channelName, userName) && (isUserInFriendList(userName) || isRandomGreeting()) && !isBotTagged(channelName, message);
     }
 
     private boolean isGreetingEnabled(final String channelName) {
@@ -134,13 +131,14 @@ public class AliveFeature extends AbstractFeature {
         return !randomizerService.flipCoin(3);
     }
 
-    private boolean isBotTagged(final String message) {
-        final Set<String> tags = new HashSet<>(ADDITIONAL_BOT_TAG_NAMES);
+    private boolean isBotTagged(final String channelName, final String message) {
+        final Set<String> tags = new HashSet<>(CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames()));
         tags.add(configurationService.getBotName());
         tags.add(TAG_CHARACTER + configurationService.getBotName());
         for (String tag : tags) {
             if (message.equalsIgnoreCase(tag)
                     || message.toLowerCase().startsWith(tag.toLowerCase() + StringUtils.SPACE)
+                    || message.toLowerCase().startsWith(tag.toLowerCase() + ",")
                     || message.toLowerCase().contains(StringUtils.SPACE + tag.toLowerCase() + StringUtils.SPACE)
                     || message.toLowerCase().endsWith(StringUtils.SPACE + tag.toLowerCase())) {
                 return true;

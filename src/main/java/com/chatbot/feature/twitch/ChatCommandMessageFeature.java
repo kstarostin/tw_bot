@@ -13,7 +13,6 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.helix.domain.Emote;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -70,9 +69,6 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private static final String MESSAGE_COMMAND_EMOTE_EMPTY = "message.command.emote.empty.";
 
     private static final String CHANNEL_DEFAULT = "default";
-
-    private static final int MIN_PROBABILITY = 0;
-    private static final int MAX_PROBABILITY = 100;
 
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
@@ -190,17 +186,6 @@ public class ChatCommandMessageFeature extends AbstractFeature {
                 return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, HAPPY))
                         .withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_DEFAULT + channelName.toLowerCase(), MESSAGE_COMMAND_DEFAULT + CHANNEL_DEFAULT));
             default:
-                if (StringUtils.isNumeric(args[1])) {
-                    int probability = NumberUtils.toInt(args[1]);
-                    if (probability <= MIN_PROBABILITY) {
-                        probability = MIN_PROBABILITY;
-                    } else if (probability >= MAX_PROBABILITY) {
-                        probability = MAX_PROBABILITY;
-                    }
-                    configurationService.getConfiguration(channelName).setIndependenceRate(probability);
-                    return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, HAPPY))
-                            .withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_DEFAULT + channelName.toLowerCase(), MESSAGE_COMMAND_DEFAULT + CHANNEL_DEFAULT));
-                }
                 return messageBuilder;
         }
     }
@@ -227,9 +212,6 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             responseTextBuilder.append(feature)
                     .append(":")
                     .append(botFeatureService.isTwitchFeatureActive(channelName, FeatureEnum.valueOf(feature.toString().toUpperCase())) ? FEATURE_COMMAND_ON_ARG : FEATURE_COMMAND_OFF_ARG);
-            if (FeatureEnum.ALIVE.equals(feature)) {
-                responseTextBuilder.append(":").append(configurationService.getConfiguration(channelName).getIndependenceRate());
-            }
             responseTextBuilder.append(" | ");
         });
         return messageBuilder.withText(StringUtils.chop(responseTextBuilder.toString().trim()));
