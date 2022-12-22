@@ -22,7 +22,7 @@ public class ChannelNotificationOnStreamStatusFeature extends AbstractFeature {
             return;
         }*/
         final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder()
-                .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, POG))
+                .withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, POG))
                 .withText(messageService.getPersonalizedMessageForKey("message.stream.online." + channelName.toLowerCase(), "message.stream.online.default"));
         messageService.sendMessage(event.getBroadcasterUserLogin(), messageBuilder, null);
     }
@@ -34,7 +34,7 @@ public class ChannelNotificationOnStreamStatusFeature extends AbstractFeature {
             return;
         }*/
         final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder()
-                .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, SAD))
+                .withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, SAD))
                 .withText(messageService.getPersonalizedMessageForKey("message.stream.offline." + channelName.toLowerCase(), "message.stream.offline.default"));
         messageService.sendMessage(event.getBroadcasterUserLogin(), messageBuilder, null);
     }

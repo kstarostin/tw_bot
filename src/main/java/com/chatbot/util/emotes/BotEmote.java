@@ -1,6 +1,7 @@
 package com.chatbot.util.emotes;
 
 import java.util.List;
+import java.util.Map;
 
 public interface BotEmote {
     interface Sets {
@@ -17,7 +18,7 @@ public interface BotEmote {
                 SevenTVChannel.RoflanEbalo, TwitchGlobal.LUL, TwitchGlobal.SUBprise, SevenTVChannel.aRolf, BTTVGlobal.tf);
 
         List<String> DANCE = List.of(SevenTVChannel.goblinPls, SevenTVChannel.pepeJAM, SevenTVChannel.BoneZone, SevenTVChannel.catJAM, SevenTVChannel.ratJAM,
-                SevenTVChannel.peepoDJ, SevenTVChannel.slavPls2, SevenTVChannel.hoSway, SevenTVChannel.DDoomer, BTTVChannel.roflanTanec, SevenTVChannel.freemanTanec,
+                SevenTVChannel.peepoDJ, SevenTVChannel.slavPls2, SevenTVChannel.hoSway, SevenTVChannel.DDoomer, BTTVChannel.roflanTanec, SevenTVChannel.MmmHmm,
                 SevenTVChannel.pepeGuitar, SevenTVGlobal.PartyParrot, SevenTVGlobal.PepePls, SevenTVGlobal.AlienDance, SevenTVGlobal.RareParrot);
 
         List<String> SAD = List.of(SevenTVChannel.jvcrSad, SevenTVChannel.Sadge, SevenTVChannel.FeelsRainMan, SevenTVChannel.TrollDespair, SevenTVChannel.KEKWait,
@@ -35,7 +36,17 @@ public interface BotEmote {
 
         List<String> FAVOURITE = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.jvcrEbalo, SevenTVChannel.jvcrS, SevenTVChannel.jvcrSad);
 
-        List<List<String>> ALL_SETS = List.of(HAPPY, POG, COOL, LAUGH, DANCE, SAD, GREETING, CONFUSION, SCARY, FAVOURITE);
+        List<List<String>> ALL_SETS = List.of(HAPPY, POG, COOL, LAUGH, DANCE, SAD, GREETING, CONFUSION, SCARY);
+
+        Map<String, String> EMOTE_COMBINATIONS = Map.of(
+                SevenTVChannel.Okayeg, SevenTVGlobal.TeaTime,
+                SevenTVChannel.Pogey, SevenTVGlobal.Clap,
+                SevenTVGlobal.EZ, SevenTVGlobal.Clap,
+                SevenTVChannel.Terpiloid, SevenTVChannel.VodkaTime,
+                SevenTVChannel.peepoDJ, SevenTVChannel.xar2EDM,
+                SevenTVChannel.hoSway, SevenTVChannel.xar2EDM,
+                SevenTVChannel.xar2EDM, SevenTVChannel.peepoDJ,
+                SevenTVChannel.MmmHmm, SevenTVGlobal.PianoTime);
     }
 
     interface TwitchGlobal {

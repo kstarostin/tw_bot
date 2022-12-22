@@ -41,6 +41,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.chatbot.util.emotes.BotEmote.Sets.EMOTE_COMBINATIONS;
+
 public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
     private static DefaultTwitchEmoteServiceImpl instance;
 
@@ -209,23 +211,47 @@ public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
 
     @SafeVarargs
     @Override
-    public final String buildEmoteLine(final String channelId, final int maxNumberOfEmotes, final List<String>... emoteSets) {
-        final int setNumber = randomizerService.rollDiceExponentially(emoteSets.length, 2);
+    public final String buildRandomEmoteLine(final String channelId, final int maxNumberOfEmotes, final List<String>... emoteSets) {
         final int numberOfEmotes = randomizerService.rollDiceExponentially(maxNumberOfEmotes, 2) + 1;
 
-        final List<String> selectedSet = emoteSets[setNumber].parallelStream().filter(emote -> isEmote(channelId, emote)).collect(Collectors.toList());
-
-        final StringBuilder emotePart = new StringBuilder();
+        final List<String> selectedEmotes = new ArrayList<>();
         for (int i = 0; i < numberOfEmotes; i++) {
-            final int index = randomizerService.rollDiceExponentially(selectedSet.size(), 2);
-            emotePart.append(StringUtils.SPACE).append(selectedSet.get(index));
+            if (i > 0) {
+                final String previousEmote = selectedEmotes.get(i - 1);
+                if (EMOTE_COMBINATIONS.containsKey(previousEmote) && isEmote(channelId, previousEmote)) {
+                    selectedEmotes.add(EMOTE_COMBINATIONS.get(previousEmote));
+                } else if (randomizerService.flipCoin()) {
+                    selectedEmotes.add(previousEmote);
+                } else {
+                    selectedEmotes.add(getRandomEmoteFromSets(channelId, emoteSets));
+                }
+            } else {
+                selectedEmotes.add(getRandomEmoteFromSets(channelId, emoteSets));
+            }
         }
+        return buildEmoteLine(channelId, selectedEmotes);
+    }
+
+    @Override
+    public String buildEmoteLine(final String channelId, final List<String> emotes) {
+        final StringBuilder emotePart = new StringBuilder();
+        emotes.stream()
+                .filter(emote -> isEmote(channelId, emote))
+                .forEach(emote -> emotePart.append(StringUtils.SPACE).append(emote));
         return emotePart.toString().trim();
     }
 
     @Override
     public boolean isEmote(final String channelId, final String text) {
         return getValidEmoteNames(channelId).contains(text);
+    }
+
+    @SafeVarargs
+    private String getRandomEmoteFromSets(final String channelId, final List<String>... emoteSets) {
+        final int setNumber = randomizerService.rollDiceExponentially(emoteSets.length, 2);
+        final List<String> selectedSet = emoteSets[setNumber].parallelStream().filter(emote -> isEmote(channelId, emote)).collect(Collectors.toList());
+        final int index = randomizerService.rollDiceExponentially(selectedSet.size(), 2);
+        return selectedSet.get(index);
     }
 
     private List<SevenTVEmote> get7TVEmotes(final String channelId, final String url) {

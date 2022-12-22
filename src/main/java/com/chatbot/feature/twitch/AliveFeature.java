@@ -19,11 +19,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -84,28 +84,29 @@ public class AliveFeature extends AbstractFeature {
         if (isGreetingResponse(channelName, userName, message)) {
             responseMessageBuilder.withText(buildGreetingText(userName));
             if (randomizerService.flipCoin(2)) {
-                responseMessageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 3, GREETING, POG, HAPPY));
+                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 3, GREETING, POG, HAPPY));
             }
             greetWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
         } else if (isEmoteOnlyMessage(channelId, message)) {
             final List<String> emoteSet = getEmoteSet(message);
             if (CollectionUtils.isNotEmpty(emoteSet) && isBotTriggeredIndependently(channelId)) {
-                responseMessageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 3, emoteSet));
+                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 3, emoteSet));
                 final int delay = calculateResponseDelayTime(responseMessageBuilder);
                 messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
-                final Calendar sentAt = Calendar.getInstance();
-                sentAt.add(Calendar.MILLISECOND, delay);
-                saveBotMessageForChannelId(channelId, new BotMessage(responseMessageBuilder.toString(), sentAt));
-                cacheService.cacheGreeting(channelName, userName);
+                if (responseMessageBuilder.isNotEmpty()) {
+                    final Calendar sentAt = Calendar.getInstance();
+                    sentAt.add(Calendar.MILLISECOND, delay);
+                    saveBotMessageForChannelId(channelId, new BotMessage(responseMessageBuilder.toString(), sentAt));
+                    cacheService.cacheGreeting(channelName, userName);
+                }
             }
         } else if (isBotTagged(channelName, message) || (isNoOneTagged(message) && isBotTriggeredIndependently(channelId))) {
             responseMessageBuilder.withText(generateResponseText(channelId, channelName));
             if (randomizerService.flipCoin(3)) {
-                responseMessageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 2, CONFUSION, HAPPY));
+                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
             }
             if (responseMessageBuilder.isNotEmpty()) {
-                final int delay = 0;
-                sendMessageWithDelay(channelId, channelName, userName, responseMessageBuilder, delay, event);
+                sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
                 cacheService.cacheGreeting(channelName, userName);
             }
         }
@@ -132,10 +133,11 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private boolean isBotTagged(final String channelName, final String message) {
-        final Set<String> tags = new HashSet<>(CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames()));
-        tags.add(configurationService.getBotName());
+        final List<String> tags = new ArrayList<>();
         tags.add(TAG_CHARACTER + configurationService.getBotName());
-        for (String tag : tags) {
+        tags.add(configurationService.getBotName());
+        tags.addAll(CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames()));
+        for (final String tag : tags) {
             if (message.equalsIgnoreCase(tag)
                     || message.toLowerCase().startsWith(tag.toLowerCase() + StringUtils.SPACE)
                     || message.toLowerCase().startsWith(tag.toLowerCase() + ",")
@@ -284,31 +286,33 @@ public class AliveFeature extends AbstractFeature {
                 break;
         }
         messageService.sendMessageWithDelay(channelName, messageBuilder, delay, replyEvent);
-        final Calendar sentAt = Calendar.getInstance();
-        sentAt.add(Calendar.MILLISECOND, delay);
-        saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.toString(), sentAt));
-        cacheService.cacheGreeting(channelName, userName);
+        if (messageBuilder.isNotEmpty()) {
+            final Calendar sentAt = Calendar.getInstance();
+            sentAt.add(Calendar.MILLISECOND, delay);
+            saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.toString(), sentAt));
+            cacheService.cacheGreeting(channelName, userName);
+        }
     }
 
-    private void sendMessageWithDelay(final String channelId, final String channelName, final String userName, final DefaultMessageServiceImpl.MessageBuilder messageBuilder, final int delay, final ChannelMessageEvent event) {
+    private void sendMessage(final String channelId, final String channelName, final String userName, final DefaultMessageServiceImpl.MessageBuilder messageBuilder, final ChannelMessageEvent event) {
         switch (getReplyType()) {
             case SEND_RESPONSE:
                 final boolean startsWithTag = randomizerService.flipCoin(2);
                 final boolean isNoTagCharIncluded = !randomizerService.flipCoin(4);
                 final String tag = isNoTagCharIncluded ? userName : TAG_CHARACTER + userName;
                 messageBuilder.withUserTag(tag, startsWithTag);
-                messageService.sendMessageWithDelay(channelName, messageBuilder, delay, null);
+                messageService.sendMessage(channelName, messageBuilder, null);
                 break;
             case SEND_REPLY:
-                messageService.sendMessageWithDelay(channelName, messageBuilder, delay, event);
+                messageService.sendMessage(channelName, messageBuilder, event);
                 break;
             case SEND_MESSAGE:
-                messageService.sendMessageWithDelay(channelName, messageBuilder, delay, null);
+                messageService.sendMessage(channelName, messageBuilder, null);
                 break;
         }
-        final Calendar sentAt = Calendar.getInstance();
-        sentAt.add(Calendar.MILLISECOND, delay);
-        saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.toString(), sentAt));
+        if (messageBuilder.isNotEmpty()) {
+            saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.toString(), Calendar.getInstance()));
+        }
     }
 
     private MessageType getReplyType() {

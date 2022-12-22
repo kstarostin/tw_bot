@@ -24,7 +24,7 @@ public class ChannelNotificationOnSubscriptionFeature extends AbstractFeature {
         final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder()
                 .withUserTag(TAG_CHARACTER + userName)
                 .withText(messageService.getPersonalizedMessageForKey("message.subscription." + channelName, "message.subscription.default"))
-                .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 3, LAUGH));
+                .withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 3, LAUGH));
         messageService.sendMessage(event.getChannel().getName(), messageBuilder, null);
     }
 }

@@ -98,7 +98,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             messageService.sendMessage(channelName, messageBuilder.withUserTag(TAG_CHARACTER + userName), false, null);
         } else {
             messageBuilder.withUserTag(TAG_CHARACTER + userName)
-                    .withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, CONFUSION))
+                    .withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, CONFUSION))
                     .withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_ERROR + channelName.toLowerCase(), MESSAGE_COMMAND_ERROR + CHANNEL_DEFAULT));
             messageService.sendMessage(channelName, messageBuilder, false, null);
         }
@@ -179,11 +179,11 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         switch (args[1]) {
             case FEATURE_COMMAND_ON_ARG:
                 features.forEach(feature -> botFeatureService.setTwitchFeatureStatus(channelName, feature, true));
-                return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, HAPPY))
+                return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, HAPPY))
                         .withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_DEFAULT + channelName.toLowerCase(), MESSAGE_COMMAND_DEFAULT + CHANNEL_DEFAULT));
             case FEATURE_COMMAND_OFF_ARG:
                 features.forEach(feature -> botFeatureService.setTwitchFeatureStatus(channelName, feature, false));
-                return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, HAPPY))
+                return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, HAPPY))
                         .withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_DEFAULT + channelName.toLowerCase(), MESSAGE_COMMAND_DEFAULT + CHANNEL_DEFAULT));
             default:
                 return messageBuilder;
@@ -233,7 +233,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder();
         if (args.length == 0) {
             configurationService.getConfiguration(channelName).setMuted(isMuted);
-            return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, isMuted ? SAD : HAPPY))
+            return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, isMuted ? SAD : HAPPY))
                     .withText(isMuted
                             ? messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_MUTE + channelName.toLowerCase(), MESSAGE_COMMAND_MUTE + CHANNEL_DEFAULT)
                             : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNMUTE + channelName.toLowerCase(), MESSAGE_COMMAND_UNMUTE + CHANNEL_DEFAULT));
@@ -241,23 +241,23 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             if (COMMAND_ALL_ARG.equalsIgnoreCase(args[0])) {
                 if (isSuperAdmin(userName)) {
                     configurationService.getConfiguration().getChannelConfigurations().values().forEach(configuration -> configuration.setMuted(isMuted));
-                    return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, isMuted ? SAD : HAPPY))
+                    return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, isMuted ? SAD : HAPPY))
                             .withText(isMuted
                                     ? messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_MUTE + channelName.toLowerCase(), MESSAGE_COMMAND_MUTE + CHANNEL_DEFAULT)
                                     : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNMUTE + channelName.toLowerCase(), MESSAGE_COMMAND_UNMUTE + CHANNEL_DEFAULT));
                 } else {
-                    return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, CONFUSION))
+                    return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, CONFUSION))
                             .withText(String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(), MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT)));
                 }
             } else if (isChannelJoined(args[0].toLowerCase())) {
                 if (isSuperAdmin(userName)) {
                     configurationService.getConfiguration(args[0].toLowerCase()).setMuted(isMuted);
-                    return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, isMuted ? SAD : HAPPY))
+                    return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, isMuted ? SAD : HAPPY))
                             .withText(isMuted
                                     ? messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_MUTE + channelName.toLowerCase(), MESSAGE_COMMAND_MUTE + CHANNEL_DEFAULT)
                                     : messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNMUTE + channelName.toLowerCase(), MESSAGE_COMMAND_UNMUTE + CHANNEL_DEFAULT));
                 } else {
-                    return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, CONFUSION))
+                    return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, CONFUSION))
                             .withText(String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(),
                                     MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT)));
                 }
@@ -276,7 +276,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         }
         if (isSuperAdmin(userName)) {
             try {
-                return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, SAD))
+                return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, SAD))
                         .withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_SHUTDOWN + channelName.toLowerCase(), MESSAGE_COMMAND_SHUTDOWN + CHANNEL_DEFAULT));
             } finally {
                 new Timer().schedule(
@@ -306,7 +306,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
                 return messageBuilder.withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_JOIN + channelName.toLowerCase(),
                         MESSAGE_COMMAND_JOIN + CHANNEL_DEFAULT) + StringUtils.SPACE + args[0].toLowerCase());
             } else {
-                return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, CONFUSION))
+                return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, CONFUSION))
                         .withText(String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(),
                                 MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT)));
             }
@@ -331,7 +331,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
                     return messageBuilder;
                 }
             } else {
-                return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, CONFUSION))
+                return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, CONFUSION))
                         .withText(String.format(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_UNAUTHORIZED + channelName.toLowerCase(),
                                 MESSAGE_COMMAND_UNAUTHORIZED + CHANNEL_DEFAULT)));
             }
@@ -393,7 +393,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         }
         // todo validate channel name
         messageService.sendMessage(args[0].toLowerCase(), messageService.getMessageBuilder().withText(args[1]), null);
-        return messageBuilder.withEmotes(twitchEmoteService.buildEmoteLine(channelId, 1, HAPPY))
+        return messageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, HAPPY))
                 .withText(messageService.getPersonalizedMessageForKey(MESSAGE_COMMAND_SEND + channelName.toLowerCase(), MESSAGE_COMMAND_SEND + CHANNEL_DEFAULT));
     }
 

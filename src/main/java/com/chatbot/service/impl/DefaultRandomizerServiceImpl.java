@@ -12,6 +12,8 @@ public class DefaultRandomizerServiceImpl implements RandomizerService {
 
     private static final int DEFAULT_EXPONENT_VALUE = 1;
 
+    private static final Random RANDOM = new Random();
+
     private DefaultRandomizerServiceImpl() {
     }
 
@@ -44,6 +46,6 @@ public class DefaultRandomizerServiceImpl implements RandomizerService {
             final int numberOfCopies = exponent > DEFAULT_EXPONENT_VALUE ? (int) Math.pow(j, exponent) : DEFAULT_EXPONENT_VALUE;
             results.addAll(Collections.nCopies(numberOfCopies, i));
         }
-        return results.get(new Random().nextInt(results.size()));
+        return results.get(RANDOM.nextInt(results.size()));
     }
 }
