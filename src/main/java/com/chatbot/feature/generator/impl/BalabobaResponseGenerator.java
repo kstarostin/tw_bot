@@ -110,9 +110,8 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
             final JSONObject jsonObject = new JSONObject(line);
             LOG.info("Balaboba response: " + jsonObject.getString("text"));
             return jsonObject.getString("text");
-        }
-        catch (final Exception e) {
-            LOG.error(e.getMessage());
+        } catch (final Exception e) {
+            LOG.error("Unexpected error: " + e.getMessage());
             return StringUtils.EMPTY;
         }
     }
@@ -122,7 +121,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         String requestQuery = REQUEST_TEMPLATE.replace("@@@query@@@", query);
         requestQuery = requestQuery.replace("@@@intro@@@", StringUtils.isNotEmpty(style) ? style : defaultValue);
         requestQuery = requestQuery.replace("@@@style@@@", defaultValue);
-        requestQuery = requestQuery.replace("@@@filter@@@", StringUtils.isNotEmpty(style) ? "1" : defaultValue);
+        requestQuery = requestQuery.replace("@@@filter@@@", StringUtils.isNotEmpty(style) ? filter.toString() : defaultValue);
         return requestQuery;
     }
 

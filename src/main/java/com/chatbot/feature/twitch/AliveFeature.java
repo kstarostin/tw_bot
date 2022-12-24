@@ -102,10 +102,10 @@ public class AliveFeature extends AbstractFeature {
             }
         } else if (isBotTagged(channelName, message) || (isNoOneTagged(message) && isBotTriggeredIndependently(channelId))) {
             responseMessageBuilder.withText(generateResponseText(channelId, channelName));
-            if (randomizerService.flipCoin(3)) {
-                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
-            }
             if (responseMessageBuilder.isNotEmpty()) {
+                if (randomizerService.flipCoin(3)) {
+                    responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
+                }
                 sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
                 cacheService.cacheGreeting(channelName, userName);
             }
