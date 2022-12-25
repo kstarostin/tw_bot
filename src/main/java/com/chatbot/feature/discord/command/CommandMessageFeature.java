@@ -1,5 +1,6 @@
 package com.chatbot.feature.discord.command;
 
+import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import org.apache.commons.lang3.StringUtils;
@@ -29,9 +30,9 @@ public class CommandMessageFeature extends AbstractCommandFeature<MessageCreateE
         if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_SUNBOY)) {
             responseMessage = handleSunboyCommand(message);
         } else if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_UFA)) {
-            responseMessage = handleUfaCommand(message);
+            responseMessage = handleGenerateMessageForCommand(message, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, BASEDGE_EMOTE);
         } else if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_STALKER)) {
-            responseMessage = handleStalkerCommand(message);
+            responseMessage = handleGenerateMessageForCommand(message, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, STALK_2HEAD_EMOTE);
         } else {
             responseMessage = StringUtils.EMPTY;
         }

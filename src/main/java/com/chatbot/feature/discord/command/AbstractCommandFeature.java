@@ -27,6 +27,10 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
     protected static final String COMMAND_UFA = "ufa";
     protected static final String COMMAND_STALKER = "stalker";
 
+    protected static final String BASEDGE_EMOTE = "<:Basedge:993919651685859349>";
+    protected static final String STALK_2HEAD_EMOTE = "<:stalk2Head:1056446650345857146>";
+    protected static final String SADGE_EMOTE = "<:Sadge:1034813380575371356>";
+
     private static final String YOUTUBE_CHANNEL_ID_1 = "UC2WNW0NZVyMeEPvtLmScgvQ"; // SUNBOYUNITED
     private static final String YOUTUBE_CHANNEL_ID_2 = "UCBF5sbrlpTYECHMSfPT8wKw"; // Архив гениальных видео
 
@@ -67,53 +71,38 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
         return youTubeService.getCachedRandomVideo().isPresent();
     }
 
-    protected String handleUfaCommand(final Message message) {
+    protected String handleGenerateMessageForCommand(final Message message, final String commandName, final BalabobaResponseGenerator.Style style, final String emote) {
         final String channelId = message.getChannelId().asString();
         final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);
         final String content = message.getContent();
         if (!getWhitelistedChannelsForCommands().contains(channelId)) {
             return StringUtils.EMPTY;
         }
-        return handleUfaCommand(channelId, userName, content);
+        return handleGenerateMessageForCommand(channelId, userName, content, commandName, style, emote);
     }
 
-    protected String handleUfaCommand(final String channelId, final String userName, final String content) {
-        return handleUfaCommand(channelId, userName, content, null);
+    protected String handleGenerateMessageForCommand(final String channelId, final String userName, final String content, final String commandName, final BalabobaResponseGenerator.Style style,
+                                                     final String emote) {
+        return handleGenerateMessageForCommand(channelId, userName, content, commandName, style, emote, null);
     }
 
-    protected String handleUfaCommand(final String channelId, final String userName, final String content, final String customResponseText) {
+    protected String handleGenerateMessageForCommand(final String channelId, final String userName, final String content, final String commandName, final BalabobaResponseGenerator.Style style,
+                                                     final String emote, final String customStartText) {
         final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), userName, content);
 
-        String responseMessage = responseGenerator.generate(messageService.getStandardMessageForKey("message.discord.ufa.request"), false, true, true, BalabobaResponseGenerator.Style.FOLK_WISDOM) +
-                ((StringUtils.isNotBlank(customResponseText)) ? StringUtils.SPACE + customResponseText : " <:Basedge:993919651685859349>");
-
-        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseMessage);
-        return responseMessage;
-    }
-
-    protected String handleStalkerCommand(final Message message) {
-        final String channelId = message.getChannelId().asString();
-        final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);
-        final String content = message.getContent();
-        if (!getWhitelistedChannelsForCommands().contains(channelId)) {
-            return StringUtils.EMPTY;
+        final StringBuilder responseBuilder = new StringBuilder();
+        if (StringUtils.isNotBlank(customStartText)) {
+            responseBuilder.append(customStartText).append(StringUtils.SPACE);
         }
-        return handleStalkerCommand(channelId, userName, content);
-    }
+        final String requestMessage = messageService.getStandardMessageForKey("message.discord." + commandName + ".request");
+        final String generatedMessage = responseGenerator.generate(requestMessage, false, true, true, style);
+        responseBuilder.append(generatedMessage);
+        if (StringUtils.isNotEmpty(emote)) {
+            responseBuilder.append(StringUtils.SPACE).append(emote);
+        }
 
-    protected String handleStalkerCommand(final String channelId, final String userName, final String content) {
-        return handleStalkerCommand(channelId, userName, content, null);
-    }
-
-    protected String handleStalkerCommand(final String channelId, final String userName, final String content, final String customResponseText) {
-        final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), userName, content);
-
-        String responseMessage = responseGenerator.generate(messageService.getStandardMessageForKey("message.discord.stalker.request"), false, true, true, BalabobaResponseGenerator.Style.SHORT_STORIES) +
-                ((StringUtils.isNotBlank(customResponseText)) ? StringUtils.SPACE + customResponseText : " <:stalk2Head:1056446650345857146>");
-
-        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseMessage);
-        return responseMessage;
+        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseBuilder);
+        return StringUtils.isBlank(generatedMessage) || StringUtils.equalsIgnoreCase(generatedMessage, requestMessage + StringUtils.SPACE) ? StringUtils.EMPTY : responseBuilder.toString();
     }
 }

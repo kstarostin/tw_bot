@@ -1,10 +1,10 @@
 {
   "name": "stalker",
-  "description": "Так не смешно же",
+  "description": "Так не смешно же...",
   "options": [
     {
       "name": "text",
-      "description": "своя вставка",
+      "description": "свой текст в начале",
       "type": 3,
       "required": false
     }
