@@ -30,6 +30,8 @@ public class CommandMessageFeature extends AbstractCommandFeature<MessageCreateE
             responseMessage = handleSunboyCommand(message);
         } else if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_UFA)) {
             responseMessage = handleUfaCommand(message);
+        } else if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_STALKER)) {
+            responseMessage = handleStalkerCommand(message);
         } else {
             responseMessage = StringUtils.EMPTY;
         }

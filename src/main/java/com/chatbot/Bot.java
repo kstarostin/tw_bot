@@ -83,7 +83,7 @@ public class Bot {
     }
 
     private void registerDiscordCommands(final GatewayDiscordClient gatewayDiscordClient) {
-        final List<String> commands = List.of("sunboy.json", "ufa.json");
+        final List<String> commands = List.of("sunboy.json", "ufa.json", "stalker.json");
         try {
             new DiscordCommandRegistrar(gatewayDiscordClient.getRestClient()).registerCommands(commands);
         } catch (Exception e) {

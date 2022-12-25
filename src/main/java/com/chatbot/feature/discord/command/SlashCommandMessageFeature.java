@@ -40,6 +40,9 @@ public class SlashCommandMessageFeature extends AbstractCommandFeature<ChatInput
         if ((COMMAND_SIGN + COMMAND_UFA).equals(command)) {
             return handleUfaCommand(event, channelId, userName, command);
         }
+        if ((COMMAND_SIGN + COMMAND_STALKER).equals(command)) {
+            return handleStalkerCommand(event, channelId, userName, command);
+        }
         return Mono.empty();
     }
 
@@ -62,6 +65,16 @@ public class SlashCommandMessageFeature extends AbstractCommandFeature<ChatInput
         event.reply(messageService.getStandardMessageForKey("message.discord.ufa.inprogress")).subscribe();
 
         final String replyText = textOptional.isEmpty() ? handleUfaCommand(channelId, userName, command) : handleUfaCommand(channelId, userName, command, textOptional.get());
+        event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
+        return Mono.empty();
+    }
+
+    private Mono<Void> handleStalkerCommand(final ChatInputInteractionEvent event, final String channelId, final String userName, final String command) {
+        final Optional<String> textOptional = getOptionalText(event);
+
+        event.reply(messageService.getStandardMessageForKey("message.discord.stalker.inprogress")).subscribe();
+
+        final String replyText = textOptional.isEmpty() ? handleStalkerCommand(channelId, userName, command) : handleStalkerCommand(channelId, userName, command, textOptional.get());
         event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
         return Mono.empty();
     }

@@ -25,6 +25,7 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
 
     protected static final String COMMAND_SUNBOY = "sunboy";
     protected static final String COMMAND_UFA = "ufa";
+    protected static final String COMMAND_STALKER = "stalker";
 
     private static final String YOUTUBE_CHANNEL_ID_1 = "UC2WNW0NZVyMeEPvtLmScgvQ"; // SUNBOYUNITED
     private static final String YOUTUBE_CHANNEL_ID_2 = "UCBF5sbrlpTYECHMSfPT8wKw"; // Архив гениальных видео
@@ -86,6 +87,31 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
 
         String responseMessage = responseGenerator.generate(messageService.getStandardMessageForKey("message.discord.ufa.request"), false, true, true, BalabobaResponseGenerator.Style.FOLK_WISDOM) +
                 ((StringUtils.isNotBlank(customResponseText)) ? StringUtils.SPACE + customResponseText : " <:Basedge:993919651685859349>");
+
+        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseMessage);
+        return responseMessage;
+    }
+
+    protected String handleStalkerCommand(final Message message) {
+        final String channelId = message.getChannelId().asString();
+        final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);
+        final String content = message.getContent();
+        if (!getWhitelistedChannelsForCommands().contains(channelId)) {
+            return StringUtils.EMPTY;
+        }
+        return handleStalkerCommand(channelId, userName, content);
+    }
+
+    protected String handleStalkerCommand(final String channelId, final String userName, final String content) {
+        return handleStalkerCommand(channelId, userName, content, null);
+    }
+
+    protected String handleStalkerCommand(final String channelId, final String userName, final String content, final String customResponseText) {
+        final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), userName, content);
+
+        String responseMessage = responseGenerator.generate(messageService.getStandardMessageForKey("message.discord.stalker.request"), false, true, true, BalabobaResponseGenerator.Style.SHORT_STORIES) +
+                ((StringUtils.isNotBlank(customResponseText)) ? StringUtils.SPACE + customResponseText : " <:stalk2Head:1056446650345857146>");
 
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseMessage);
         return responseMessage;
