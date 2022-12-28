@@ -95,8 +95,9 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
         if (StringUtils.isNotBlank(customStartText)) {
             responseBuilder.append(customStartText).append(StringUtils.SPACE);
         }
+        final String requesterId = "ds:" + channelId + ":" + userName;
         final String requestMessage = messageService.getStandardMessageForKey("message.discord." + commandName + ".request");
-        final String generatedMessage = responseGenerator.generate(requestMessage, false, true, true, style);
+        final String generatedMessage = responseGenerator.generate(requesterId, requestMessage, false, true, true, style);
         responseBuilder.append(generatedMessage);
         if (StringUtils.isNotEmpty(emote)) {
             responseBuilder.append(StringUtils.SPACE).append(emote);
