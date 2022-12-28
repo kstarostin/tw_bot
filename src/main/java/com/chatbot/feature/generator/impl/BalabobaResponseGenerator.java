@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -30,7 +31,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
             300, 300,
             350
     };
-    private final static int GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS = 10;
+    private final static int GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS = 5;
 
     private BalabobaResponseGenerator () {
     }
@@ -50,18 +51,18 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     @Override
     public String generate(final String requestMessage, final boolean shortenResponse, final boolean sanitizeResponse, final boolean includeRequest, final Style style) {
         Style requestStyle = style != null ? style : getRandomStyle();
-        final String payload = createPayload(requestMessage + StringUtils.SPACE, 0, requestStyle.toString(), 0);
+        final String payload = createPayload(requestMessage, 0, requestStyle.toString(), 0);
 
         String generatedMessage;
         if (shortenResponse) {
             int maxLength = calculateRandomLength();
             int generateCounter = 1;
             do {
-                generatedMessage = shorten(generateByBalaboba(payload), maxLength);
+                generatedMessage = shorten(generateByBalaboba(payload, generateCounter), maxLength);
                 generateCounter++;
-            } while (generatedMessage.length() > maxLength && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
+            } while ((generatedMessage.length() == 0 || generatedMessage.length() > maxLength) && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
         } else {
-            generatedMessage = generateByBalaboba(payload);
+            generatedMessage = generateByBalaboba(payload, 1);
         }
         if (sanitizeResponse) {
             generatedMessage = sanitizeResponseMessage(generatedMessage);
@@ -92,7 +93,8 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         return sanitizedMessage;
     }
 
-    private String generateByBalaboba(final String payload) {
+    private String generateByBalaboba(final String payload, final int counter) {
+        BufferedReader reader = null;
         try {
             final URLConnection http = new URL(BALABOBA_API_URL).openConnection();
             http.setRequestProperty("Content-Type", "application/json");
@@ -100,19 +102,27 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
             http.setDoInput(true);
             http.connect();
 
-            LOG.info("Balaboba request: " + payload);
+            LOG.info(String.format("Balaboba request #%d: %s", counter, payload));
             http.getOutputStream().write(payload.getBytes(StandardCharsets.UTF_8));
 
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(http.getInputStream()));
+            reader = new BufferedReader(new InputStreamReader(http.getInputStream()));
             final String line = reader.readLine();
-            reader.close();
 
-            final JSONObject jsonObject = new JSONObject(line);
-            LOG.info("Balaboba response: " + jsonObject.getString("text"));
-            return jsonObject.getString("text");
+            final String responseText = new JSONObject(line).getString("text");
+            LOG.info("Balaboba response: " + responseText);
+
+            return responseText;
         } catch (final Exception e) {
             LOG.error("Unexpected error: " + e.getMessage());
             return StringUtils.EMPTY;
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (final IOException e) {
+                    LOG.error("Cannot close reader: " + e.getMessage());
+                }
+            }
         }
     }
 
