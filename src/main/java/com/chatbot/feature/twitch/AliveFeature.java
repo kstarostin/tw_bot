@@ -101,8 +101,8 @@ public class AliveFeature extends AbstractFeature {
                     cacheService.cacheGreeting(channelName, userName);
                 }
             }
-        } else if (isBotTagged(channelName, message)) {
-            responseMessageBuilder.withText(generateResponseText(channelId, userName, message));
+        } else if (isBotTaggedDirectly(message)) {
+            responseMessageBuilder.withText(generateResponseText(channelId, userName, List.of(message)));
             if (responseMessageBuilder.isNotEmpty()) {
                 if (randomizerService.flipCoin(3)) {
                     responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
@@ -110,7 +110,7 @@ public class AliveFeature extends AbstractFeature {
                 sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
                 cacheService.cacheGreeting(channelName, userName);
             }
-        } else if (isNoOneTagged(message) && isBotTriggeredIndependently(channelId)) {
+        } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotTriggeredIndependently(channelId))) {
             responseMessageBuilder.withText(generateResponseText(channelId, userName, getLastMessages(channelId, userName)));
             if (responseMessageBuilder.isNotEmpty()) {
                 if (randomizerService.flipCoin(3)) {
@@ -123,7 +123,10 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private boolean isGreetingResponse(final String channelName, final String userName, final String message) {
-        return isGreetingEnabled(channelName) && !isUserGreeted(channelName, userName) && (isUserInFriendList(userName) || isRandomGreeting()) && !isBotTagged(channelName, message);
+        return isGreetingEnabled(channelName)
+                && !isUserGreeted(channelName, userName)
+                && (isUserInFriendList(userName) || isRandomGreeting())
+                && !(isBotTaggedDirectly(message) || isBotTaggedIndirectly(channelName, message));
     }
 
     private boolean isGreetingEnabled(final String channelName) {
@@ -142,11 +145,16 @@ public class AliveFeature extends AbstractFeature {
         return !randomizerService.flipCoin(3);
     }
 
-    private boolean isBotTagged(final String channelName, final String message) {
-        final List<String> tags = new ArrayList<>();
-        tags.add(TAG_CHARACTER + configurationService.getBotName());
-        tags.add(configurationService.getBotName());
-        tags.addAll(CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames()));
+    private boolean isBotTaggedDirectly(final String message) {
+        final List<String> tags = List.of(TAG_CHARACTER + configurationService.getBotName(), configurationService.getBotName());
+        return isTagged(message, tags);
+    }
+
+    private boolean isBotTaggedIndirectly(final String channelName, final String message) {
+        return isTagged(message, new ArrayList<>(CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames())));
+    }
+
+    private boolean isTagged(final String message, final List<String> tags) {
         for (final String tag : tags) {
             if (message.equalsIgnoreCase(tag)
                     || message.toLowerCase().startsWith(tag.toLowerCase() + StringUtils.SPACE)
@@ -235,10 +243,6 @@ public class AliveFeature extends AbstractFeature {
         return lastMessages.stream().limit(3).map(AbstractChannelMessageEvent::getMessage).collect(Collectors.toList());
     }
 
-    private String generateResponseText(final String channelId, final String userName, final String requestMessage) {
-        return generateResponseText(channelId, userName, List.of(requestMessage));
-    }
-
     private String generateResponseText(final String channelId, final String userName, final List<String> lastMessages) {
         final String requesterId = "tw:" + channelId + ":" + userName;
         final String requestMessage = ResponseGeneratorUtil.shorten(sanitizeRequestMessage(channelId, String.join(StringUtils.SPACE, lastMessages)), 100, ResponseGeneratorUtil.SPACE_SHORTENER);
@@ -250,6 +254,8 @@ public class AliveFeature extends AbstractFeature {
 
     private String sanitizeRequestMessage(final String channelId, final String message) {
         final int maxLength = 100;
+        final String[] delimiters = {".", "?", "!"};
+
         final String[] words =  message.trim().split(StringUtils.SPACE);
         final List<String> sanitizedWords = Arrays.stream(words)
                 .filter(word -> !word.startsWith(TAG_CHARACTER))
@@ -268,10 +274,13 @@ public class AliveFeature extends AbstractFeature {
                 sanitizedMessage = sanitizedMessageBuilder.toString();
                 break;
             } else {
-                return (sanitizedMessage.length() > maxLength ? sanitizedMessage.substring(0, maxLength) : sanitizedMessage).trim() + ".";
+                sanitizedMessage = (sanitizedMessage.length() > maxLength ? sanitizedMessage.substring(0, maxLength) : sanitizedMessage).trim();
+                return StringUtils.endsWithAny(sanitizedMessage, delimiters) ? sanitizedMessage : sanitizedMessage + ".";
             }
         }
-        return sanitizedMessage.trim() + ".";
+        sanitizedMessage = sanitizedMessage.trim();
+
+        return StringUtils.endsWithAny(sanitizedMessage, delimiters) ? sanitizedMessage : sanitizedMessage + ".";
     }
 
     private int calculateResponseDelayTime(final DefaultMessageServiceImpl.MessageBuilder messageBuilder) {

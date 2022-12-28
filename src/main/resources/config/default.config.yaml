@@ -1,4 +1,4 @@
-bot_name: "0mskBot"
+bot_name: "Kebirow"
 super_admin: "0mskbird"
 
 # Channels - The bot will connect to all listed Twitch channels on startup
@@ -29,15 +29,15 @@ additional_bot_tag_names:
     - боту
     - ботом
     - боте
-    - омск
-    - омска
-    - омску
-    - омском
-    - омске
-    - омский
-    - омского
-    - омскому
-    - омским
+    - ботик
+    - ботика
+    - ботику
+    - ботиком
+    - ботике
+    - кебиров
+    - кебирова
+    - кебирову
+    - кебировым
     - bot
 
 

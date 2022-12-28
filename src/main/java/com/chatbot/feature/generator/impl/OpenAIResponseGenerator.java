@@ -15,13 +15,13 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
 
     private final Logger LOG = LoggerFactory.getLogger(OpenAIResponseGenerator.class);
 
-    private OpenAiService service;
+    private final OpenAiService service;
 
+    // see <a href="https://openai.com/api/pricing/"/>
     private static final String MODEL_DAVINCI = "text-davinci-003"; // $0.0200/1K tokens
     private static final String MODEL_CURIE = "text-curie-001"; // $0.0020/1K tokens
     private static final String MODEL_BABBAGE = "text-babbage-001"; // $0.0005/1K tokens
     private static final String MODEL_ADA = "text-ada-001"; // $0.0004/1K tokens
-
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
 
@@ -45,7 +45,7 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
                 .echo(includeRequest)
                 .user(requesterId);
         if (shortenResponse) {
-            completionRequestBuilder.maxTokens(250); // todo tune length
+            completionRequestBuilder.maxTokens(200); // todo tune length
         }
         LOG.info(String.format("OpenAI request: %s", completionRequestBuilder.toString()));
 
@@ -58,7 +58,7 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
         if (sanitizeResponse) {
             generatedMessage = ResponseGeneratorUtil.sanitize(generatedMessage);
         }
-        return shortenResponse ? ResponseGeneratorUtil.shorten(generatedMessage, 200, ResponseGeneratorUtil.SENTENCE_SHORTENER) : generatedMessage;
+        return shortenResponse ? ResponseGeneratorUtil.shorten(generatedMessage, 150, ResponseGeneratorUtil.SENTENCE_SHORTENER) : generatedMessage;
     }
 
     @Override
