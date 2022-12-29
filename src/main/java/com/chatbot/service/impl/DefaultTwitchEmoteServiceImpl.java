@@ -218,7 +218,7 @@ public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
         for (int i = 0; i < numberOfEmotes; i++) {
             if (i > 0) {
                 final String previousEmote = selectedEmotes.get(i - 1);
-                if (EMOTE_COMBINATIONS.containsKey(previousEmote) && isEmote(channelId, previousEmote)) {
+                if (EMOTE_COMBINATIONS.containsKey(previousEmote) && randomizerService.flipCoin() && isEmote(channelId, previousEmote)) {
                     selectedEmotes.add(EMOTE_COMBINATIONS.get(previousEmote));
                 } else if (randomizerService.flipCoin()) {
                     selectedEmotes.add(previousEmote);
