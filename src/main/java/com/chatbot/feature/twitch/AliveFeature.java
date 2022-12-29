@@ -102,7 +102,7 @@ public class AliveFeature extends AbstractFeature {
                 }
             }
         } else if (isBotTaggedDirectly(message)) {
-            responseMessageBuilder.withText(generateResponseText(channelId, userName, List.of(message)));
+            responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, List.of(message)));
             if (responseMessageBuilder.isNotEmpty()) {
                 if (randomizerService.flipCoin(3)) {
                     responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
@@ -111,7 +111,7 @@ public class AliveFeature extends AbstractFeature {
                 cacheService.cacheGreeting(channelName, userName);
             }
         } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotTriggeredIndependently(channelId))) {
-            responseMessageBuilder.withText(generateResponseText(channelId, userName, getLastMessages(channelId, userName)));
+            responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, getLastMessages(channelId, userName)));
             if (responseMessageBuilder.isNotEmpty()) {
                 if (randomizerService.flipCoin(3)) {
                     responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
@@ -243,23 +243,25 @@ public class AliveFeature extends AbstractFeature {
         return lastMessages.stream().limit(3).map(AbstractChannelMessageEvent::getMessage).collect(Collectors.toList());
     }
 
-    private String generateResponseText(final String channelId, final String userName, final List<String> lastMessages) {
+    private String generateResponseText(final String channelId, final String channelName, final String userName, final List<String> lastMessages) {
         final String requesterId = "tw:" + channelId + ":" + userName;
-        final String requestMessage = ResponseGeneratorUtil.shorten(sanitizeRequestMessage(channelId, String.join(StringUtils.SPACE, lastMessages)), 100, ResponseGeneratorUtil.SPACE_SHORTENER);
+        final String requestMessage = ResponseGeneratorUtil.shorten(
+                sanitizeRequestMessage(channelId, channelName, String.join(StringUtils.SPACE, lastMessages)), 100, ResponseGeneratorUtil.SPACE_SHORTENER);
 
         return StringUtils.isNotBlank(requestMessage)
                 ? responseGenerator.generate(requesterId, requestMessage, true, true, false)
                 : StringUtils.EMPTY;
     }
 
-    private String sanitizeRequestMessage(final String channelId, final String message) {
+    private String sanitizeRequestMessage(final String channelId, final String channelName, final String message) {
         final int maxLength = 100;
         final String[] delimiters = {".", "?", "!"};
 
         final String[] words =  message.trim().split(StringUtils.SPACE);
         final List<String> sanitizedWords = Arrays.stream(words)
                 .filter(word -> !word.startsWith(TAG_CHARACTER))
-                .filter(word -> !StringUtils.containsAnyIgnoreCase(word, configurationService.getBotName()))
+                .filter(word -> !StringUtils.equalsIgnoreCase(word, configurationService.getBotName()))
+                .filter(word -> !StringUtils.equalsAnyIgnoreCase(word, CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames()).toArray(new String[0])))
                 .filter(word -> !twitchEmoteService.isEmote(channelId, word))
                 .collect(Collectors.toList());
         if (sanitizedWords.isEmpty()) {
@@ -279,7 +281,6 @@ public class AliveFeature extends AbstractFeature {
             }
         }
         sanitizedMessage = sanitizedMessage.trim();
-
         return StringUtils.endsWithAny(sanitizedMessage, delimiters) ? sanitizedMessage : sanitizedMessage + ".";
     }
 
@@ -338,7 +339,7 @@ public class AliveFeature extends AbstractFeature {
                 break;
         }
         if (messageBuilder.isNotEmpty()) {
-            saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.toString(), Calendar.getInstance()));
+            saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.toString()));
         }
     }
 
@@ -385,7 +386,7 @@ public class AliveFeature extends AbstractFeature {
         return BOT_MESSAGE_HISTORY_MAP.containsKey(channelId) ? BOT_MESSAGE_HISTORY_MAP.get(channelId) : new CircularFifoQueue<>(10);
     }
 
-    private class BotMessage {
+    private static class BotMessage {
         private String message;
         private Calendar postedAt;
 
