@@ -90,7 +90,7 @@ public class AliveFeature extends AbstractFeature {
             greetWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
         } else if (isEmoteOnlyMessage(channelId, message)) {
             final List<String> emoteSet = getEmoteSet(message);
-            if (CollectionUtils.isNotEmpty(emoteSet) && isBotTriggeredIndependently(channelId)) {
+            if (CollectionUtils.isNotEmpty(emoteSet) && isBotTriggeredIndependently(channelId, channelName)) {
                 responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 3, emoteSet));
                 final int delay = calculateResponseDelayTime(responseMessageBuilder);
                 messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
@@ -101,23 +101,25 @@ public class AliveFeature extends AbstractFeature {
                     cacheService.cacheGreeting(channelName, userName);
                 }
             }
-        } else if (isBotTaggedDirectly(message)) {
-            responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, List.of(message)));
-            if (responseMessageBuilder.isNotEmpty()) {
-                if (randomizerService.flipCoin(3)) {
-                    responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
+        } else if (canBeTriggeredByTag(channelId, channelName, userName)) {
+            if (isBotTaggedDirectly(message)) {
+                responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, List.of(message)));
+                if (responseMessageBuilder.isNotEmpty()) {
+                    if (randomizerService.flipCoin(3)) {
+                        responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
+                    }
+                    sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
+                    cacheService.cacheGreeting(channelName, userName);
                 }
-                sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
-                cacheService.cacheGreeting(channelName, userName);
-            }
-        } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotTriggeredIndependently(channelId))) {
-            responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, getLastMessages(channelId, userName)));
-            if (responseMessageBuilder.isNotEmpty()) {
-                if (randomizerService.flipCoin(3)) {
-                    responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
+            } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotTriggeredIndependently(channelId, channelName))) {
+                responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, getLastMessages(channelId, userName)));
+                if (responseMessageBuilder.isNotEmpty()) {
+                    if (randomizerService.flipCoin(3)) {
+                        responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
+                    }
+                    sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
+                    cacheService.cacheGreeting(channelName, userName);
                 }
-                sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
-                cacheService.cacheGreeting(channelName, userName);
             }
         }
     }
@@ -167,6 +169,11 @@ public class AliveFeature extends AbstractFeature {
         return false;
     }
 
+    private boolean canBeTriggeredByTag(final String channelId, final String channelName, final String userName) {
+        final int secondsToCheck = configurationService.getConfiguration(channelName).getTagTriggerMaxWaitTime();
+        return isSuperAdmin(userName) || !hasMessagesSentInChannelSince(channelId, secondsToCheck);
+    }
+
     private boolean isEmoteOnlyMessage(final String channelId, final String message) {
         final String[] messageTokens = message.split(StringUtils.SPACE);
         for (final String token : messageTokens) {
@@ -193,10 +200,12 @@ public class AliveFeature extends AbstractFeature {
         return !message.contains(TAG_CHARACTER);
     }
 
-    private boolean isBotTriggeredIndependently(final String channelId) {
+    private boolean isBotTriggeredIndependently(final String channelId, final String channelName) {
         final int chattingRate = calculateCurrentChattingRate(channelId);
         final int subtract = chattingRate - MIN_CHATTING_RATE;
-        int secondsToCheck = 60 - chattingRate * 3;
+        final int maxSecondsToCheck = configurationService.getConfiguration(channelName).getSelfTriggerMaxWaitTime();
+        final int rateMultiplier = maxSecondsToCheck / (MAX_CHATTING_RATE * 2);
+        int secondsToCheck = maxSecondsToCheck - chattingRate * rateMultiplier;
 
         LOG.info(String.format("Current chatting rate [%d], independent response probability [%s], last bot message must be [%d] seconds ago",
                 chattingRate, chattingRate * 10 + "%", secondsToCheck));

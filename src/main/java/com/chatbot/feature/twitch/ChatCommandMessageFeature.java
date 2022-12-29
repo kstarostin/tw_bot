@@ -104,10 +104,6 @@ public class ChatCommandMessageFeature extends AbstractFeature {
         }
     }
 
-    private boolean isSuperAdmin(final String userName) {
-        return configurationService.getSuperAdminName().equalsIgnoreCase(userName);
-    }
-
     private boolean isBroadcaster(final String userName, final String channelName) {
         return userName.equalsIgnoreCase(channelName);
     }

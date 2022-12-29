@@ -39,4 +39,8 @@ public abstract class AbstractFeature {
     protected boolean isCommand(final String message) {
         return message.toLowerCase().startsWith(COMMAND_SYNTAX);
     }
+
+    protected boolean isSuperAdmin(final String userName) {
+        return configurationService.getSuperAdminName().equalsIgnoreCase(userName);
+    }
 }

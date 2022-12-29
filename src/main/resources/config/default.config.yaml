@@ -22,6 +22,10 @@ active_features:
 ## FEATURE: ALIVE
 # Defines whether Bot welcomes chat users
 user_greeting_enabled: true
+# Defines time in seconds which bot must wait after its last message before triggering via tagging can happen (excluding admins)
+tag_trigger_max_wait_time: 15
+# Defines time in seconds which bot must wait after its last message before self triggering can happen
+self_trigger_max_wait_time: 60
 # Channel permissions of users for skipping moderation
 additional_bot_tag_names:
     - бот

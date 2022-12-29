@@ -15,6 +15,8 @@ public class Configuration {
     private boolean muted;
     private Set<String> activeFeatures;
     private boolean userGreetingEnabled;
+    private int tagTriggerMaxWaitTime;
+    private int selfTriggerMaxWaitTime;
     private List<String> messageWhitelistedPermissions;
     private List<String> additionalBotTagNames;
     private boolean checkModeratorPermissions;
@@ -54,6 +56,22 @@ public class Configuration {
 
     public void setUserGreetingEnabled(boolean userGreetingEnabled) {
         this.userGreetingEnabled = userGreetingEnabled;
+    }
+
+    public int getTagTriggerMaxWaitTime() {
+        return tagTriggerMaxWaitTime;
+    }
+
+    public void setTagTriggerMaxWaitTime(int tagTriggerMaxWaitTime) {
+        this.tagTriggerMaxWaitTime = tagTriggerMaxWaitTime;
+    }
+
+    public int getSelfTriggerMaxWaitTime() {
+        return selfTriggerMaxWaitTime;
+    }
+
+    public void setSelfTriggerMaxWaitTime(int selfTriggerMaxWaitTime) {
+        this.selfTriggerMaxWaitTime = selfTriggerMaxWaitTime;
     }
 
     public List<String> getMessageWhitelistedPermissions() {
