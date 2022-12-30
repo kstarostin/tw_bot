@@ -45,23 +45,23 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     }
 
     @Override
-    public String generate(final String requesterId, final String requestMessage, final boolean shortenResponse, final boolean sanitizeResponse, final boolean includeRequest) {
-        return generate(requesterId, requestMessage, shortenResponse, sanitizeResponse, includeRequest, null);
+    public String generate(final String requesterId, final String requestMessage, final Integer maxResponseLength, final boolean sanitizeResponse, final boolean includeRequest) {
+        return generate(requesterId, requestMessage, maxResponseLength, sanitizeResponse, includeRequest, null);
     }
 
     @Override
-    public String generate(final String requesterId, final String requestMessage, final boolean shortenResponse, final boolean sanitizeResponse, final boolean includeRequest, final Style style) {
+    public String generate(final String requesterId, final String requestMessage, final Integer maxResponseLength, final boolean sanitizeResponse, final boolean includeRequest, final Style style) {
         Style requestStyle = style != null ? style : getRandomStyle();
         final String payload = createPayload(requestMessage, 0, requestStyle.toString(), 0);
 
         String generatedMessage;
-        if (shortenResponse) {
+        if (maxResponseLength != null) {
             int maxLength = calculateRandomLength();
             int generateCounter = 1;
             do {
-                generatedMessage = ResponseGeneratorUtil.shorten(generateByBalaboba(payload, generateCounter), maxLength, ResponseGeneratorUtil.SENTENCE_SHORTENER);
+                generatedMessage = ResponseGeneratorUtil.shorten(generateByBalaboba(payload, generateCounter), maxResponseLength, ResponseGeneratorUtil.SENTENCE_SHORTENER);
                 generateCounter++;
-            } while ((generatedMessage.length() == 0 || generatedMessage.length() > maxLength) && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
+            } while ((generatedMessage.length() == 0 || generatedMessage.length() > maxResponseLength) && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
         } else {
             generatedMessage = generateByBalaboba(payload, 1);
         }

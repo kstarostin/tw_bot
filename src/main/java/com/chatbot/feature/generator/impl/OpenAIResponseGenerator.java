@@ -38,14 +38,14 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
     }
 
     @Override
-    public String generate(final String requesterId, String requestMessage, boolean shortenResponse, boolean sanitizeResponse, boolean includeRequest) {
+    public String generate(final String requesterId, String requestMessage, final Integer maxResponseLength, boolean sanitizeResponse, boolean includeRequest) {
         final CompletionRequest.CompletionRequestBuilder completionRequestBuilder = CompletionRequest.builder()
                 .prompt(requestMessage)
                 .model(MODEL_CURIE)
                 .echo(includeRequest)
                 .user(requesterId);
-        if (shortenResponse) {
-            completionRequestBuilder.maxTokens(200); // todo tune length
+        if (maxResponseLength != null) {
+            completionRequestBuilder.maxTokens((int) (maxResponseLength * 1.33)); // todo tune length
         }
         LOG.info(String.format("OpenAI request: %s", completionRequestBuilder.toString()));
 
@@ -58,11 +58,11 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
         if (sanitizeResponse) {
             generatedMessage = ResponseGeneratorUtil.sanitize(generatedMessage);
         }
-        return shortenResponse ? ResponseGeneratorUtil.shorten(generatedMessage, 150, ResponseGeneratorUtil.SENTENCE_SHORTENER) : generatedMessage;
+        return maxResponseLength != null ? ResponseGeneratorUtil.shorten(generatedMessage, maxResponseLength, ResponseGeneratorUtil.SENTENCE_SHORTENER) : generatedMessage;
     }
 
     @Override
-    public String generate(final String requesterId, String requestMessage, boolean shortenResponse, boolean sanitizeResponse, boolean includeRequest, BalabobaResponseGenerator.Style style) {
-        return generate(requesterId, requestMessage, shortenResponse, sanitizeResponse, includeRequest);
+    public String generate(final String requesterId, String requestMessage, Integer maxResponseLength, boolean sanitizeResponse, boolean includeRequest, BalabobaResponseGenerator.Style style) {
+        return generate(requesterId, requestMessage, maxResponseLength, sanitizeResponse, includeRequest);
     }
 }

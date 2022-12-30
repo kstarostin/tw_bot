@@ -83,14 +83,14 @@ public class AliveFeature extends AbstractFeature {
 
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder();
         if (isGreetingResponse(channelName, userName, message)) {
-            responseMessageBuilder.withText(buildGreetingText(userName));
+            responseMessageBuilder.withText(buildGreetingTextNew(channelId, channelName, userName));
             if (randomizerService.flipCoin(2)) {
                 responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 3, GREETING, POG, HAPPY));
             }
             greetWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
         } else if (isEmoteOnlyMessage(channelId, message)) {
             final List<String> emoteSet = getEmoteSet(message);
-            if (CollectionUtils.isNotEmpty(emoteSet) && isBotTriggeredIndependently(channelId, channelName)) {
+            if (CollectionUtils.isNotEmpty(emoteSet) && isBotSelfTriggered(channelId, channelName)) {
                 responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 3, emoteSet));
                 final int delay = calculateResponseDelayTime(responseMessageBuilder);
                 messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
@@ -111,7 +111,7 @@ public class AliveFeature extends AbstractFeature {
                     sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
                     cacheService.cacheGreeting(channelName, userName);
                 }
-            } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotTriggeredIndependently(channelId, channelName))) {
+            } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotSelfTriggered(channelId, channelName))) {
                 responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, getLastMessages(channelId, userName)));
                 if (responseMessageBuilder.isNotEmpty()) {
                     if (randomizerService.flipCoin(3)) {
@@ -200,7 +200,7 @@ public class AliveFeature extends AbstractFeature {
         return !message.contains(TAG_CHARACTER);
     }
 
-    private boolean isBotTriggeredIndependently(final String channelId, final String channelName) {
+    private boolean isBotSelfTriggered(final String channelId, final String channelName) {
         final int chattingRate = calculateCurrentChattingRate(channelId);
         final int subtract = chattingRate - MIN_CHATTING_RATE;
         final int maxSecondsToCheck = configurationService.getConfiguration(channelName).getSelfTriggerMaxWaitTime();
@@ -239,6 +239,32 @@ public class AliveFeature extends AbstractFeature {
         return messageTemplate.replaceAll(" +", StringUtils.SPACE).trim();
     }
 
+    private String buildGreetingTextNew(final String channelId, final String channelName, final String userName) {
+        final List<String> greetingTokens = new ArrayList<>(List.of(GREETING_TOKEN));
+        if (randomizerService.flipCoin(2)) {
+            greetingTokens.add(USERNAME_TOKEN);
+            Collections.shuffle(greetingTokens);
+        }
+
+        final StringBuilder sb = new StringBuilder();
+        greetingTokens.forEach(token -> sb.append(StringUtils.SPACE).append(token));
+
+        String messageTemplate = sb.toString();
+        for (final String token : greetingTokens) {
+            final String replacement = messageService.getPersonalizedMessageForKey("message.greeting." + token + "." + userName.toLowerCase(), "message.greeting." + token + ".default");
+            messageTemplate = messageTemplate.replace(token, replacement);
+        }
+
+        final String requesterId = "tw:" + channelId + ":" + configurationService.getConfiguration().getSuperAdmin();
+        String requestMessage = sanitizeRequestMessage(channelId, channelName, messageTemplate.replace(ADDITION_TOKEN, StringUtils.EMPTY));
+        if (requestMessage.endsWith(".")) {
+            requestMessage = StringUtils.replaceOnce(requestMessage, ".", ",");
+        }
+
+        final String responseMessage = responseGenerator.generate(requesterId, requestMessage, 75, true, true);
+        return responseMessage.replaceAll(" +", StringUtils.SPACE).trim();
+    }
+
     private List<String> getLastMessages(final String channelId, final String userName) {
         List<ChannelMessageEvent> lastMessages = getLastChatMessageEventsForChannelIdAndUserName(channelId, userName).stream()
                 .filter(event -> !isEmoteOnlyMessage(channelId, event.getMessage()))
@@ -258,7 +284,7 @@ public class AliveFeature extends AbstractFeature {
                 sanitizeRequestMessage(channelId, channelName, String.join(StringUtils.SPACE, lastMessages)), 100, ResponseGeneratorUtil.SPACE_SHORTENER);
 
         return StringUtils.isNotBlank(requestMessage)
-                ? responseGenerator.generate(requesterId, requestMessage, true, true, false)
+                ? responseGenerator.generate(requesterId, requestMessage, 150, true, false)
                 : StringUtils.EMPTY;
     }
 
@@ -428,6 +454,6 @@ public class AliveFeature extends AbstractFeature {
     private enum MessageType {
         SEND_RESPONSE,
         SEND_REPLY,
-        SEND_MESSAGE;
+        SEND_MESSAGE
     }
 }
