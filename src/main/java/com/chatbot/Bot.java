@@ -1,6 +1,7 @@
 package com.chatbot;
 
 import com.chatbot.configuration.GlobalConfiguration;
+import com.chatbot.feature.discord.command.AliveFeature;
 import com.chatbot.feature.discord.command.CommandMessageFeature;
 import com.chatbot.feature.discord.MessageReactionFeature;
 import com.chatbot.feature.discord.command.SlashCommandMessageFeature;
@@ -74,10 +75,11 @@ public class Bot {
 
             final Mono<Void> handleMessageReaction = gateway.on(MessageCreateEvent.class, event -> MessageReactionFeature.getInstance().handle(event)).then();
             final Mono<Void> handleCommandMessage = gateway.on(MessageCreateEvent.class, event -> CommandMessageFeature.getInstance().handle(event)).then();
+            final Mono<Void> handleMessage = gateway.on(MessageCreateEvent.class, event -> AliveFeature.getInstance().handle(event)).then();
 
             final Mono<Void> handleSlashCommandMessage = gateway.on(ChatInputInteractionEvent.class, event -> SlashCommandMessageFeature.getInstance().handle(event)).then();
 
-            return printOnLogin.and(handleMessageReaction).and(handleCommandMessage).and(handleSlashCommandMessage);
+            return printOnLogin.and(handleMessageReaction).and(handleCommandMessage).and(handleSlashCommandMessage).and(handleMessage);
         });
         login.block();
     }
