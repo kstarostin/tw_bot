@@ -47,9 +47,11 @@ public class AliveFeature {
         final String userId = message.getAuthor().map(user -> user.getId().asString()).orElse(StringUtils.EMPTY);
         final String requesterId = "ds:" + channelId + ":" + userName;
 
-        final String sanitizedContent = message.getContent().replaceAll("<@\\d+>", StringUtils.EMPTY).trim();
+        final String[] delimiters = {".", "?", "!"};
+        String sanitizedMessage = message.getContent().replaceAll("<@\\d+>", StringUtils.EMPTY).trim();
+        sanitizedMessage = StringUtils.endsWithAny(sanitizedMessage, delimiters) ? sanitizedMessage : sanitizedMessage + ".";
 
-        final String responseMessage = responseGenerator.generate(requesterId, sanitizedContent, 250, true, false);
+        final String responseMessage = responseGenerator.generate(requesterId, sanitizedMessage, 250, true, false);
 
         return StringUtils.isNotEmpty(responseMessage)
                 ? message.getChannel().flatMap(channel -> channel.createMessage(String.format("<@%s> %s", userId, responseMessage))).then()
