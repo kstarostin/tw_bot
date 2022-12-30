@@ -45,7 +45,7 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
                 .echo(includeRequest)
                 .user(requesterId);
         if (maxResponseLength != null) {
-            completionRequestBuilder.maxTokens((int) (maxResponseLength * 1.33)); // todo tune length
+            completionRequestBuilder.maxTokens((int) (maxResponseLength * 1.33));
         }
         LOG.info(String.format("OpenAI request: %s", completionRequestBuilder.toString()));
 

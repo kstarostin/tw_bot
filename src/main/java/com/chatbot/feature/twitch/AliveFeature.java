@@ -261,7 +261,7 @@ public class AliveFeature extends AbstractFeature {
             requestMessage = StringUtils.replaceOnce(requestMessage, ".", ",");
         }
 
-        final String responseMessage = responseGenerator.generate(requesterId, requestMessage, 75, true, true);
+        final String responseMessage = responseGenerator.generate(requesterId, requestMessage, 100, true, true);
         return responseMessage.replaceAll(" +", StringUtils.SPACE).trim();
     }
 
