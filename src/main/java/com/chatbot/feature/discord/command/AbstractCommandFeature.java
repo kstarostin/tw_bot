@@ -1,6 +1,7 @@
 package com.chatbot.feature.discord.command;
 
 import com.chatbot.feature.discord.AbstractDiscordFeature;
+import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.service.MessageService;
@@ -97,7 +98,7 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
         }
         final String requesterId = "ds:" + channelId + ":" + userName;
         final String requestMessage = messageService.getStandardMessageForKey("message.discord." + commandName + ".request");
-        final String generatedMessage = responseGenerator.generate(requesterId, requestMessage, null, true, true, style);
+        final String generatedMessage = responseGenerator.generate(new GeneratorRequest(requestMessage, requesterId, true, null, true, style));
         responseBuilder.append(generatedMessage);
         if (StringUtils.isNotEmpty(emote)) {
             responseBuilder.append(StringUtils.SPACE).append(emote);

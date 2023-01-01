@@ -1,6 +1,8 @@
 package com.chatbot.feature.twitch;
 
+import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
+import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.impl.OpenAIResponseGenerator;
 import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.PeriodCacheService;
@@ -59,7 +61,8 @@ public class AliveFeature extends AbstractFeature {
     private static final Map<String, Queue<ChannelMessageEvent>> CHAT_MESSAGE_HISTORY_MAP = new HashMap<>();
     private static final Map<String, Queue<BotMessage>> BOT_MESSAGE_HISTORY_MAP = new HashMap<>();
 
-    private final ResponseGenerator responseGenerator = OpenAIResponseGenerator.getInstance();
+    private final ResponseGenerator openAIresponseGenerator = OpenAIResponseGenerator.getInstance();
+    private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
     private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
     private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
@@ -261,7 +264,7 @@ public class AliveFeature extends AbstractFeature {
             requestMessage = StringUtils.replaceOnce(requestMessage, ".", ",");
         }
 
-        final String responseMessage = responseGenerator.generate(requesterId, requestMessage, 100, true, true);
+        final String responseMessage = generate(new GeneratorRequest(requestMessage, requesterId, true, 100, true));
         return responseMessage.replaceAll(" +", StringUtils.SPACE).trim();
     }
 
@@ -284,8 +287,16 @@ public class AliveFeature extends AbstractFeature {
                 sanitizeRequestMessage(channelId, channelName, String.join(StringUtils.SPACE, lastMessages)), 100, ResponseGeneratorUtil.SPACE_SHORTENER);
 
         return StringUtils.isNotBlank(requestMessage)
-                ? responseGenerator.generate(requesterId, requestMessage, 150, true, false)
+                ? generate(new GeneratorRequest(requestMessage, requesterId, true, 150, false))
                 : StringUtils.EMPTY;
+    }
+
+    private String generate(final GeneratorRequest request) {
+        String response = openAIresponseGenerator.generate(request);
+        if (StringUtils.isBlank(response)) {
+            response = balabobaResponseGenerator.generate(request);
+        }
+        return ResponseGeneratorUtil.moderate(response);
     }
 
     private String sanitizeRequestMessage(final String channelId, final String channelName, final String message) {

@@ -1,7 +1,7 @@
 package com.chatbot;
 
 import com.chatbot.configuration.GlobalConfiguration;
-import com.chatbot.feature.discord.command.AliveFeature;
+import com.chatbot.feature.discord.AliveFeature;
 import com.chatbot.feature.discord.command.CommandMessageFeature;
 import com.chatbot.feature.discord.MessageReactionFeature;
 import com.chatbot.feature.discord.command.SlashCommandMessageFeature;

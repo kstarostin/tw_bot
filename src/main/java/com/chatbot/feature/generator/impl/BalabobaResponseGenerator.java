@@ -1,5 +1,6 @@
 package com.chatbot.feature.generator.impl;
 
+import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -13,7 +14,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
 
 public class BalabobaResponseGenerator implements ResponseGenerator {
     private static BalabobaResponseGenerator instance;
@@ -23,15 +23,6 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     private static final String BALABOBA_API_URL = "https://zeapi.yandex.net/lab/api/yalm/text3";
     private final static String REQUEST_TEMPLATE = "{\"query\":\"@@@query@@@\",\"intro\":@@@intro@@@,\"style\":@@@style@@@,\"filter\":@@@filter@@@}";
 
-    private final static int[] GENERATED_MESSAGE_MAX_LENGTHS = {
-            50, 50, 50, 50, 50, 50, 50,
-            100, 100, 100, 100, 100, 100,
-            150, 150, 150, 150, 150,
-            200, 200, 200, 200,
-            250, 250, 250,
-            300, 300,
-            350
-    };
     private final static int GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS = 5;
 
     private BalabobaResponseGenerator () {
@@ -45,35 +36,24 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     }
 
     @Override
-    public String generate(final String requesterId, final String requestMessage, final Integer maxResponseLength, final boolean sanitizeResponse, final boolean includeRequest) {
-        return generate(requesterId, requestMessage, maxResponseLength, sanitizeResponse, includeRequest, null);
-    }
-
-    @Override
-    public String generate(final String requesterId, final String requestMessage, final Integer maxResponseLength, final boolean sanitizeResponse, final boolean includeRequest, final Style style) {
-        Style requestStyle = style != null ? style : getRandomStyle();
-        final String payload = createPayload(requestMessage, 0, requestStyle.toString(), 0);
+    public String generate(final GeneratorRequest request) {
+        Style requestStyle = request.getResponseStyle() != null ? request.getResponseStyle() : getRandomStyle();
+        final String payload = createPayload(request.getRequestMessage(), 0, requestStyle.toString(), 0);
 
         String generatedMessage;
-        if (maxResponseLength != null) {
-            int maxLength = calculateRandomLength();
+        if (request.getMaxResponseLength() != null) {
             int generateCounter = 1;
             do {
-                generatedMessage = ResponseGeneratorUtil.shorten(generateByBalaboba(payload, generateCounter), maxResponseLength, ResponseGeneratorUtil.SENTENCE_SHORTENER);
+                generatedMessage = ResponseGeneratorUtil.shorten(generateByBalaboba(payload, generateCounter), request.getMaxResponseLength(), ResponseGeneratorUtil.SENTENCE_SHORTENER);
                 generateCounter++;
-            } while ((generatedMessage.length() == 0 || generatedMessage.length() > maxResponseLength) && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
+            } while ((generatedMessage.length() == 0 || generatedMessage.length() > request.getMaxResponseLength()) && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
         } else {
             generatedMessage = generateByBalaboba(payload, 1);
         }
-        if (sanitizeResponse) {
+        if (request.isResponseSanitized()) {
             generatedMessage = ResponseGeneratorUtil.sanitize(generatedMessage);
         }
-        return includeRequest ? requestMessage + StringUtils.SPACE + generatedMessage : generatedMessage;
-    }
-
-    private int calculateRandomLength() {
-        int random = new Random().nextInt(GENERATED_MESSAGE_MAX_LENGTHS.length);
-        return GENERATED_MESSAGE_MAX_LENGTHS[random];
+        return request.isRequestIncluded() ? request.getRequestMessage() + StringUtils.SPACE + generatedMessage : generatedMessage;
     }
 
     private String generateByBalaboba(final String payload, final int counter) {

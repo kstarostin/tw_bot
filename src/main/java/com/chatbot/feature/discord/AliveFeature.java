@@ -1,7 +1,10 @@
-package com.chatbot.feature.discord.command;
+package com.chatbot.feature.discord;
 
+import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
+import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.impl.OpenAIResponseGenerator;
+import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -11,13 +14,14 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Mono;
 
-public class AliveFeature {
+public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static AliveFeature instance;
 
     private static final String COMMAND_SIGN = "!";
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
-    private final ResponseGenerator responseGenerator = OpenAIResponseGenerator.getInstance();
+    private final ResponseGenerator openAIresponseGenerator = OpenAIResponseGenerator.getInstance();
+    private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
 
     private AliveFeature() {
     }
@@ -51,10 +55,18 @@ public class AliveFeature {
         String sanitizedMessage = message.getContent().replaceAll("<@\\d+>", StringUtils.EMPTY).trim();
         sanitizedMessage = StringUtils.endsWithAny(sanitizedMessage, delimiters) ? sanitizedMessage : sanitizedMessage + ".";
 
-        final String responseMessage = responseGenerator.generate(requesterId, sanitizedMessage, 250, true, false);
+        final String responseMessage = generate(new GeneratorRequest(sanitizedMessage, requesterId, true, 250, false));
 
         return StringUtils.isNotEmpty(responseMessage)
                 ? message.getChannel().flatMap(channel -> channel.createMessage(String.format("<@%s> %s", userId, responseMessage))).then()
                 : Mono.empty();
+    }
+
+    private String generate(final GeneratorRequest request) {
+        String response = openAIresponseGenerator.generate(request);
+        if (StringUtils.isBlank(response)) {
+            response = balabobaResponseGenerator.generate(request);
+        }
+        return ResponseGeneratorUtil.moderate(response);
     }
 }

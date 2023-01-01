@@ -146,6 +146,30 @@ public class DefaultModerationServiceImpl implements ModerationService {
         return Instant.now().getEpochSecond() - createdInstant.getEpochSecond();
     }
 
+    @Override
+    public Set<String> readDictionary(final String path) {
+        final Set<String> keywords = new HashSet<>();
+        final URL url = getClass().getClassLoader().getResource(path);
+        final File keywordFilePath = url != null ? new File(url.getFile()) : null;
+        if (keywordFilePath == null || !keywordFilePath.exists()) {
+            return keywords;
+        }
+        try {
+            final Scanner scanner = new Scanner(keywordFilePath);
+            scanner.useDelimiter("\r\n");
+            while (scanner.hasNext()){
+                final String line = scanner.next();
+                if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
+                    keywords.add(line);
+                }
+            }
+            scanner.close();
+        } catch (final FileNotFoundException e) {
+            LOG.error(String.format("Can't read file %s", keywordFilePath));
+        }
+        return keywords;
+    }
+
     private Optional<Follow> getUserFollowOnChannel(final String userId, final String channelId) {
         return twitchClientService.getTwitchHelixClient().getFollowers(getAuthToken(), userId, channelId, null, null).execute().getFollows().stream().findFirst();
     }
@@ -206,29 +230,6 @@ public class DefaultModerationServiceImpl implements ModerationService {
             }
         });
         return map;
-    }
-
-    private Set<String> readDictionary(final String path) {
-        final Set<String> keywords = new HashSet<>();
-        final URL url = getClass().getClassLoader().getResource(path);
-        final File keywordFilePath = url != null ? new File(url.getFile()) : null;
-        if (keywordFilePath == null || !keywordFilePath.exists()) {
-            return keywords;
-        }
-        try {
-            final Scanner scanner = new Scanner(keywordFilePath);
-            scanner.useDelimiter("\r\n");
-            while (scanner.hasNext()){
-                final String line = scanner.next();
-                if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
-                    keywords.add(line);
-                }
-            }
-            scanner.close();
-        } catch (final FileNotFoundException e) {
-            LOG.error(String.format("Can't read file %s", keywordFilePath));
-        }
-        return keywords;
     }
 
     private String getAuthToken() {

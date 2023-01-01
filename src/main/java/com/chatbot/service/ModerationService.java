@@ -26,4 +26,6 @@ public interface ModerationService {
     long getFollowAgeInSeconds(String userId, String channelId);
 
     long getUserAgeInSeconds(String userId);
+
+    Set<String> readDictionary(String path);
 }

@@ -1,5 +1,6 @@
 package com.chatbot.feature.generator.impl;
 
+import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.ConfigurationService;
@@ -7,6 +8,7 @@ import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import com.theokanning.openai.OpenAiService;
 import com.theokanning.openai.completion.CompletionRequest;
 import com.theokanning.openai.completion.CompletionResult;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,31 +40,31 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
     }
 
     @Override
-    public String generate(final String requesterId, String requestMessage, final Integer maxResponseLength, boolean sanitizeResponse, boolean includeRequest) {
+    public String generate(final GeneratorRequest request) {
         final CompletionRequest.CompletionRequestBuilder completionRequestBuilder = CompletionRequest.builder()
-                .prompt(requestMessage)
+                .prompt(request.getRequestMessage())
                 .model(MODEL_CURIE)
-                .echo(includeRequest)
-                .user(requesterId);
-        if (maxResponseLength != null) {
-            completionRequestBuilder.maxTokens((int) (maxResponseLength * 1.33));
+                .echo(request.isRequestIncluded())
+                .user(request.getRequesterId());
+        if (request.getMaxResponseLength() != null) {
+            completionRequestBuilder.maxTokens((int) (request.getMaxResponseLength() * 1.33));
         }
         LOG.info(String.format("OpenAI request: %s", completionRequestBuilder.toString()));
 
-        final CompletionResult result = service.createCompletion(completionRequestBuilder.build());
+        String generatedMessage;
+        try {
+            final CompletionResult result = service.createCompletion(completionRequestBuilder.build());
+            LOG.info(String.format("OpenAI response: %s", result.toString()));
 
-        LOG.info(String.format("OpenAI response: %s", result.toString()));
+            generatedMessage = result.getChoices().iterator().next().getText();
 
-        String generatedMessage = result.getChoices().iterator().next().getText();
-
-        if (sanitizeResponse) {
-            generatedMessage = ResponseGeneratorUtil.sanitize(generatedMessage);
+            if (request.isResponseSanitized()) {
+                generatedMessage = ResponseGeneratorUtil.sanitize(generatedMessage);
+            }
+            return request.getMaxResponseLength() != null ? ResponseGeneratorUtil.shorten(generatedMessage, request.getMaxResponseLength(), ResponseGeneratorUtil.SENTENCE_SHORTENER) : generatedMessage;
+        } catch (final Exception e) {
+            LOG.error("Unexpected error: " + e.getMessage());
+            return StringUtils.EMPTY;
         }
-        return maxResponseLength != null ? ResponseGeneratorUtil.shorten(generatedMessage, maxResponseLength, ResponseGeneratorUtil.SENTENCE_SHORTENER) : generatedMessage;
-    }
-
-    @Override
-    public String generate(final String requesterId, String requestMessage, Integer maxResponseLength, boolean sanitizeResponse, boolean includeRequest, BalabobaResponseGenerator.Style style) {
-        return generate(requesterId, requestMessage, maxResponseLength, sanitizeResponse, includeRequest);
     }
 }
