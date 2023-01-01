@@ -3,12 +3,12 @@ package com.chatbot.feature.generator;
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 
 public class GeneratorRequest {
-    private String requestMessage;
-    private String requesterId;
-    private boolean responseSanitized;
-    private Integer maxResponseLength;
-    private boolean requestIncluded;
-    private BalabobaResponseGenerator.Style responseStyle;
+    private final String requestMessage;
+    private final String requesterId;
+    private final boolean responseSanitized;
+    private final Integer maxResponseLength;
+    private final boolean requestIncluded;
+    private final BalabobaResponseGenerator.Style responseStyle;
 
     public GeneratorRequest(final String requestMessage, final String requesterId, final boolean responseSanitized, final Integer maxResponseLength, final boolean requestIncluded) {
         this(requestMessage, requesterId, responseSanitized, maxResponseLength, requestIncluded, null);

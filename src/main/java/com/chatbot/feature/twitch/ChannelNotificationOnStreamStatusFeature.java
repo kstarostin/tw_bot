@@ -5,8 +5,8 @@ import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.eventsub.events.StreamOfflineEvent;
 import com.github.twitch4j.eventsub.events.StreamOnlineEvent;
 
-import static com.chatbot.util.emotes.BotEmote.Sets.POG;
-import static com.chatbot.util.emotes.BotEmote.Sets.SAD;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.POG;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.SAD;
 
 public class ChannelNotificationOnStreamStatusFeature extends AbstractFeature {
 

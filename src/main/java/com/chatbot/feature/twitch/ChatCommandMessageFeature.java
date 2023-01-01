@@ -20,9 +20,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
 
-import static com.chatbot.util.emotes.BotEmote.Sets.CONFUSION;
-import static com.chatbot.util.emotes.BotEmote.Sets.HAPPY;
-import static com.chatbot.util.emotes.BotEmote.Sets.SAD;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.CONFUSION;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.HAPPY;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.SAD;
 
 public class ChatCommandMessageFeature extends AbstractFeature {
     private static final String FEATURE_COMMAND_SET_ARG = "set";
@@ -405,7 +405,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             }
         } else if (args.length == 0) {
             emoteMessage = twitchEmoteService.getChannel7TVEmotes(channelId).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
-            emoteMessage += twitchEmoteService.getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage += StringUtils.SPACE + twitchEmoteService.getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return messageBuilder.withText(StringUtils.isNotEmpty(emoteMessage)
                 ? emoteMessage
@@ -423,7 +423,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             }
         } else if (args.length == 0) {
             emoteMessage = twitchEmoteService.getChannelBTTVEmotes(channelId).stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
-            emoteMessage += twitchEmoteService.getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage += StringUtils.SPACE + twitchEmoteService.getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
         }
         return messageBuilder.withText(StringUtils.isNotEmpty(emoteMessage)
                 ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage
@@ -441,7 +441,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             }
         } else if (args.length == 0) {
             emoteMessage = twitchEmoteService.getChannelFFZEmotes(channelId).stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
-            emoteMessage += twitchEmoteService.getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage += StringUtils.SPACE + twitchEmoteService.getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return messageBuilder.withText(StringUtils.isNotEmpty(emoteMessage)
                 ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage
@@ -459,7 +459,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
             }
         } else if (args.length == 0) {
             emoteMessage = twitchEmoteService.getChannelTwitchEmotes(channelId).stream().map(Emote::getName).collect(Collectors.joining(StringUtils.SPACE));
-            emoteMessage += twitchEmoteService.getGlobalTwitchEmotes().stream().map(Emote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage += StringUtils.SPACE + twitchEmoteService.getGlobalTwitchEmotes().stream().map(Emote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return messageBuilder.withText(StringUtils.isNotEmpty(emoteMessage)
                 ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage

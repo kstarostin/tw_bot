@@ -1,4 +1,7 @@
-bot_name: "Kebirow"
+twitch_bot_name: "Kebirow"
+twitch_bot_id: "682675045"
+discord_bot_name: "Kebirow"
+discord_bot_discriminator: "8705"
 super_admin: "0mskbird"
 
 # Channels - The bot will connect to all listed Twitch channels on startup

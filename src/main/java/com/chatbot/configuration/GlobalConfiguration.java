@@ -11,18 +11,45 @@ import java.util.Map;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GlobalConfiguration {
-    private String botName;
+    private String twitchBotName;
+    private String twitchBotId;
+    private String discordBotName;
+    private String discordBotDiscriminator;
     private String superAdmin;
     private List<String> twitchChannels;
 
     private Map<String, Configuration> channelConfigurations = new HashMap<>();
 
-    public String getBotName() {
-        return botName;
+    public String getTwitchBotName() {
+        return twitchBotName;
     }
 
-    public void setBotName(String botName) {
-        this.botName = botName;
+    public void setTwitchBotName(String twitchBotName) {
+        this.twitchBotName = twitchBotName;
+    }
+
+    public String getTwitchBotId() {
+        return twitchBotId;
+    }
+
+    public void setTwitchBotId(String twitchBotId) {
+        this.twitchBotId = twitchBotId;
+    }
+
+    public String getDiscordBotName() {
+        return discordBotName;
+    }
+
+    public void setDiscordBotName(String discordBotName) {
+        this.discordBotName = discordBotName;
+    }
+
+    public String getDiscordBotDiscriminator() {
+        return discordBotDiscriminator;
+    }
+
+    public void setDiscordBotDiscriminator(String discordBotDiscriminator) {
+        this.discordBotDiscriminator = discordBotDiscriminator;
     }
 
     public String getSuperAdmin() {

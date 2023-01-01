@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.chatbot.util.emotes.BotEmote.Sets.*;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.*;
 
 public class AliveFeature extends AbstractFeature {
     private final Logger LOG = LoggerFactory.getLogger(AliveFeature.class);
@@ -151,7 +151,7 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private boolean isBotTaggedDirectly(final String message) {
-        final List<String> tags = List.of(TAG_CHARACTER + configurationService.getBotName(), configurationService.getBotName());
+        final List<String> tags = List.of(TAG_CHARACTER + configurationService.getTwitchBotName(), configurationService.getTwitchBotName());
         return isTagged(message, tags);
     }
 
@@ -306,7 +306,7 @@ public class AliveFeature extends AbstractFeature {
         final String[] words =  message.trim().split(StringUtils.SPACE);
         final List<String> sanitizedWords = Arrays.stream(words)
                 .filter(word -> !word.startsWith(TAG_CHARACTER))
-                .filter(word -> !StringUtils.equalsIgnoreCase(word, configurationService.getBotName()))
+                .filter(word -> !StringUtils.equalsIgnoreCase(word, configurationService.getTwitchBotName()))
                 .filter(word -> !StringUtils.equalsAnyIgnoreCase(word, CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames()).toArray(new String[0])))
                 .filter(word -> !twitchEmoteService.isEmote(channelId, word))
                 .collect(Collectors.toList());

@@ -17,7 +17,13 @@ public interface ConfigurationService {
 
     Properties getProperties(String path);
 
-    String getBotName();
+    String getTwitchBotName();
+
+    String getTwitchBotId();
+
+    String getDiscordBotName();
+
+    String getDiscordBotDiscriminator();
 
     String getSuperAdminName();
 

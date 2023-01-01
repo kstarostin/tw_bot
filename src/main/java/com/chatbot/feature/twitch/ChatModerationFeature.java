@@ -9,9 +9,9 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.chatbot.util.emotes.BotEmote.Sets.CONFUSION;
-import static com.chatbot.util.emotes.BotEmote.Sets.COOL;
-import static com.chatbot.util.emotes.BotEmote.Sets.HAPPY;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.CONFUSION;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.COOL;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.HAPPY;
 
 public class ChatModerationFeature extends AbstractFeature {
 

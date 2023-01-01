@@ -70,11 +70,11 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
             } else {
                 reaction = getReaction(channelId, PAUSEY, false);
             }
-            LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
+            LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         if (hasStreamLink(message.getContent())) {
             reaction = getReaction(channelId, POGEY, false);
-            LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
+            LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         return reaction != null ? message.addReaction(reaction) : Mono.empty();
     }

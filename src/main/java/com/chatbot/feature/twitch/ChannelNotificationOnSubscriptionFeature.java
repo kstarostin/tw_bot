@@ -5,7 +5,7 @@ import com.chatbot.util.FeatureEnum;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.SubscriptionEvent;
 
-import static com.chatbot.util.emotes.BotEmote.Sets.LAUGH;
+import static com.chatbot.util.emotes.TwitchEmote.Sets.LAUGH;
 
 public class ChannelNotificationOnSubscriptionFeature extends AbstractFeature {
 

@@ -37,7 +37,7 @@ public class Bot {
 
     public Bot() {
         configurationService.loadConfiguration();
-        configurationService.loadConfiguration(configurationService.getBotName().toLowerCase());
+        configurationService.loadConfiguration(configurationService.getTwitchBotName().toLowerCase());
         twitchClientService.buildClient();
         registerFeatures();
     }

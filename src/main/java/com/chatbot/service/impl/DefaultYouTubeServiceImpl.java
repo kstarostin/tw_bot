@@ -79,7 +79,7 @@ public class DefaultYouTubeServiceImpl implements YouTubeService {
             final GoogleCredential credential = getCredential();
 
             // This object is used to make YouTube Data API requests.
-            final YouTube youtube = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(configurationService.getBotName()).build();
+            final YouTube youtube = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(configurationService.getDiscordBotName()).build();
 
             final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
             final List<SearchResult> searchResultList = new ArrayList<>();

@@ -144,8 +144,23 @@ public class DefaultConfigurationServiceImpl implements ConfigurationService {
     }
 
     @Override
-    public String getBotName() {
-        return getConfiguration().getBotName();
+    public String getTwitchBotName() {
+        return getConfiguration().getTwitchBotName();
+    }
+
+    @Override
+    public String getTwitchBotId() {
+        return getConfiguration().getTwitchBotId();
+    }
+
+    @Override
+    public String getDiscordBotName() {
+        return getConfiguration().getDiscordBotName();
+    }
+
+    @Override
+    public String getDiscordBotDiscriminator() {
+        return getConfiguration().getDiscordBotDiscriminator();
     }
 
     @Override

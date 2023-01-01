@@ -21,20 +21,15 @@ public class ResponseGeneratorUtil {
 
     public static String sanitize(final String message) {
         String sanitizedMessage = message.trim();
-        while (sanitizedMessage.startsWith("-") || sanitizedMessage.startsWith("—") || sanitizedMessage.startsWith("\"")) {
+        while (sanitizedMessage.startsWith("-") || sanitizedMessage.startsWith("—")) {
             sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "-");
             sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "—");
-            sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "\"");
-            sanitizedMessage = sanitizedMessage.trim();
-        }
-        if (sanitizedMessage.endsWith("\"")) {
-            sanitizedMessage = StringUtils.removeEnd(sanitizedMessage, "\"");
             sanitizedMessage = sanitizedMessage.trim();
         }
         if (sanitizedMessage.contains("\n")) {
             sanitizedMessage = sanitizedMessage.replaceAll("\n", StringUtils.SPACE);
         }
-        return sanitizedMessage.trim();
+        return sanitizedMessage.replaceAll("\\s+", StringUtils.SPACE).trim();
     }
 
     public static String shorten(final String message, final int maxLength, final String delimiterRegex) {

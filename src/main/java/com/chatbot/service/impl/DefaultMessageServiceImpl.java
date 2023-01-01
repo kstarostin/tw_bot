@@ -55,7 +55,7 @@ public class DefaultMessageServiceImpl implements MessageService {
         if (responseMessage.isEmpty()) {
             return;
         }
-        if (!configurationService.getBotName().equalsIgnoreCase(channelName) && !configurationService.getConfiguration().getTwitchChannels().contains(channelName)) {
+        if (!configurationService.getTwitchBotName().equalsIgnoreCase(channelName) && !configurationService.getConfiguration().getTwitchChannels().contains(channelName)) {
             return;
         }
         if (isMuteChecked && configurationService.getConfiguration(channelName).isMuted()) {
@@ -63,7 +63,7 @@ public class DefaultMessageServiceImpl implements MessageService {
         }
         if (botFeatureService.isTwitchFeatureActive(channelName, FeatureEnum.LOGGING)) {
             final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-            LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , configurationService.getBotName(), responseMessage);
+            LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , configurationService.getTwitchBotName(), responseMessage);
         }
         final List<String> messageParts = new ArrayList<>();
 

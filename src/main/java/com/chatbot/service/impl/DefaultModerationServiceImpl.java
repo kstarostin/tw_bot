@@ -63,7 +63,7 @@ public class DefaultModerationServiceImpl implements ModerationService {
     @Override
     public boolean isBotModeratorOnChannel(final String channelName) {
         if (configurationService.getConfiguration(channelName).isCheckModeratorPermissions()) {
-            final String botName = configurationService.getBotName().toLowerCase();
+            final String botName = configurationService.getTwitchBotName().toLowerCase();
             final List<String> channelModerators = twitchClientService.getTwitchClient().getMessagingInterface().getChatters(channelName).execute().getModerators();
             return CollectionUtils.isNotEmpty(channelModerators) && channelModerators.stream().map(String::toLowerCase).collect(Collectors.toSet()).contains(botName);
         }
@@ -237,7 +237,7 @@ public class DefaultModerationServiceImpl implements ModerationService {
     }
 
     private String getUserId(final String userName) {
-        final UserList userList = twitchClientService.getTwitchHelixClient().getUsers(getAuthToken(), null, List.of(configurationService.getBotName())).execute();
+        final UserList userList = twitchClientService.getTwitchHelixClient().getUsers(getAuthToken(), null, List.of(configurationService.getTwitchBotName())).execute();
         return userList.getUsers().stream().filter(user -> userName.equalsIgnoreCase(user.getLogin())).map(User::getId).findFirst().orElse(StringUtils.EMPTY);
     }
 }

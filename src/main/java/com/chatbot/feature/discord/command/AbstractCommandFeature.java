@@ -64,7 +64,7 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
                 ? customResponseText + StringUtils.SPACE + videoURL
                 : String.format(messageService.getStandardMessageForKey("message.discord.sunboy.response"), videoURL);
 
-        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseMessage);
+        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), responseMessage);
         return responseMessage;
     }
 
@@ -104,7 +104,7 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
             responseBuilder.append(StringUtils.SPACE).append(emote);
         }
 
-        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getBotName(), responseBuilder);
+        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), responseBuilder);
         return StringUtils.isBlank(generatedMessage) || StringUtils.equalsIgnoreCase(generatedMessage, requestMessage + StringUtils.SPACE) ? StringUtils.EMPTY : responseBuilder.toString();
     }
 }

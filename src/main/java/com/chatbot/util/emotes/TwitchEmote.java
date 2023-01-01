@@ -3,7 +3,7 @@ package com.chatbot.util.emotes;
 import java.util.List;
 import java.util.Map;
 
-public interface BotEmote {
+public interface TwitchEmote {
     interface Sets {
         List<String> HAPPY = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.Okayge, SevenTVChannel.Basedge, SevenTVChannel.PepeChill, SevenTVChannel.Starege, SevenTVChannel.MmmHmm,
                 SevenTVChannel.Zaebis, BTTVChannel.OkayChamp, SevenTVGlobal.Gayge, SevenTVGlobal.peepoHappy, SevenTVChannel.Clueless, SevenTVGlobal.FeelsOkayMan, BTTVGlobal.FeelsGoodMan,

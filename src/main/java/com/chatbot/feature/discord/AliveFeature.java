@@ -18,6 +18,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static AliveFeature instance;
 
     private static final String COMMAND_SIGN = "!";
+    private static final String MESSAGE_WITH_MENTION_TEMPLATE = "<@%s> %s";
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final ResponseGenerator openAIresponseGenerator = OpenAIResponseGenerator.getInstance();
@@ -39,11 +40,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN)) {
             return Mono.empty();
         }
-        final boolean isBotMentioned = CollectionUtils.emptyIfNull(message.getUserMentions()).stream()
-                .filter(User::isBot)
-                .filter(user -> configurationService.getBotName().equalsIgnoreCase(user.getUsername()))
-                .anyMatch(user -> "8705".equals(user.getDiscriminator()));
-        if (!isBotMentioned) {
+        if (!isBotTagged(message)) {
             return Mono.empty();
         }
         final String channelId = message.getChannelId().asString();
@@ -58,8 +55,15 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         final String responseMessage = generate(new GeneratorRequest(sanitizedMessage, requesterId, true, 250, false));
 
         return StringUtils.isNotEmpty(responseMessage)
-                ? message.getChannel().flatMap(channel -> channel.createMessage(String.format("<@%s> %s", userId, responseMessage))).then()
+                ? message.getChannel().flatMap(channel -> channel.createMessage(addMention(responseMessage, userId))).then()
                 : Mono.empty();
+    }
+
+    private boolean isBotTagged(final Message message) {
+        return CollectionUtils.emptyIfNull(message.getUserMentions()).stream()
+                .filter(User::isBot)
+                .filter(user -> configurationService.getDiscordBotName().equalsIgnoreCase(user.getUsername()))
+                .anyMatch(user -> configurationService.getDiscordBotDiscriminator().equals(user.getDiscriminator()));
     }
 
     private String generate(final GeneratorRequest request) {
@@ -68,5 +72,11 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
             response = balabobaResponseGenerator.generate(request);
         }
         return StringUtils.isNotEmpty(response) ? ResponseGeneratorUtil.moderate(response) : response;
+    }
+
+    private String addMention(final String message, final String userId) {
+        return StringUtils.isNotEmpty(userId)
+                ? String.format(MESSAGE_WITH_MENTION_TEMPLATE, userId, message)
+                : message;
     }
 }
