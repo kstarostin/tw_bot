@@ -67,6 +67,6 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         if (StringUtils.isBlank(response)) {
             response = balabobaResponseGenerator.generate(request);
         }
-        return ResponseGeneratorUtil.moderate(response);
+        return StringUtils.isNotEmpty(response) ? ResponseGeneratorUtil.moderate(response) : response;
     }
 }

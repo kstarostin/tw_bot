@@ -54,6 +54,7 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private static final String COMMAND_FFZ_ARG = "ffz";
     private static final String COMMAND_EMOTES_ARG = "emotes";
     private static final String COMMAND_GLOBAL_ARG = "global";
+    private static final String COMMAND_CHANNEL_ARG = "channel";
 
     private static final String MESSAGE_COMMAND_DEFAULT = "message.command.default.";
     private static final String MESSAGE_COMMAND_UNAUTHORIZED = "message.command.unauthorized.";
@@ -396,10 +397,15 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private DefaultMessageServiceImpl.MessageBuilder execute7TVCommand(final String[] args, final String userName, final String channelId, final String channelName) {
         final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder();
         String emoteMessage = StringUtils.EMPTY;
-        if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
-            emoteMessage = twitchEmoteService.getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        if (args.length == 1) {
+            if (COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
+                emoteMessage = twitchEmoteService.getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            } else if (COMMAND_CHANNEL_ARG.equalsIgnoreCase(args[0])) {
+                emoteMessage = twitchEmoteService.getChannel7TVEmotes(channelId).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            }
         } else if (args.length == 0) {
             emoteMessage = twitchEmoteService.getChannel7TVEmotes(channelId).stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage += twitchEmoteService.getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return messageBuilder.withText(StringUtils.isNotEmpty(emoteMessage)
                 ? emoteMessage
@@ -409,10 +415,15 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private DefaultMessageServiceImpl.MessageBuilder executeBTTVCommand(final String[] args, final String userName, final String channelId, final String channelName) {
         final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder();
         String emoteMessage = StringUtils.EMPTY;
-        if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
-            emoteMessage = twitchEmoteService.getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
+        if (args.length == 1) {
+            if (COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
+                emoteMessage = twitchEmoteService.getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
+            } else if (COMMAND_CHANNEL_ARG.equalsIgnoreCase(args[0])) {
+                emoteMessage = twitchEmoteService.getChannelBTTVEmotes(channelId).stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
+            }
         } else if (args.length == 0) {
             emoteMessage = twitchEmoteService.getChannelBTTVEmotes(channelId).stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage += twitchEmoteService.getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.joining(StringUtils.SPACE));
         }
         return messageBuilder.withText(StringUtils.isNotEmpty(emoteMessage)
                 ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage
@@ -422,10 +433,15 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private DefaultMessageServiceImpl.MessageBuilder executeFFZCommand(final String[] args, final String userName, final String channelId, final String channelName) {
         final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder();
         String emoteMessage = StringUtils.EMPTY;
-        if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
-            emoteMessage = twitchEmoteService.getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
+        if (args.length == 1) {
+            if (COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
+                emoteMessage = twitchEmoteService.getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
+            } else if (COMMAND_CHANNEL_ARG.equalsIgnoreCase(args[0])) {
+                emoteMessage = twitchEmoteService.getChannelFFZEmotes(channelId).stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
+            }
         } else if (args.length == 0) {
             emoteMessage = twitchEmoteService.getChannelFFZEmotes(channelId).stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage += twitchEmoteService.getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return messageBuilder.withText(StringUtils.isNotEmpty(emoteMessage)
                 ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage
@@ -435,10 +451,15 @@ public class ChatCommandMessageFeature extends AbstractFeature {
     private DefaultMessageServiceImpl.MessageBuilder executeTwitchEmotesCommand(final String[] args, final String userName, final String channelId, final String channelName) {
         final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder();
         String emoteMessage = StringUtils.EMPTY;
-        if (args.length == 1 && COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
-            emoteMessage = twitchEmoteService.getGlobalTwitchEmotes().stream().map(Emote::getName).collect(Collectors.joining(StringUtils.SPACE));
+        if (args.length == 1) {
+            if (COMMAND_GLOBAL_ARG.equalsIgnoreCase(args[0])) {
+                emoteMessage = twitchEmoteService.getGlobalTwitchEmotes().stream().map(Emote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            } else if (COMMAND_CHANNEL_ARG.equalsIgnoreCase(args[0])) {
+                emoteMessage = twitchEmoteService.getChannelTwitchEmotes(channelId).stream().map(Emote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            }
         } else if (args.length == 0) {
             emoteMessage = twitchEmoteService.getChannelTwitchEmotes(channelId).stream().map(Emote::getName).collect(Collectors.joining(StringUtils.SPACE));
+            emoteMessage += twitchEmoteService.getGlobalTwitchEmotes().stream().map(Emote::getName).collect(Collectors.joining(StringUtils.SPACE));
         }
         return messageBuilder.withText(StringUtils.isNotEmpty(emoteMessage)
                 ? TAG_CHARACTER + userName + StringUtils.SPACE + emoteMessage
