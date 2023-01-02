@@ -5,6 +5,7 @@ import com.chatbot.service.PeriodCacheService;
 import com.chatbot.service.RandomizerService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.service.TwitchEmoteService;
+import com.chatbot.util.emotes.TwitchEmote;
 import com.chatbot.util.emotes.bttv.BTTV;
 import com.chatbot.util.emotes.bttv.BTTVEmote;
 import com.chatbot.util.emotes.ffz.FFZ;
@@ -197,28 +198,35 @@ public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
     }
 
     @Override
-    public Set<String> getValidEmoteNames(final String channelId) {
-        final Set<String> emotesNames = getGlobalTwitchEmotes().stream().map(Emote::getName).collect(Collectors.toSet());
-        emotesNames.addAll(getChannelTwitchEmotes(channelId).stream().map(Emote::getName).collect(Collectors.toSet()));
-        emotesNames.addAll(getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.toSet()));
-        emotesNames.addAll(getChannelBTTVEmotes(channelId).stream().map(BTTVEmote::getCode).collect(Collectors.toSet()));
-        emotesNames.addAll(getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
-        emotesNames.addAll(getChannelFFZEmotes(channelId).stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
-        emotesNames.addAll(getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
-        emotesNames.addAll(getChannel7TVEmotes(channelId).stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
-        return emotesNames;
+    public Set<String> getValidEmoteCodes(final String channelId) {
+        final Set<String> emoteCodes = getGlobalTwitchEmotes().stream().map(Emote::getName).collect(Collectors.toSet());
+        emoteCodes.addAll(getChannelTwitchEmotes(channelId).stream().map(Emote::getName).collect(Collectors.toSet()));
+        emoteCodes.addAll(getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.toSet()));
+        emoteCodes.addAll(getChannelBTTVEmotes(channelId).stream().map(BTTVEmote::getCode).collect(Collectors.toSet()));
+        emoteCodes.addAll(getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
+        emoteCodes.addAll(getChannelFFZEmotes(channelId).stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
+        emoteCodes.addAll(getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
+        emoteCodes.addAll(getChannel7TVEmotes(channelId).stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
+        return emoteCodes;
     }
 
     @SafeVarargs
     @Override
-    public final String buildRandomEmoteLine(final String channelId, final int maxNumberOfEmotes, final List<String>... emoteSets) {
+    public final String buildRandomEmoteLine(final String channelId, final int maxNumberOfEmotes, final List<TwitchEmote>... emoteSets) {
+        final List<TwitchEmote> selectedEmotes = buildRandomEmoteList(channelId, maxNumberOfEmotes, emoteSets);
+        return buildEmoteLine(channelId, selectedEmotes);
+    }
+
+    @SafeVarargs
+    @Override
+    public final List<TwitchEmote> buildRandomEmoteList(final String channelId, final int maxNumberOfEmotes, final List<TwitchEmote>... emoteSets) {
         final int numberOfEmotes = randomizerService.rollDiceExponentially(maxNumberOfEmotes, 2) + 1;
 
-        final List<String> selectedEmotes = new ArrayList<>();
+        final List<TwitchEmote> selectedEmotes = new ArrayList<>();
         for (int i = 0; i < numberOfEmotes; i++) {
             if (i > 0) {
-                final String previousEmote = selectedEmotes.get(i - 1);
-                if (EMOTE_COMBINATIONS.containsKey(previousEmote) && randomizerService.flipCoin() && isEmote(channelId, previousEmote)) {
+                final TwitchEmote previousEmote = selectedEmotes.get(i - 1);
+                if (EMOTE_COMBINATIONS.containsKey(previousEmote) && randomizerService.flipCoin() && isEmote(channelId, previousEmote.toString())) {
                     selectedEmotes.add(EMOTE_COMBINATIONS.get(previousEmote));
                 } else if (randomizerService.flipCoin()) {
                     selectedEmotes.add(previousEmote);
@@ -229,29 +237,28 @@ public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
                 selectedEmotes.add(getRandomEmoteFromSets(channelId, emoteSets));
             }
         }
-        return buildEmoteLine(channelId, selectedEmotes);
-    }
-
-    @Override
-    public String buildEmoteLine(final String channelId, final List<String> emotes) {
-        final StringBuilder emotePart = new StringBuilder();
-        emotes.stream()
-                .filter(emote -> isEmote(channelId, emote))
-                .forEach(emote -> emotePart.append(StringUtils.SPACE).append(emote));
-        return emotePart.toString().trim();
+        return selectedEmotes;
     }
 
     @Override
     public boolean isEmote(final String channelId, final String text) {
-        return getValidEmoteNames(channelId).contains(text);
+        return getValidEmoteCodes(channelId).contains(text);
     }
 
     @SafeVarargs
-    private String getRandomEmoteFromSets(final String channelId, final List<String>... emoteSets) {
+    private TwitchEmote getRandomEmoteFromSets(final String channelId, final List<TwitchEmote>... emoteSets) {
         final int setNumber = randomizerService.rollDiceExponentially(emoteSets.length, 2);
-        final List<String> selectedSet = emoteSets[setNumber].parallelStream().filter(emote -> isEmote(channelId, emote)).collect(Collectors.toList());
+        final List<TwitchEmote> selectedSet = emoteSets[setNumber].parallelStream().filter(emote -> isEmote(channelId, emote.toString())).collect(Collectors.toList());
         final int index = randomizerService.rollDiceExponentially(selectedSet.size(), 2);
         return selectedSet.get(index);
+    }
+
+    private String buildEmoteLine(final String channelId, final List<TwitchEmote> emotes) {
+        final StringBuilder emotePart = new StringBuilder();
+        emotes.stream()
+                .filter(emote -> isEmote(channelId, emote.toString()))
+                .forEach(emote -> emotePart.append(StringUtils.SPACE).append(emote));
+        return emotePart.toString().trim();
     }
 
     private List<SevenTVEmote> get7TVEmotes(final String channelId, final String url) {

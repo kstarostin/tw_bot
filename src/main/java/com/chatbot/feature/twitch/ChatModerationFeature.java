@@ -40,18 +40,18 @@ public class ChatModerationFeature extends AbstractFeature {
                 final String banReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.ban.reason." + channelName.toLowerCase(), "message.moderation.ban.reason.default");
                 moderationService.banUser(channelName, event.getUser().getName(), banReasonMessage);
 
-                responseBuilder.withUserTag(TAG_CHARACTER + userName)
+                responseBuilder.withUserTag(userName)
                         .withText(messageService.getPersonalizedMessageForKey("message.moderation.ban." + channelName.toLowerCase(), "message.moderation.ban.default"))
-                        .withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, COOL));
+                        .withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 1, COOL));
             } else if (violationPoints >= getViolationPointsThresholdToTimeout(channelName)) {
                 final String muteReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.timeout.reason." + channelName.toLowerCase(), "message.moderation.timeout.reason.default");
                 moderationService.timeoutUser(channelName, event.getUser().getName(), muteReasonMessage, getAutoTimeoutTimeSeconds(channelName));
 
-                responseBuilder.withUserTag(TAG_CHARACTER + userName)
+                responseBuilder.withUserTag(userName)
                         .withText(messageService.getPersonalizedMessageForKey("message.moderation.timeout." + channelName.toLowerCase(), "message.moderation.timeout.default"))
-                        .withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, HAPPY));;
+                        .withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 1, HAPPY));;
             } else {
-                responseBuilder.withUserTag(TAG_CHARACTER + userName).withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 1, CONFUSION));
+                responseBuilder.withUserTag(userName).withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 1, CONFUSION));
             }
             if (responseBuilder.isNotEmpty()) {
                 messageService.sendMessage(channelName, responseBuilder, null);

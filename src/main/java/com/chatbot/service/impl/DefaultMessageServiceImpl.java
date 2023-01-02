@@ -6,7 +6,9 @@ import com.chatbot.service.RandomizerService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.util.FeatureEnum;
 import com.chatbot.service.MessageService;
+import com.chatbot.util.emotes.TwitchEmote;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,7 @@ public class DefaultMessageServiceImpl implements MessageService {
     private static final String DATE_FORMAT = "dd-MM-yyyy HH:mm:ss";
 
     private static final int MAX_MESSAGE_LENGTH = 450;
+    private static final String TAG_CHARACTER = "@";
 
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
@@ -150,7 +153,7 @@ public class DefaultMessageServiceImpl implements MessageService {
         private String tag;
         private boolean startsWithTag;
         private String text;
-        private String emotes;
+        private List<TwitchEmote> emotes;
 
         private MessageBuilder() {
         }
@@ -172,7 +175,7 @@ public class DefaultMessageServiceImpl implements MessageService {
             return this;
         }
 
-        public MessageBuilder withEmotes(final String emotes) {
+        public MessageBuilder withEmotes(final List<TwitchEmote> emotes) {
             this.emotes = emotes;
             return this;
         }
@@ -181,22 +184,22 @@ public class DefaultMessageServiceImpl implements MessageService {
         public String toString() {
             final StringBuilder sb = new StringBuilder();
             if (startsWithTag && StringUtils.isNotEmpty(tag)) {
-                sb.append(tag);
+                sb.append(TAG_CHARACTER).append(tag);
             }
             if (StringUtils.isNotEmpty(text)) {
                 sb.append(StringUtils.SPACE).append(text);
             }
             if (!startsWithTag && StringUtils.isNotEmpty(tag)) {
-                sb.append(StringUtils.SPACE).append(tag);
+                sb.append(StringUtils.SPACE).append(TAG_CHARACTER).append(tag);
             }
-            if (StringUtils.isNotEmpty(emotes)) {
-                sb.append(StringUtils.SPACE).append(emotes);
+            if (CollectionUtils.isNotEmpty(emotes)) {
+                emotes.forEach(emote -> sb.append(StringUtils.SPACE).append(emote));
             }
             return sb.toString().trim();
         }
 
         public boolean isNotEmpty() {
-            return StringUtils.isNotEmpty(tag) || StringUtils.isNotEmpty(text) || StringUtils.isNotEmpty(emotes);
+            return StringUtils.isNotEmpty(tag) || StringUtils.isNotEmpty(text) || CollectionUtils.isNotEmpty(emotes);
         }
     }
 }

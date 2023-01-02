@@ -1,6 +1,7 @@
 package com.chatbot.feature.discord.command;
 
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
+import com.chatbot.util.emotes.DiscordEmote;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteraction;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
@@ -66,12 +67,12 @@ public class SlashCommandMessageFeature extends AbstractCommandFeature<ChatInput
         event.reply(messageService.getStandardMessageForKey("message.discord.ufa.inprogress")).subscribe();
 
         final String replyText = textOptional.isEmpty()
-                ? handleGenerateMessageForCommand(channelId, userName, command, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, BASEDGE_EMOTE)
-                : handleGenerateMessageForCommand(channelId, userName, command, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, BASEDGE_EMOTE, textOptional.get());
+                ? handleGenerateMessageForCommand(channelId, userName, command, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, DiscordEmote.RedRoomGuild.Basedge.toString())
+                : handleGenerateMessageForCommand(channelId, userName, command, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, DiscordEmote.RedRoomGuild.Basedge.toString(), textOptional.get());
         if (StringUtils.isNotEmpty(replyText)) {
             event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
         } else {
-            event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(messageService.getStandardMessageForKey("message.discord.ufa.fail") + StringUtils.SPACE + SADGE_EMOTE)).subscribe();
+            event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(messageService.getStandardMessageForKey("message.discord.ufa.fail") + StringUtils.SPACE + DiscordEmote.RedRoomGuild.Sadge)).subscribe();
         }
         return Mono.empty();
     }
@@ -82,12 +83,12 @@ public class SlashCommandMessageFeature extends AbstractCommandFeature<ChatInput
         event.reply(messageService.getStandardMessageForKey("message.discord.stalker.inprogress")).subscribe();
 
         final String replyText = textOptional.isEmpty()
-                ? handleGenerateMessageForCommand(channelId, userName, command, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, STALK_2HEAD_EMOTE)
-                : handleGenerateMessageForCommand(channelId, userName, command, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, STALK_2HEAD_EMOTE, textOptional.get());
+                ? handleGenerateMessageForCommand(channelId, userName, command, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, DiscordEmote.RedRoomGuild.stalk2Head.toString())
+                : handleGenerateMessageForCommand(channelId, userName, command, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, DiscordEmote.RedRoomGuild.stalk2Head.toString(), textOptional.get());
         if (StringUtils.isNotEmpty(replyText)) {
             event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
         } else {
-            event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(messageService.getStandardMessageForKey("message.discord.stalker.fail") + StringUtils.SPACE + SADGE_EMOTE)).subscribe();
+            event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(messageService.getStandardMessageForKey("message.discord.stalker.fail") + StringUtils.SPACE + DiscordEmote.RedRoomGuild.Sadge)).subscribe();
         }
         return Mono.empty();
     }

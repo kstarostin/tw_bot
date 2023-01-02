@@ -1,6 +1,7 @@
 package com.chatbot.feature.discord.command;
 
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
+import com.chatbot.util.emotes.DiscordEmote;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import org.apache.commons.lang3.StringUtils;
@@ -30,9 +31,9 @@ public class CommandMessageFeature extends AbstractCommandFeature<MessageCreateE
         if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_SUNBOY)) {
             responseMessage = handleSunboyCommand(message);
         } else if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_UFA)) {
-            responseMessage = handleGenerateMessageForCommand(message, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, BASEDGE_EMOTE);
+            responseMessage = handleGenerateMessageForCommand(message, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, DiscordEmote.RedRoomGuild.Basedge.toString());
         } else if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN + COMMAND_STALKER)) {
-            responseMessage = handleGenerateMessageForCommand(message, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, STALK_2HEAD_EMOTE);
+            responseMessage = handleGenerateMessageForCommand(message, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, DiscordEmote.RedRoomGuild.stalk2Head.toString());
         } else {
             responseMessage = StringUtils.EMPTY;
         }

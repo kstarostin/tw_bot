@@ -2,6 +2,7 @@ package com.chatbot.feature.discord;
 
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
+import com.chatbot.util.emotes.DiscordEmote;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
@@ -13,25 +14,12 @@ import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 import java.util.Set;
 
 public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static MessageReactionFeature instance;
 
     private final Logger LOG = LoggerFactory.getLogger(MessageReactionFeature.class);
-
-    /**
-     * Discord emotes
-     */
-    private static final String PAUSEY = "Pausey";
-    private static final String POGEY = "Pogey";
-    private static final String DESHOVKA = "deshovka";
-    private static final String KIPPAH = "Kippah";
-    private static final Map<String, Map<String, Long>> CHANNEL_2_EMOTE_MAP = Map.of(
-            OMSK_OMSK, Map.of(PAUSEY, 1035132999798358016L, POGEY, 1035133015040462869L),
-            RED_ROOM_ANNOUNCE, Map.of(PAUSEY, 987043617216536596L, POGEY, 980131980039573585L, DESHOVKA, 950496796948447312L, KIPPAH, 1054071733017133197L)
-    );
 
     private static final Set<String> NO_STREAM_TODAY_STRING_TOKENS = Set.of("сегодня без", "сегодня не", "не будет", "не сегодня", "завтра", "в понедельник", "во вторник", "в среду",
             "в четверг", "в пятницу", "в субботу", "в воскресенье", "в день после", "а вот");
@@ -66,14 +54,14 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         ReactionEmoji reaction = null;
         if (isEveryone(message.getContent())) {
             if (isNoStreamToday(message.getContent())) {
-                reaction = getReaction(channelId, KIPPAH, false);
+                reaction = getReaction(DiscordEmote.RedRoomGuild.Kippah, false);
             } else {
-                reaction = getReaction(channelId, PAUSEY, false);
+                reaction = getReaction(DiscordEmote.RedRoomGuild.Pausey, false);
             }
             LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         if (hasStreamLink(message.getContent())) {
-            reaction = getReaction(channelId, POGEY, false);
+            reaction = getReaction(DiscordEmote.RedRoomGuild.Pogey, false);
             LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         return reaction != null ? message.addReaction(reaction) : Mono.empty();
@@ -83,8 +71,7 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         return NO_STREAM_TODAY_STRING_TOKENS.stream().anyMatch(token -> content.toLowerCase().contains(token));
     }
 
-    private ReactionEmoji getReaction(final String channelId, final String reactionName, final boolean isAnimated) {
-        final Long emoteId = CHANNEL_2_EMOTE_MAP.get(channelId).getOrDefault(reactionName, null);
-        return ReactionEmoji.of(emoteId, reactionName, isAnimated);
+    private ReactionEmoji getReaction(final DiscordEmote emote, final boolean isAnimated) {
+        return ReactionEmoji.of(emote.getId(), emote.getCode(), isAnimated);
     }
 }

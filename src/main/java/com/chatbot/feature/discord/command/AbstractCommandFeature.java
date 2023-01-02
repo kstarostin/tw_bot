@@ -28,10 +28,6 @@ public abstract class AbstractCommandFeature<T extends Event> extends AbstractDi
     protected static final String COMMAND_UFA = "ufa";
     protected static final String COMMAND_STALKER = "stalker";
 
-    protected static final String BASEDGE_EMOTE = "<:Basedge:993919651685859349>";
-    protected static final String STALK_2HEAD_EMOTE = "<:stalk2Head:1056446650345857146>";
-    protected static final String SADGE_EMOTE = "<:Sadge:1034813380575371356>";
-
     private static final String YOUTUBE_CHANNEL_ID_1 = "UC2WNW0NZVyMeEPvtLmScgvQ"; // SUNBOYUNITED
     private static final String YOUTUBE_CHANNEL_ID_2 = "UCBF5sbrlpTYECHMSfPT8wKw"; // Архив гениальных видео
 

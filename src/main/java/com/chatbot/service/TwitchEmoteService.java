@@ -1,5 +1,6 @@
 package com.chatbot.service;
 
+import com.chatbot.util.emotes.TwitchEmote;
 import com.chatbot.util.emotes.bttv.BTTVEmote;
 import com.chatbot.util.emotes.ffz.FFZEmoticon;
 import com.chatbot.util.emotes.seventv.SevenTVEmote;
@@ -17,9 +18,9 @@ public interface TwitchEmoteService {
     List<FFZEmoticon> getChannelFFZEmotes(String channelId);
     List<Emote> getGlobalTwitchEmotes();
     List<Emote> getChannelTwitchEmotes(String channelId);
-    Set<String> getValidEmoteNames(String channelId);
+    Set<String> getValidEmoteCodes(String channelId);
     @SuppressWarnings("unchecked")
-    String buildRandomEmoteLine(String channelId, int maxNumberOfEmotes, List<String>... emoteSets);
-    String buildEmoteLine(String channelId, List<String> emotes);
+    String buildRandomEmoteLine(String channelId, int maxNumberOfEmotes, List<TwitchEmote>... emoteSets);
+    List<TwitchEmote> buildRandomEmoteList(String channelId, int maxNumberOfEmotes, List<TwitchEmote>... emoteSets);
     boolean isEmote(String channelId, String text);
 }

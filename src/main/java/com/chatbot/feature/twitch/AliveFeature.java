@@ -13,6 +13,7 @@ import com.chatbot.service.impl.DefaultPeriodCacheServiceImpl;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.service.impl.DefaultRandomizerServiceImpl;
 import com.chatbot.util.FeatureEnum;
+import com.chatbot.util.emotes.TwitchEmote;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.AbstractChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
@@ -88,13 +89,13 @@ public class AliveFeature extends AbstractFeature {
         if (isGreetingResponse(channelName, userName, message)) {
             responseMessageBuilder.withText(buildGreetingTextNew(channelId, channelName, userName));
             if (randomizerService.flipCoin(2)) {
-                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 3, GREETING, POG, HAPPY));
+                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 3, GREETING, POG, HAPPY));
             }
             greetWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
         } else if (isEmoteOnlyMessage(channelId, message)) {
-            final List<String> emoteSet = getEmoteSet(message);
+            final List<TwitchEmote> emoteSet = getEmoteSet(message);
             if (CollectionUtils.isNotEmpty(emoteSet) && isBotSelfTriggered(channelId, channelName)) {
-                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 3, emoteSet));
+                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 3, emoteSet));
                 final int delay = calculateResponseDelayTime(responseMessageBuilder);
                 messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
                 if (responseMessageBuilder.isNotEmpty()) {
@@ -109,7 +110,7 @@ public class AliveFeature extends AbstractFeature {
                 responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, List.of(message)));
                 if (responseMessageBuilder.isNotEmpty()) {
                     if (randomizerService.flipCoin(3)) {
-                        responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
+                        responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 2, CONFUSION, HAPPY));
                     }
                     sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
                     cacheService.cacheGreeting(channelName, userName);
@@ -118,7 +119,7 @@ public class AliveFeature extends AbstractFeature {
                 responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, getLastMessages(channelId, userName)));
                 if (responseMessageBuilder.isNotEmpty()) {
                     if (randomizerService.flipCoin(3)) {
-                        responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteLine(channelId, 2, CONFUSION, HAPPY));
+                        responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 2, CONFUSION, HAPPY));
                     }
                     sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
                     cacheService.cacheGreeting(channelName, userName);
@@ -187,11 +188,11 @@ public class AliveFeature extends AbstractFeature {
         return true;
     }
 
-    private List<String> getEmoteSet(final String emoteText) {
+    private List<TwitchEmote> getEmoteSet(final String emoteText) {
         final String[] emotes = emoteText.trim().split(StringUtils.SPACE);
         for (final String emote : emotes) {
-            for (final List<String> set : ALL_SETS) {
-                if (set.contains(emote)) {
+            for (final List<TwitchEmote> set : ALL_SETS) {
+                if (set.stream().anyMatch(setEmote -> setEmote.toString().equals(emote))) {
                     return set;
                 }
             }
@@ -351,7 +352,7 @@ public class AliveFeature extends AbstractFeature {
         switch (getReplyType()) {
             case SEND_RESPONSE:
                 final boolean startsWithTag = randomizerService.flipCoin(2);
-                messageBuilder.withUserTag(TAG_CHARACTER + userName, startsWithTag);
+                messageBuilder.withUserTag(userName, startsWithTag);
                 break;
             case SEND_REPLY:
                 replyEvent = event;
@@ -372,10 +373,7 @@ public class AliveFeature extends AbstractFeature {
         switch (getReplyType()) {
             case SEND_RESPONSE:
                 final boolean startsWithTag = randomizerService.flipCoin(2);
-                final boolean isNoTagCharIncluded = !randomizerService.flipCoin(4);
-                final String tag = isNoTagCharIncluded ? userName : TAG_CHARACTER + userName;
-                messageBuilder.withUserTag(tag, startsWithTag);
-                messageService.sendMessage(channelName, messageBuilder, null);
+                messageService.sendMessage(channelName, messageBuilder.withUserTag(userName, startsWithTag), null);
                 break;
             case SEND_REPLY:
                 messageService.sendMessage(channelName, messageBuilder, event);
