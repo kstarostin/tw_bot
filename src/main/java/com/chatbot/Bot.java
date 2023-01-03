@@ -2,9 +2,8 @@ package com.chatbot;
 
 import com.chatbot.configuration.GlobalConfiguration;
 import com.chatbot.feature.discord.AliveFeature;
-import com.chatbot.feature.discord.command.CommandMessageFeature;
 import com.chatbot.feature.discord.MessageReactionFeature;
-import com.chatbot.feature.discord.command.SlashCommandMessageFeature;
+import com.chatbot.feature.discord.CommandMessageFeature;
 import com.chatbot.service.ChannelService;
 import com.chatbot.service.impl.DefaultChannelServiceImpl;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -74,12 +73,10 @@ public class Bot {
             registerDiscordCommands(gateway);
 
             final Mono<Void> handleMessageReaction = gateway.on(MessageCreateEvent.class, event -> MessageReactionFeature.getInstance().handle(event)).then();
-            final Mono<Void> handleCommandMessage = gateway.on(MessageCreateEvent.class, event -> CommandMessageFeature.getInstance().handle(event)).then();
             final Mono<Void> handleMessage = gateway.on(MessageCreateEvent.class, event -> AliveFeature.getInstance().handle(event)).then();
+            final Mono<Void> handleCommandMessage = gateway.on(ChatInputInteractionEvent.class, event -> CommandMessageFeature.getInstance().handle(event)).then();
 
-            final Mono<Void> handleSlashCommandMessage = gateway.on(ChatInputInteractionEvent.class, event -> SlashCommandMessageFeature.getInstance().handle(event)).then();
-
-            return printOnLogin.and(handleMessageReaction).and(handleCommandMessage).and(handleSlashCommandMessage).and(handleMessage);
+            return printOnLogin.and(handleMessageReaction).and(handleCommandMessage).and(handleMessage);
         });
         login.block();
     }

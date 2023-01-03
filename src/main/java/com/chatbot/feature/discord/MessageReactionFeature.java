@@ -54,14 +54,14 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         ReactionEmoji reaction = null;
         if (isEveryone(message.getContent())) {
             if (isNoStreamToday(message.getContent())) {
-                reaction = getReaction(DiscordEmote.RedRoomGuild.Kippah, false);
+                reaction = getReaction(DiscordEmote.KebirowHomeGuild.Kippah, false);
             } else {
-                reaction = getReaction(DiscordEmote.RedRoomGuild.Pausey, false);
+                reaction = getReaction(DiscordEmote.KebirowHomeGuild.Pausey, false);
             }
             LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         if (hasStreamLink(message.getContent())) {
-            reaction = getReaction(DiscordEmote.RedRoomGuild.Pogey, false);
+            reaction = getReaction(DiscordEmote.KebirowHomeGuild.Pogey, false);
             LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), reaction.asEmojiData().name().orElse(StringUtils.EMPTY));
         }
         return reaction != null ? message.addReaction(reaction) : Mono.empty();

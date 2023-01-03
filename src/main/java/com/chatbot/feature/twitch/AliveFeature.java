@@ -15,7 +15,6 @@ import com.chatbot.service.impl.DefaultRandomizerServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.chatbot.util.emotes.TwitchEmote;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
-import com.github.twitch4j.chat.events.AbstractChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
@@ -53,10 +52,12 @@ public class AliveFeature extends AbstractFeature {
     private static final String ADDITION_TOKEN = "${addition}";
 
     private static final Set<String> USER_FRIEND_LIST = Set.of("0mskbird", "yura_atlet", "1skybox1", "chenushka", "hereticjz", "skvdee", "svetloholmov", "prof_133", "kiber_bober",
-            "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013");
+            "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013", "shinigamidth");
 
     private static final int MIN_CHATTING_RATE = 1;
     private static final int MAX_CHATTING_RATE = 10;
+
+    private static final int REQUEST_MESSAGE_MAX_LENGTH = 100;
 
     // Chat caches
     private static final Map<String, Queue<ChannelMessageEvent>> CHAT_MESSAGE_HISTORY_MAP = new HashMap<>();
@@ -116,7 +117,7 @@ public class AliveFeature extends AbstractFeature {
                     cacheService.cacheGreeting(channelName, userName);
                 }
             } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotSelfTriggered(channelId, channelName))) {
-                responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, getLastMessages(channelId, userName)));
+                responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, getLastMessagesLimited(channelId, userName)));
                 if (responseMessageBuilder.isNotEmpty()) {
                     if (randomizerService.flipCoin(3)) {
                         responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 2, CONFUSION, HAPPY));
@@ -265,34 +266,45 @@ public class AliveFeature extends AbstractFeature {
             requestMessage = StringUtils.replaceOnce(requestMessage, ".", ",");
         }
 
-        final String responseMessage = generate(new GeneratorRequest(requestMessage, requesterId, true, 100, true));
+        final String responseMessage = generateResponseText(new GeneratorRequest(requestMessage, requesterId, true, 100, true));
         return responseMessage.replaceAll(" +", StringUtils.SPACE).trim();
     }
 
-    private List<String> getLastMessages(final String channelId, final String userName) {
-        List<ChannelMessageEvent> lastMessages = getLastChatMessageEventsForChannelIdAndUserName(channelId, userName).stream()
+    private List<String> getLastMessagesLimited(final String channelId, final String userName) {
+        List<ChannelMessageEvent> lastMessageEvents = getLastChatMessageEventsForChannelIdAndUserName(channelId, userName).stream()
                 .filter(event -> !isEmoteOnlyMessage(channelId, event.getMessage()))
                 .collect(Collectors.toList());
-        if (lastMessages.size() < 3) {
-            lastMessages = getLastChatMessageEventsForChannelId(channelId).stream()
+        if (lastMessageEvents.size() < 3) {
+            lastMessageEvents = getLastChatMessageEventsForChannelId(channelId).stream()
                     .filter(event -> !isEmoteOnlyMessage(channelId, event.getMessage()))
                     .collect(Collectors.toList());
         }
-        Collections.reverse(lastMessages);
-        return lastMessages.stream().limit(3).map(AbstractChannelMessageEvent::getMessage).collect(Collectors.toList());
+        Collections.reverse(lastMessageEvents);
+
+        final StringBuilder message = new StringBuilder();
+        final List<String> lastMessages = new ArrayList<>();
+
+        for (final ChannelMessageEvent event : lastMessageEvents) {
+            lastMessages.add(event.getMessage());
+            message.append(event.getMessage()).append(StringUtils.SPACE);
+            if (message.length() > REQUEST_MESSAGE_MAX_LENGTH) {
+                break;
+            }
+        }
+        return lastMessages.stream().limit(3).collect(Collectors.toList());
     }
 
     private String generateResponseText(final String channelId, final String channelName, final String userName, final List<String> lastMessages) {
         final String requesterId = "tw:" + channelId + ":" + userName;
         final String requestMessage = ResponseGeneratorUtil.shorten(
-                sanitizeRequestMessage(channelId, channelName, String.join(StringUtils.SPACE, lastMessages)), 100, ResponseGeneratorUtil.SPACE_SHORTENER);
+                sanitizeRequestMessage(channelId, channelName, String.join(StringUtils.SPACE, lastMessages)), REQUEST_MESSAGE_MAX_LENGTH, ResponseGeneratorUtil.SPACE_SHORTENER);
 
         return StringUtils.isNotBlank(requestMessage)
-                ? generate(new GeneratorRequest(requestMessage, requesterId, true, 150, false))
+                ? generateResponseText(new GeneratorRequest(requestMessage, requesterId, true, 150, false))
                 : StringUtils.EMPTY;
     }
 
-    private String generate(final GeneratorRequest request) {
+    private String generateResponseText(final GeneratorRequest request) {
         String response = openAIresponseGenerator.generate(request);
         if (StringUtils.isBlank(response)) {
             response = balabobaResponseGenerator.generate(request);
