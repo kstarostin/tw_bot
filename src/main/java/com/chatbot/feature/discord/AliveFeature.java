@@ -6,10 +6,11 @@ import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.impl.OpenAIResponseGenerator;
 import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.ConfigurationService;
+import com.chatbot.service.DiscordEmoteService;
 import com.chatbot.service.MessageService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
+import com.chatbot.service.impl.DefaultDiscordEmoteServiceImpl;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
-import com.chatbot.util.emotes.DiscordEmote;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
@@ -17,14 +18,14 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import static com.chatbot.util.emotes.DiscordEmote.Sets.CONFUSION;
+import static com.chatbot.util.emotes.DiscordEmote.Sets.HAPPY;
 
 public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static AliveFeature instance;
 
-    private static final String COMMAND_SIGN = "!";
-
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
+    private final DiscordEmoteService discordEmoteService = DefaultDiscordEmoteServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final ResponseGenerator openAIresponseGenerator = OpenAIResponseGenerator.getInstance();
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
@@ -42,9 +43,6 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     public Mono<Void> handle(final MessageCreateEvent event) {
         final Message message = event.getMessage();
 
-        if (StringUtils.startsWith(message.getContent(), COMMAND_SIGN)) {
-            return Mono.empty();
-        }
         if (!isBotTagged(message)) {
             return Mono.empty();
         }
@@ -62,7 +60,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder()
                 .withUserTag(userId)
                 .withText(responseMessage)
-                .withEmotes(List.of(DiscordEmote.KebirowHomeGuild.Okayeg));
+                .withEmotes(discordEmoteService.buildRandomEmoteList(2, CONFUSION, HAPPY));
 
         return StringUtils.isNotEmpty(responseMessage)
                 ? message.getChannel().flatMap(channel -> channel.createMessage(responseMessageBuilder.buildForDiscord())).then()

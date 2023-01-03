@@ -1,6 +1,8 @@
 package com.chatbot.util.emotes;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class DiscordEmote extends AbstractEmote {
@@ -40,18 +42,19 @@ public class DiscordEmote extends AbstractEmote {
     }
 
     public interface Sets {
-        List<DiscordEmote> HAPPY = List.of(KebirowHomeGuild.Okayge, KebirowHomeGuild.Basedge, KebirowHomeGuild.Starege, KebirowHomeGuild.MmmHmm,
-                KebirowHomeGuild.Clueless, KebirowHomeGuild.FeelsOkayMan, KebirowHomeGuild.FeelsWowMan, KebirowHomeGuild.YEP, KebirowHomeGuild.peepoChat);
+        List<DiscordEmote> HAPPY = List.of(KebirowHomeGuild.Okayge, KebirowHomeGuild.Basedge, KebirowHomeGuild.Starege, KebirowHomeGuild.Clueless, KebirowHomeGuild.FeelsOkayMan,
+                KebirowHomeGuild.FeelsWowMan, KebirowHomeGuild.YEP);
         List<DiscordEmote> POG = List.of(KebirowHomeGuild.KebirowPog, KebirowHomeGuild.Pogey, KebirowHomeGuild.Pogey, KebirowHomeGuild.PagMan, KebirowHomeGuild.stalkPog);
         List<DiscordEmote> COOL = List.of(KebirowHomeGuild.EZ, KebirowHomeGuild.Basedge, KebirowHomeGuild.XyliSiga);
-        List<DiscordEmote> LAUGH = List.of(KebirowHomeGuild.OMEGALUL, KebirowHomeGuild.KEKW, KebirowHomeGuild.StreamerDoesntKnow);
-        List<DiscordEmote> DANCE = List.of(KebirowHomeGuild.BoneZone, KebirowHomeGuild.borpaSpin);
-        List<DiscordEmote> SAD = List.of(KebirowHomeGuild.Sadge, KebirowHomeGuild.Sadeg, KebirowHomeGuild.FeelsBadMan, KebirowHomeGuild.FeelsRainMan, KebirowHomeGuild.KEKWait,
-                KebirowHomeGuild.Aware, KebirowHomeGuild.Despairge, KebirowHomeGuild.XyliSiga);
-        List<DiscordEmote> GREETING = List.of(KebirowHomeGuild.XyliWave, KebirowHomeGuild.KKomrade);
+        List<DiscordEmote> LAUGH = List.of(KebirowHomeGuild.OMEGALUL, KebirowHomeGuild.KEKW);
+        List<DiscordEmote> DANCE = Collections.emptyList();
+        List<DiscordEmote> SAD = List.of(KebirowHomeGuild.Sadge, KebirowHomeGuild.Sadeg, KebirowHomeGuild.FeelsBadMan, KebirowHomeGuild.KEKWait, KebirowHomeGuild.Despairge, KebirowHomeGuild.XyliSiga);
+        List<DiscordEmote> GREETING = List.of(KebirowHomeGuild.KKomrade);
         List<DiscordEmote> CONFUSION = List.of(KebirowHomeGuild.Okayeg, KebirowHomeGuild.KEKWait, KebirowHomeGuild.CheNaxyi, KebirowHomeGuild.HUH, KebirowHomeGuild.Pausey,
                 KebirowHomeGuild.FeelsSpecialMan, KebirowHomeGuild.XyliNado);
         List<DiscordEmote> SCARY = List.of(KebirowHomeGuild.monkaW);
+
+        Map<DiscordEmote, DiscordEmote> EMOTE_COMBINATIONS = Collections.emptyMap();
     }
 
     public interface KebirowHomeGuild {
