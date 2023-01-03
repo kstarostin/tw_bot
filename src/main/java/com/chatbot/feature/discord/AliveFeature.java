@@ -6,7 +6,10 @@ import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.impl.OpenAIResponseGenerator;
 import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.ConfigurationService;
+import com.chatbot.service.MessageService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
+import com.chatbot.service.impl.DefaultMessageServiceImpl;
+import com.chatbot.util.emotes.DiscordEmote;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
@@ -14,12 +17,14 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static AliveFeature instance;
 
     private static final String COMMAND_SIGN = "!";
-    private static final String MESSAGE_WITH_MENTION_TEMPLATE = "<@%s> %s";
 
+    private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final ResponseGenerator openAIresponseGenerator = OpenAIResponseGenerator.getInstance();
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
@@ -54,8 +59,13 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
 
         final String responseMessage = generate(new GeneratorRequest(sanitizedMessage, requesterId, true, 250, false));
 
+        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder()
+                .withUserTag(userId)
+                .withText(responseMessage)
+                .withEmotes(List.of(DiscordEmote.KebirowHomeGuild.Okayeg));
+
         return StringUtils.isNotEmpty(responseMessage)
-                ? message.getChannel().flatMap(channel -> channel.createMessage(addMention(responseMessage, userId))).then()
+                ? message.getChannel().flatMap(channel -> channel.createMessage(responseMessageBuilder.buildForDiscord())).then()
                 : Mono.empty();
     }
 
@@ -72,11 +82,5 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
             response = balabobaResponseGenerator.generate(request);
         }
         return StringUtils.isNotEmpty(response) ? ResponseGeneratorUtil.moderate(response) : response;
-    }
-
-    private String addMention(final String message, final String userId) {
-        return StringUtils.isNotEmpty(userId)
-                ? String.format(MESSAGE_WITH_MENTION_TEMPLATE, userId, message)
-                : message;
     }
 }

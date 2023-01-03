@@ -102,7 +102,7 @@ public class AliveFeature extends AbstractFeature {
                 if (responseMessageBuilder.isNotEmpty()) {
                     final Calendar sentAt = Calendar.getInstance();
                     sentAt.add(Calendar.MILLISECOND, delay);
-                    saveBotMessageForChannelId(channelId, new BotMessage(responseMessageBuilder.toString(), sentAt));
+                    saveBotMessageForChannelId(channelId, new BotMessage(responseMessageBuilder.buildForTwitch(), sentAt));
                     cacheService.cacheGreeting(channelName, userName);
                 }
             }
@@ -348,7 +348,7 @@ public class AliveFeature extends AbstractFeature {
         final int maxDelayTime = 7;
         final int[] dividerArray = IntStream.range(minDelayTime, maxDelayTime + 1).toArray();
         final int divider;
-        final String message = messageBuilder.toString();
+        final String message = messageBuilder.buildForTwitch();
         if (message.length() / maxDelayTime == 0) {
             divider = minDelayTime;
         } else if (message.length() / maxDelayTime > dividerArray.length) {
@@ -376,7 +376,7 @@ public class AliveFeature extends AbstractFeature {
         if (messageBuilder.isNotEmpty()) {
             final Calendar sentAt = Calendar.getInstance();
             sentAt.add(Calendar.MILLISECOND, delay);
-            saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.toString(), sentAt));
+            saveBotMessageForChannelId(channelId, new BotMessage(messageBuilder.buildForTwitch(), sentAt));
             cacheService.cacheGreeting(channelName, userName);
         }
     }

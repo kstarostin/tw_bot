@@ -6,7 +6,7 @@ import com.chatbot.service.RandomizerService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.util.FeatureEnum;
 import com.chatbot.service.MessageService;
-import com.chatbot.util.emotes.TwitchEmote;
+import com.chatbot.util.emotes.AbstractEmote;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,7 +30,6 @@ public class DefaultMessageServiceImpl implements MessageService {
     private static final String DATE_FORMAT = "dd-MM-yyyy HH:mm:ss";
 
     private static final int MAX_MESSAGE_LENGTH = 450;
-    private static final String TAG_CHARACTER = "@";
 
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
@@ -54,7 +53,7 @@ public class DefaultMessageServiceImpl implements MessageService {
 
     @Override
     public void sendMessage(final String channelName, final MessageBuilder messageBuilder, final boolean isMuteChecked, final ChannelMessageEvent event) {
-        final String responseMessage = messageBuilder.toString();
+        final String responseMessage = messageBuilder.buildForTwitch();
         if (responseMessage.isEmpty()) {
             return;
         }
@@ -90,7 +89,7 @@ public class DefaultMessageServiceImpl implements MessageService {
         if (configurationService.getConfiguration(channelName).isMuted()) {
             return;
         }
-        if (messageBuilder.toString().isEmpty()) {
+        if (messageBuilder.buildForTwitch().isEmpty()) {
             return;
         }
         if (delay == 0) {
@@ -150,10 +149,13 @@ public class DefaultMessageServiceImpl implements MessageService {
     }
 
     public class MessageBuilder {
+        private static final String TWITCH_TAG_TEMPLATE = "@%s";
+        private static final String DISCORD_TAG_TEMPLATE = "<@%s>";
+
         private String tag;
         private boolean startsWithTag;
         private String text;
-        private List<TwitchEmote> emotes;
+        private List<? extends AbstractEmote> emotes;
 
         private MessageBuilder() {
         }
@@ -175,25 +177,37 @@ public class DefaultMessageServiceImpl implements MessageService {
             return this;
         }
 
-        public MessageBuilder withEmotes(final List<TwitchEmote> emotes) {
+        public MessageBuilder withEmotes(final List<? extends AbstractEmote> emotes) {
             this.emotes = emotes;
             return this;
         }
 
         @Override
         public String toString() {
+            return buildForTwitch();
+        }
+
+        public String buildForTwitch() {
+            return build(TWITCH_TAG_TEMPLATE);
+        }
+
+        public String buildForDiscord() {
+            return build(DISCORD_TAG_TEMPLATE);
+        }
+
+        private String build(final String tagTemplate) {
             final StringBuilder sb = new StringBuilder();
             if (startsWithTag && StringUtils.isNotEmpty(tag)) {
-                sb.append(TAG_CHARACTER).append(tag);
+                sb.append(String.format(tagTemplate, tag));
             }
             if (StringUtils.isNotEmpty(text)) {
                 sb.append(StringUtils.SPACE).append(text);
             }
             if (!startsWithTag && StringUtils.isNotEmpty(tag)) {
-                sb.append(StringUtils.SPACE).append(TAG_CHARACTER).append(tag);
+                sb.append(StringUtils.SPACE).append(String.format(tagTemplate, tag));
             }
             if (CollectionUtils.isNotEmpty(emotes)) {
-                emotes.forEach(emote -> sb.append(StringUtils.SPACE).append(emote));
+                emotes.forEach(emote -> sb.append(StringUtils.SPACE).append(emote.toString()));
             }
             return sb.toString().trim();
         }
