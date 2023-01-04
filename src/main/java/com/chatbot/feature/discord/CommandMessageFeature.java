@@ -87,7 +87,7 @@ public class CommandMessageFeature extends AbstractDiscordFeature<ChatInputInter
                     .withEmotes(List.of(DiscordEmote.KebirowHomeGuild.borpaSpin));
             event.reply(tempReplyBuilder.buildForDiscord()).subscribe();
 
-            final String replyText = textOptional.isEmpty() ? handleSunboyCommand(channelId, userId, userName, command) : handleSunboyCommand(channelId, userName, command, textOptional.get());
+            final String replyText = textOptional.isEmpty() ? handleSunboyCommand(channelId, userId, userName, command) : handleSunboyCommand(channelId, userId, userName, command, textOptional.get());
             event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
             return Mono.empty();
         }
