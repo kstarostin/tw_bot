@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -57,6 +58,7 @@ public class CommandMessageFeature extends AbstractDiscordFeature<ChatInputInter
     @Override
     public Mono<Void> handle(final ChatInputInteractionEvent event) {
         final String channelId = event.getInteraction().getChannelId().asString();
+        final String userId = event.getInteraction().getUser().getId().asString();
         final String userName = event.getInteraction().getUser().getUsername();
         final String command = event.getInteraction().getCommandInteraction()
                 .map(ApplicationCommandInteraction::getName)
@@ -64,35 +66,38 @@ public class CommandMessageFeature extends AbstractDiscordFeature<ChatInputInter
                 .orElse(StringUtils.EMPTY);
 
         if ((COMMAND_SIGN + COMMAND_SUNBOY).equals(command)) {
-            return handleSunboyCommand(event, channelId, userName, command);
+            return handleSunboyCommand(event, channelId, userId, userName, command);
         }
         if ((COMMAND_SIGN + COMMAND_UFA).equals(command)) {
-            return handleUfaCommand(event, channelId, userName, command);
+            return handleUfaCommand(event, channelId, userId, userName, command);
         }
         if ((COMMAND_SIGN + COMMAND_STALKER).equals(command)) {
-            return handleStalkerCommand(event, channelId, userName, command);
+            return handleStalkerCommand(event, channelId, userId, userName, command);
         }
         return Mono.empty();
     }
 
-    private Mono<Void> handleSunboyCommand(final ChatInputInteractionEvent event, final String channelId, final String userName, final String command) {
+    private Mono<Void> handleSunboyCommand(final ChatInputInteractionEvent event, final String channelId, final String userId, final String userName, final String command) {
         final Optional<String> textOptional = getOptionalText(event);
         if (hasCachedVideo()) {
-            return event.reply().withContent(textOptional.isEmpty() ? handleSunboyCommand(channelId, userName, command) : handleSunboyCommand(channelId, userName, command, textOptional.get()));
+            return event.reply().withContent(textOptional.isEmpty() ? handleSunboyCommand(channelId, userId, userName, command) : handleSunboyCommand(channelId, userName, command, textOptional.get()));
         } else {
-            event.reply(messageService.getStandardMessageForKey("message.discord.sunboy.inprogress")).subscribe();
+            final DefaultMessageServiceImpl.MessageBuilder tempReplyBuilder = messageService.getMessageBuilder()
+                    .withText(messageService.getStandardMessageForKey("message.discord.sunboy.inprogress"))
+                    .withEmotes(List.of(DiscordEmote.KebirowHomeGuild.borpaSpin));
+            event.reply(tempReplyBuilder.buildForDiscord()).subscribe();
 
-            final String replyText = textOptional.isEmpty() ? handleSunboyCommand(channelId, userName, command) : handleSunboyCommand(channelId, userName, command, textOptional.get());
+            final String replyText = textOptional.isEmpty() ? handleSunboyCommand(channelId, userId, userName, command) : handleSunboyCommand(channelId, userName, command, textOptional.get());
             event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
             return Mono.empty();
         }
     }
 
-    private String handleSunboyCommand(final String channelId, final String userName, final String content) {
-        return handleSunboyCommand(channelId, userName, content, null);
+    private String handleSunboyCommand(final String channelId, final String userId, final String userName, final String content) {
+        return handleSunboyCommand(channelId, userId, userName, content, null);
     }
 
-    private String handleSunboyCommand(final String channelId, final String userName, final String content, final String customResponseText) {
+    private String handleSunboyCommand(final String channelId, final String userId, final String userName, final String content, final String customResponseText) {
         final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), userName, content);
 
@@ -105,34 +110,50 @@ public class CommandMessageFeature extends AbstractDiscordFeature<ChatInputInter
         return responseMessage;
     }
 
-    private Mono<Void> handleUfaCommand(final ChatInputInteractionEvent event, final String channelId, final String userName, final String command) {
+    private Mono<Void> handleUfaCommand(final ChatInputInteractionEvent event, final String channelId, final String userId, final String userName, final String command) {
         final Optional<String> textOptional = getOptionalText(event);
 
-        event.reply(messageService.getStandardMessageForKey("message.discord.ufa.inprogress")).subscribe();
+        final DefaultMessageServiceImpl.MessageBuilder tempReplyBuilder = messageService.getMessageBuilder()
+                .withText(messageService.getStandardMessageForKey("message.discord.ufa.inprogress"))
+                .withEmotes(List.of(DiscordEmote.KebirowHomeGuild.VodkaTime));
+
+        event.reply(tempReplyBuilder.buildForDiscord()).subscribe();
 
         final String replyText = textOptional.isEmpty()
-                ? handleGenerateMessageForCommand(channelId, userName, command, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, DiscordEmote.KebirowHomeGuild.Basedge.toString())
-                : handleGenerateMessageForCommand(channelId, userName, command, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, DiscordEmote.KebirowHomeGuild.Basedge.toString(), textOptional.get());
+                ? handleGenerateMessageForCommand(channelId, userId, userName, command, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, DiscordEmote.KebirowHomeGuild.Basedge)
+                : handleGenerateMessageForCommand(channelId, userId, userName, command, COMMAND_UFA, BalabobaResponseGenerator.Style.FOLK_WISDOM, DiscordEmote.KebirowHomeGuild.Basedge, textOptional.get());
         if (StringUtils.isNotEmpty(replyText)) {
             event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
         } else {
-            event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(messageService.getStandardMessageForKey("message.discord.ufa.fail") + StringUtils.SPACE + DiscordEmote.KebirowHomeGuild.Sadge)).subscribe();
+            event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(messageService.getMessageBuilder()
+                    .withUserTag(userId)
+                    .withText(messageService.getStandardMessageForKey("message.discord.ufa.fail"))
+                    .withEmotes(List.of(DiscordEmote.KebirowHomeGuild.Sadge))
+                    .buildForDiscord())).subscribe();
         }
         return Mono.empty();
     }
 
-    private Mono<Void> handleStalkerCommand(final ChatInputInteractionEvent event, final String channelId, final String userName, final String command) {
+    private Mono<Void> handleStalkerCommand(final ChatInputInteractionEvent event, final String channelId, final String userId, final String userName, final String command) {
         final Optional<String> textOptional = getOptionalText(event);
 
-        event.reply(messageService.getStandardMessageForKey("message.discord.stalker.inprogress")).subscribe();
+        final DefaultMessageServiceImpl.MessageBuilder tempReplyBuilder = messageService.getMessageBuilder()
+                .withText(messageService.getStandardMessageForKey("message.discord.stalker.inprogress"))
+                .withEmotes(List.of(DiscordEmote.KebirowHomeGuild.stalkPog));
+
+        event.reply(tempReplyBuilder.buildForDiscord()).subscribe();
 
         final String replyText = textOptional.isEmpty()
-                ? handleGenerateMessageForCommand(channelId, userName, command, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, DiscordEmote.KebirowHomeGuild.stalk2Head.toString())
-                : handleGenerateMessageForCommand(channelId, userName, command, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, DiscordEmote.KebirowHomeGuild.stalk2Head.toString(), textOptional.get());
+                ? handleGenerateMessageForCommand(channelId, userId, userName, command, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, DiscordEmote.KebirowHomeGuild.stalk2Head)
+                : handleGenerateMessageForCommand(channelId, userId, userName, command, COMMAND_STALKER, BalabobaResponseGenerator.Style.SHORT_STORIES, DiscordEmote.KebirowHomeGuild.stalk2Head, textOptional.get());
         if (StringUtils.isNotEmpty(replyText)) {
             event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(replyText)).subscribe();
         } else {
-            event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(messageService.getStandardMessageForKey("message.discord.stalker.fail") + StringUtils.SPACE + DiscordEmote.KebirowHomeGuild.Sadge)).subscribe();
+            event.editReply(InteractionReplyEditSpec.builder().build().withContentOrNull(messageService.getMessageBuilder()
+                    .withUserTag(userId)
+                    .withText(messageService.getStandardMessageForKey("message.discord.stalker.fail"))
+                    .withEmotes(List.of(DiscordEmote.KebirowHomeGuild.Sadge))
+                    .buildForDiscord())).subscribe();
         }
         return Mono.empty();
     }
@@ -141,30 +162,36 @@ public class CommandMessageFeature extends AbstractDiscordFeature<ChatInputInter
         return youTubeService.getCachedRandomVideo().isPresent();
     }
 
-    private String handleGenerateMessageForCommand(final String channelId, final String userName, final String content, final String commandName, final BalabobaResponseGenerator.Style style,
-                                                     final String emote) {
-        return handleGenerateMessageForCommand(channelId, userName, content, commandName, style, emote, null);
+    private String handleGenerateMessageForCommand(final String channelId, final String userId, final String userName, final String content, final String commandName,
+                                                   final BalabobaResponseGenerator.Style style, final DiscordEmote emote) {
+        return handleGenerateMessageForCommand(channelId, userId, userName, content, commandName, style, emote, null);
     }
 
-    private String handleGenerateMessageForCommand(final String channelId, final String userName, final String content, final String commandName, final BalabobaResponseGenerator.Style style,
-                                                     final String emote, final String customStartText) {
+    private String handleGenerateMessageForCommand(final String channelId, final String userId, final String userName, final String content, final String commandName,
+                                                   final BalabobaResponseGenerator.Style style, final DiscordEmote emote, final String customStartText) {
         final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), userName, content);
 
-        final StringBuilder responseBuilder = new StringBuilder();
+        final StringBuilder textBuilder = new StringBuilder();
         if (StringUtils.isNotBlank(customStartText)) {
-            responseBuilder.append(customStartText).append(StringUtils.SPACE);
+            textBuilder.append(customStartText).append(StringUtils.SPACE);
         }
         final String requesterId = "ds:" + channelId + ":" + userName;
         final String requestMessage = messageService.getStandardMessageForKey("message.discord." + commandName + ".request");
         final String generatedMessage = responseGenerator.generate(new GeneratorRequest(requestMessage, requesterId, true, null, true, style));
-        responseBuilder.append(generatedMessage);
-        if (StringUtils.isNotEmpty(emote)) {
-            responseBuilder.append(StringUtils.SPACE).append(emote);
+        if (StringUtils.isBlank(generatedMessage) || StringUtils.equalsIgnoreCase(generatedMessage, requestMessage + StringUtils.SPACE)) {
+            return StringUtils.EMPTY;
         }
+        textBuilder.append(generatedMessage);
 
-        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), responseBuilder);
-        return StringUtils.isBlank(generatedMessage) || StringUtils.equalsIgnoreCase(generatedMessage, requestMessage + StringUtils.SPACE) ? StringUtils.EMPTY : responseBuilder.toString();
+        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder()
+                .withUserTag(userId)
+                .withText(textBuilder.toString())
+                .withEmotes(List.of(emote));
+
+        final String response = responseMessageBuilder.buildForDiscord();
+        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), response);
+        return response;
     }
 
     private Optional<String> getOptionalText(final ChatInputInteractionEvent event) {

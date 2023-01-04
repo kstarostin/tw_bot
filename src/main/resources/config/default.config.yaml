@@ -1,7 +1,9 @@
 twitch_bot_name: "Kebirow"
 twitch_bot_id: "682675045"
+
 discord_bot_name: "Kebirow"
 discord_bot_discriminator: "8705"
+
 super_admin: "0mskbird"
 
 # Channels - The bot will connect to all listed Twitch channels on startup
@@ -29,7 +31,7 @@ user_greeting_enabled: true
 tag_trigger_max_wait_time: 15
 # Defines time in seconds which bot must wait after its last message before self triggering can happen
 self_trigger_max_wait_time: 60
-# Channel permissions of users for skipping moderation
+# Additional keywords for indirect bot tagging
 additional_bot_tag_names:
     - бот
     - бота
