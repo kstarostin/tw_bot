@@ -7,12 +7,20 @@ import java.util.Objects;
 
 public class DiscordEmote extends AbstractEmote {
     private static final String EMOTE_TEMPLATE = "<:%s:%d>";
+    private static final String EMOTE_ANIMATED_TEMPLATE = "<a:%s:%d>";
 
     private final Long id;
+    private boolean isAnimated = false;
 
-    public DiscordEmote(final String code,final Long id) {
+    public DiscordEmote(final String code, final Long id) {
         super(code);
         this.id = id;
+    }
+
+    public DiscordEmote(final String code, final Long id, final boolean isAnimated) {
+        super(code);
+        this.id = id;
+        this.isAnimated = isAnimated;
     }
 
     public Long getId() {
@@ -21,7 +29,7 @@ public class DiscordEmote extends AbstractEmote {
 
     @Override
     public String toString() {
-        return String.format(EMOTE_TEMPLATE, getCode(), getId());
+        return String.format(isAnimated ? EMOTE_ANIMATED_TEMPLATE : EMOTE_TEMPLATE, getCode(), getId());
     }
 
     @Override
@@ -43,18 +51,21 @@ public class DiscordEmote extends AbstractEmote {
 
     public interface Sets {
         List<DiscordEmote> HAPPY = List.of(KebirowHomeGuild.Okayge, KebirowHomeGuild.Basedge, KebirowHomeGuild.Starege, KebirowHomeGuild.Clueless, KebirowHomeGuild.FeelsOkayMan,
-                KebirowHomeGuild.FeelsWowMan, KebirowHomeGuild.YEP);
+                KebirowHomeGuild.MmmHmm, KebirowHomeGuild.FeelsWowMan, KebirowHomeGuild.YEP, KebirowHomeGuild.peepoChat);
         List<DiscordEmote> POG = List.of(KebirowHomeGuild.KebirowPog, KebirowHomeGuild.Pogey, KebirowHomeGuild.Pogey, KebirowHomeGuild.PagMan, KebirowHomeGuild.stalkPog);
         List<DiscordEmote> COOL = List.of(KebirowHomeGuild.EZ, KebirowHomeGuild.Basedge, KebirowHomeGuild.XyliSiga);
-        List<DiscordEmote> LAUGH = List.of(KebirowHomeGuild.OMEGALUL, KebirowHomeGuild.KEKW);
-        List<DiscordEmote> DANCE = Collections.emptyList();
-        List<DiscordEmote> SAD = List.of(KebirowHomeGuild.Sadge, KebirowHomeGuild.Sadeg, KebirowHomeGuild.FeelsBadMan, KebirowHomeGuild.KEKWait, KebirowHomeGuild.Despairge, KebirowHomeGuild.XyliSiga);
-        List<DiscordEmote> GREETING = List.of(KebirowHomeGuild.KKomrade);
+        List<DiscordEmote> LAUGH = List.of(KebirowHomeGuild.OMEGALUL, KebirowHomeGuild.KEKW, KebirowHomeGuild.StreamerDoesntKnow);
+        List<DiscordEmote> DANCE = List.of(KebirowHomeGuild.BoneZone);
+        List<DiscordEmote> SAD = List.of(KebirowHomeGuild.Sadge, KebirowHomeGuild.Sadeg, KebirowHomeGuild.Aware, KebirowHomeGuild.FeelsBadMan, KebirowHomeGuild.FeelsRainMan,
+                KebirowHomeGuild.KEKWait, KebirowHomeGuild.Despairge, KebirowHomeGuild.XyliSiga);
+        List<DiscordEmote> GREETING = List.of(KebirowHomeGuild.KKomrade, KebirowHomeGuild.XyliWave);
         List<DiscordEmote> CONFUSION = List.of(KebirowHomeGuild.Okayeg, KebirowHomeGuild.KEKWait, KebirowHomeGuild.CheNaxyi, KebirowHomeGuild.HUH, KebirowHomeGuild.Pausey,
-                KebirowHomeGuild.FeelsSpecialMan, KebirowHomeGuild.XyliNado);
+                KebirowHomeGuild.FeelsSpecialMan, KebirowHomeGuild.XyliNado, KebirowHomeGuild.borpaSpin);
         List<DiscordEmote> SCARY = List.of(KebirowHomeGuild.monkaW);
 
-        Map<DiscordEmote, DiscordEmote> EMOTE_COMBINATIONS = Collections.emptyMap();
+        Map<DiscordEmote, DiscordEmote> EMOTE_COMBINATIONS = Map.of(
+                KebirowHomeGuild.Okayeg, KebirowHomeGuild.TeaTime
+        );
     }
 
     public interface KebirowHomeGuild {
@@ -91,20 +102,20 @@ public class DiscordEmote extends AbstractEmote {
         DiscordEmote stalk2Head = new DiscordEmote("stalk2Head", 1059853916830969916L);
         DiscordEmote stalkPog = new DiscordEmote("stalkPog", 1059853915136479383L);
         // Dynamic
-        DiscordEmote Aware = new DiscordEmote("Aware", 1059848803567542322L);
-        DiscordEmote BoneZone = new DiscordEmote("BoneZone", 1059848867220312194L);
-        DiscordEmote DinkDonk = new DiscordEmote("DinkDonk", 1059854474237181972L);
-        DiscordEmote FeelsRainMan = new DiscordEmote("FeelsRainMan", 1059848864435273798L);
+        DiscordEmote Aware = new DiscordEmote("Aware", 1059848803567542322L, true);
+        DiscordEmote BoneZone = new DiscordEmote("BoneZone", 1059848867220312194L, true);
+        DiscordEmote DinkDonk = new DiscordEmote("DinkDonk", 1059854474237181972L, true);
+        DiscordEmote FeelsRainMan = new DiscordEmote("FeelsRainMan", 1059848864435273798L, true);
         DiscordEmote MmmHmm = new DiscordEmote("MmmHmm", 1059849614959837205L);
-        DiscordEmote StreamerDoesntKnow = new DiscordEmote("StreamerDoesntKnow", 1059848869355192350L);
-        DiscordEmote TeaTime = new DiscordEmote("TeaTime", 1059849395262197846L);
-        DiscordEmote VodkaTime = new DiscordEmote("VodkaTime", 1059848877785747476L);
-        DiscordEmote XyliBye = new DiscordEmote("XyliBye", 1059848852934492222L);
-        DiscordEmote XyliWave = new DiscordEmote("XyliWave", 1059848845107920916L);
-        DiscordEmote borpaSpin = new DiscordEmote("borpaSpin", 1059853524378341478L);
-        DiscordEmote catNope = new DiscordEmote("catNope", 1059848814502084638L);
-        DiscordEmote catYep = new DiscordEmote("catYep", 1059848812790820984L);
-        DiscordEmote peepoChat = new DiscordEmote("peepoChat", 1059854625202778142L);
+        DiscordEmote StreamerDoesntKnow = new DiscordEmote("StreamerDoesntKnow", 1059848869355192350L, true);
+        DiscordEmote TeaTime = new DiscordEmote("TeaTime", 1059849395262197846L, true);
+        DiscordEmote VodkaTime = new DiscordEmote("VodkaTime", 1059848877785747476L, true);
+        DiscordEmote XyliBye = new DiscordEmote("XyliBye", 1059848852934492222L, true);
+        DiscordEmote XyliWave = new DiscordEmote("XyliWave", 1059848845107920916L, true);
+        DiscordEmote borpaSpin = new DiscordEmote("borpaSpin", 1059853524378341478L, true);
+        DiscordEmote catNope = new DiscordEmote("catNope", 1059848814502084638L, true);
+        DiscordEmote catYep = new DiscordEmote("catYep", 1059848812790820984L, true);
+        DiscordEmote peepoChat = new DiscordEmote("peepoChat", 1059854625202778142L, true);
     }
 
     public interface RedRoomGuild {
