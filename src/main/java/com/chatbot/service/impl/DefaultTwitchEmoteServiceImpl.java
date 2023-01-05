@@ -203,8 +203,8 @@ public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
         emoteCodes.addAll(getChannelTwitchEmotes(channelId).stream().map(Emote::getName).collect(Collectors.toSet()));
         emoteCodes.addAll(getGlobalBTTVEmotes().stream().map(BTTVEmote::getCode).collect(Collectors.toSet()));
         emoteCodes.addAll(getChannelBTTVEmotes(channelId).stream().map(BTTVEmote::getCode).collect(Collectors.toSet()));
-        emoteCodes.addAll(getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
-        emoteCodes.addAll(getChannelFFZEmotes(channelId).stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
+        //emoteCodes.addAll(getGlobalFFZEmotes().stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
+        //emoteCodes.addAll(getChannelFFZEmotes(channelId).stream().map(FFZEmoticon::getName).collect(Collectors.toSet()));
         emoteCodes.addAll(getGlobal7TVEmotes().stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
         emoteCodes.addAll(getChannel7TVEmotes(channelId).stream().map(SevenTVEmote::getName).collect(Collectors.toSet()));
         return emoteCodes;

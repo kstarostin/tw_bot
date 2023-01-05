@@ -11,4 +11,5 @@ public interface MessageService {
     String getStandardMessageForKey(String key);
     String getPersonalizedMessageForKey(String personalizedKey, final String defaultKey);
     DefaultMessageServiceImpl.MessageBuilder getMessageBuilder();
+    DefaultMessageServiceImpl.MessageSanitizer getMessageSanitizer(String text);
 }

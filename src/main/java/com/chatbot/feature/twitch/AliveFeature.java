@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -86,46 +85,79 @@ public class AliveFeature extends AbstractFeature {
         }
         saveChatMessageEventForChannelId(channelId, event);
 
-        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder();
         if (isGreetingResponse(channelName, userName, message)) {
-            responseMessageBuilder.withText(buildGreetingTextNew(channelId, channelName, userName));
-            if (randomizerService.flipCoin(2)) {
-                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 3, GREETING, POG, HAPPY));
-            }
-            greetWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
+            greet(event);
         } else if (isEmoteOnlyMessage(channelId, message)) {
-            final List<TwitchEmote> emoteSet = getEmoteSet(message);
-            if (CollectionUtils.isNotEmpty(emoteSet) && isBotSelfTriggered(channelId, channelName)) {
-                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 3, emoteSet));
-                final int delay = calculateResponseDelayTime(responseMessageBuilder);
-                messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
-                if (responseMessageBuilder.isNotEmpty()) {
-                    final Calendar sentAt = Calendar.getInstance();
-                    sentAt.add(Calendar.MILLISECOND, delay);
-                    saveBotMessageForChannelId(channelId, new BotMessage(responseMessageBuilder.buildForTwitch(), sentAt));
-                    cacheService.cacheGreeting(channelName, userName);
-                }
+            if (isBotSelfTriggered(channelId, channelName)) {
+                respondWithEmote(message, event, StringUtils.EMPTY);
             }
         } else if (canBeTriggeredByTag(channelId, channelName, userName)) {
-            if (isBotTaggedDirectly(message)) {
-                responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, List.of(message)));
-                if (responseMessageBuilder.isNotEmpty()) {
-                    if (randomizerService.flipCoin(3)) {
-                        responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 2, CONFUSION, HAPPY));
-                    }
-                    sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
-                    cacheService.cacheGreeting(channelName, userName);
-                }
-            } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotSelfTriggered(channelId, channelName))) {
-                responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, getLastMessagesLimited(channelId, userName)));
-                if (responseMessageBuilder.isNotEmpty()) {
-                    if (randomizerService.flipCoin(3)) {
-                        responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 2, CONFUSION, HAPPY));
-                    }
-                    sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
-                    cacheService.cacheGreeting(channelName, userName);
-                }
+            if (isBotTaggedDirectly(message) && isEmoteOnlyMessage(channelId, messageService.getMessageSanitizer(message).withNoTags().sanitizeForTwitch(channelId, channelName))) {
+                respondWithEmote(messageService.getMessageSanitizer(message).withNoTags().sanitizeForTwitch(channelId, channelName), event, userName);
+            } else {
+                respondWithMessage(message, event);
             }
+        }
+    }
+
+    private void greet(final ChannelMessageEvent event) {
+        final String channelId = event.getChannel().getId();
+        final String channelName = event.getChannel().getName();
+        final String userName = event.getUser().getName();
+        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder().withText(buildGreetingText(channelId, channelName, userName));
+
+        if (randomizerService.flipCoin(2)) {
+            responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 3, GREETING, POG, HAPPY));
+        }
+        greetWithDelay(channelId, channelName, userName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), event);
+    }
+
+    private void respondWithEmote(final String message, final ChannelMessageEvent event, final String userTag) {
+        final String channelId = event.getChannel().getId();
+        final String channelName = event.getChannel().getName();
+        final String userName = event.getUser().getName();
+        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder();
+
+        final List<TwitchEmote> emoteSet = getEmoteSet(message);
+        if (CollectionUtils.isNotEmpty(emoteSet)) {
+            responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 3, emoteSet)).withUserTag(userTag);
+        } else {
+            splitOnParts(message).stream()
+                    .findFirst()
+                    .ifPresent(emote -> responseMessageBuilder.withEmotes(List.of(new TwitchEmote(emote))).withUserTag(userTag));
+        }
+        final int delay = calculateResponseDelayTime(responseMessageBuilder);
+        messageService.sendMessageWithDelay(channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
+        if (responseMessageBuilder.isNotEmpty()) {
+            final Calendar sentAt = Calendar.getInstance();
+            sentAt.add(Calendar.MILLISECOND, delay);
+            saveBotMessageForChannelId(channelId, new BotMessage(responseMessageBuilder.buildForTwitch(), sentAt));
+            cacheService.cacheGreeting(channelName, userName);
+        }
+    }
+
+    private void respondWithMessage(final String message, final ChannelMessageEvent event) {
+        final String channelId = event.getChannel().getId();
+        final String channelName = event.getChannel().getName();
+        final String userName = event.getUser().getName();
+        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder();
+
+        List<String> lastMessagesForRequest = null;
+        if (isBotTaggedDirectly(message)) {
+            lastMessagesForRequest = List.of(message);
+        } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotSelfTriggered(channelId, channelName))) {
+            lastMessagesForRequest = getLastMessagesLimited(channelId, userName);
+        }
+        if (CollectionUtils.isEmpty(lastMessagesForRequest)) {
+            return;
+        }
+        responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, lastMessagesForRequest));
+        if (responseMessageBuilder.isNotEmpty()) {
+            if (randomizerService.flipCoin(3)) {
+                responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 2, CONFUSION, HAPPY));
+            }
+            sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
+            cacheService.cacheGreeting(channelName, userName);
         }
     }
 
@@ -154,14 +186,14 @@ public class AliveFeature extends AbstractFeature {
 
     private boolean isBotTaggedDirectly(final String message) {
         final List<String> tags = List.of(TAG_CHARACTER + configurationService.getTwitchBotName(), configurationService.getTwitchBotName());
-        return isTagged(message, tags);
+        return isBotTagged(message, tags);
     }
 
     private boolean isBotTaggedIndirectly(final String channelName, final String message) {
-        return isTagged(message, new ArrayList<>(CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames())));
+        return isBotTagged(message, new ArrayList<>(CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames())));
     }
 
-    private boolean isTagged(final String message, final List<String> tags) {
+    private boolean isBotTagged(final String message, final List<String> tags) {
         for (final String tag : tags) {
             if (message.equalsIgnoreCase(tag)
                     || message.toLowerCase().startsWith(tag.toLowerCase() + StringUtils.SPACE)
@@ -180,7 +212,7 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private boolean isEmoteOnlyMessage(final String channelId, final String message) {
-        final String[] messageTokens = message.split(StringUtils.SPACE);
+        final List<String> messageTokens = splitOnParts(message);
         for (final String token : messageTokens) {
             if (!twitchEmoteService.isEmote(channelId, token)) {
                 return false;
@@ -190,7 +222,7 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private List<TwitchEmote> getEmoteSet(final String emoteText) {
-        final String[] emotes = emoteText.trim().split(StringUtils.SPACE);
+        final List<String> emotes = splitOnParts(emoteText);
         for (final String emote : emotes) {
             for (final List<TwitchEmote> set : ALL_SETS) {
                 if (set.stream().anyMatch(setEmote -> setEmote.toString().equals(emote))) {
@@ -199,6 +231,10 @@ public class AliveFeature extends AbstractFeature {
             }
         }
         return Collections.emptyList();
+    }
+
+    private List<String> splitOnParts(final String text) {
+        return List.of(text.trim().split(StringUtils.SPACE));
     }
 
     private boolean isNoOneTagged(final String message) {
@@ -212,8 +248,7 @@ public class AliveFeature extends AbstractFeature {
         final int rateMultiplier = maxSecondsToCheck / (MAX_CHATTING_RATE * 2);
         int secondsToCheck = maxSecondsToCheck - chattingRate * rateMultiplier;
 
-        LOG.info(String.format("Current chatting rate [%d], independent response probability [%s], last bot message must be [%d] seconds ago",
-                chattingRate, chattingRate * 10 + "%", secondsToCheck));
+        LOG.info(String.format("Current chatting rate [%d], independent response probability [%s], last bot message must be [%d] seconds ago", chattingRate, chattingRate * 10 + "%", secondsToCheck));
         if (hasMessagesSentInChannelSince(channelId, secondsToCheck)) {
             return false;
         }
@@ -226,31 +261,12 @@ public class AliveFeature extends AbstractFeature {
         return getLastBotMessagesForChannelId(channelId).stream().anyMatch(botMessage -> botMessage.getPostedAt().after(timePoint));
     }
 
-    private String buildGreetingText(final String userName) {
-        final List<String> greetingTokens = Arrays.asList(USERNAME_TOKEN, GREETING_TOKEN, ADDITION_TOKEN);
-        Collections.shuffle(greetingTokens);
-        final StringBuilder sb = new StringBuilder();
-        greetingTokens.forEach(token -> {
-            final int exponent = ADDITION_TOKEN.equals(token) ? 3 : 2;
-            if (randomizerService.flipCoin(exponent)) {
-                sb.append(StringUtils.SPACE).append(token);
-            }
-        });
-        String messageTemplate = sb.toString();
-        for (final String token : greetingTokens) {
-            final String replacement = messageService.getPersonalizedMessageForKey("message.greeting." + token + "." + userName.toLowerCase(), "message.greeting." + token + ".default");
-            messageTemplate = messageTemplate.replace(token, replacement);
-        }
-        return messageTemplate.replaceAll(" +", StringUtils.SPACE).trim();
-    }
-
-    private String buildGreetingTextNew(final String channelId, final String channelName, final String userName) {
+    private String buildGreetingText(final String channelId, final String channelName, final String userName) {
         final List<String> greetingTokens = new ArrayList<>(List.of(GREETING_TOKEN));
         if (randomizerService.flipCoin(2)) {
             greetingTokens.add(USERNAME_TOKEN);
             Collections.shuffle(greetingTokens);
         }
-
         final StringBuilder sb = new StringBuilder();
         greetingTokens.forEach(token -> sb.append(StringUtils.SPACE).append(token));
 
@@ -259,12 +275,13 @@ public class AliveFeature extends AbstractFeature {
             final String replacement = messageService.getPersonalizedMessageForKey("message.greeting." + token + "." + userName.toLowerCase(), "message.greeting." + token + ".default");
             messageTemplate = messageTemplate.replace(token, replacement);
         }
-
         final String requesterId = "tw:" + channelId + ":" + configurationService.getConfiguration().getSuperAdmin();
-        String requestMessage = sanitizeRequestMessage(channelId, channelName, messageTemplate.replace(ADDITION_TOKEN, StringUtils.EMPTY));
-        if (requestMessage.endsWith(".")) {
-            requestMessage = StringUtils.replaceOnce(requestMessage, ".", ",");
-        }
+        String requestMessage = messageService.getMessageSanitizer(messageTemplate.replace(ADDITION_TOKEN, StringUtils.EMPTY))
+                .withNoTags()
+                .withNoEmotes()
+                .withMaxLength(REQUEST_MESSAGE_MAX_LENGTH)
+                .withDelimiter(",")
+                .sanitizeForTwitch(channelId, channelName);
 
         final String responseMessage = generateResponseText(new GeneratorRequest(requestMessage, requesterId, true, 100, true));
         return responseMessage.replaceAll(" +", StringUtils.SPACE).trim();
@@ -296,8 +313,12 @@ public class AliveFeature extends AbstractFeature {
 
     private String generateResponseText(final String channelId, final String channelName, final String userName, final List<String> lastMessages) {
         final String requesterId = "tw:" + channelId + ":" + userName;
-        final String requestMessage = ResponseGeneratorUtil.shorten(
-                sanitizeRequestMessage(channelId, channelName, String.join(StringUtils.SPACE, lastMessages)), REQUEST_MESSAGE_MAX_LENGTH, ResponseGeneratorUtil.SPACE_SHORTENER);
+        final String requestMessage = messageService.getMessageSanitizer(String.join(StringUtils.SPACE, lastMessages))
+                .withNoTags()
+                .withNoEmotes()
+                .withMaxLength(REQUEST_MESSAGE_MAX_LENGTH)
+                .withDelimiter()
+                .sanitizeForTwitch(channelId, channelName);
 
         return StringUtils.isNotBlank(requestMessage)
                 ? generateResponseText(new GeneratorRequest(requestMessage, requesterId, true, 150, false))
@@ -310,37 +331,6 @@ public class AliveFeature extends AbstractFeature {
             response = balabobaResponseGenerator.generate(request);
         }
         return StringUtils.isNotEmpty(response) ? ResponseGeneratorUtil.moderate(response) : response;
-    }
-
-    private String sanitizeRequestMessage(final String channelId, final String channelName, final String message) {
-        final int maxLength = 100;
-        final String[] delimiters = {".", "?", "!"};
-
-        final String[] words =  message.trim().split(StringUtils.SPACE);
-        final List<String> sanitizedWords = Arrays.stream(words)
-                .filter(word -> !word.startsWith(TAG_CHARACTER))
-                .filter(word -> !StringUtils.equalsIgnoreCase(word, configurationService.getTwitchBotName()))
-                .filter(word -> !StringUtils.equalsAnyIgnoreCase(word, CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames()).toArray(new String[0])))
-                .filter(word -> !twitchEmoteService.isEmote(channelId, word))
-                .collect(Collectors.toList());
-        if (sanitizedWords.isEmpty()) {
-            return StringUtils.EMPTY;
-        }
-        String sanitizedMessage = String.join(StringUtils.SPACE, sanitizedWords);
-        final StringBuilder sanitizedMessageBuilder = new StringBuilder();
-        for (final String word : sanitizedWords) {
-            if (sanitizedMessageBuilder.length() + word.length() + 1 < maxLength) {
-                sanitizedMessageBuilder.append(word).append(StringUtils.SPACE);
-            } else if (StringUtils.isNotEmpty(sanitizedMessageBuilder.toString())) {
-                sanitizedMessage = sanitizedMessageBuilder.toString();
-                break;
-            } else {
-                sanitizedMessage = (sanitizedMessage.length() > maxLength ? sanitizedMessage.substring(0, maxLength) : sanitizedMessage).trim();
-                return StringUtils.endsWithAny(sanitizedMessage, delimiters) ? sanitizedMessage : sanitizedMessage + ".";
-            }
-        }
-        sanitizedMessage = sanitizedMessage.trim();
-        return StringUtils.endsWithAny(sanitizedMessage, delimiters) ? sanitizedMessage : sanitizedMessage + ".";
     }
 
     private int calculateResponseDelayTime(final DefaultMessageServiceImpl.MessageBuilder messageBuilder) {

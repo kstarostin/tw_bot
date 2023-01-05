@@ -4,6 +4,7 @@ import com.chatbot.service.BotFeatureService;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.RandomizerService;
 import com.chatbot.service.TwitchClientService;
+import com.chatbot.service.TwitchEmoteService;
 import com.chatbot.util.FeatureEnum;
 import com.chatbot.service.MessageService;
 import com.chatbot.util.emotes.AbstractEmote;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
@@ -35,6 +37,7 @@ public class DefaultMessageServiceImpl implements MessageService {
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
+    private final TwitchEmoteService twitchEmoteService = DefaultTwitchEmoteServiceImpl.getInstance();
 
     private DefaultMessageServiceImpl() {
     }
@@ -128,6 +131,11 @@ public class DefaultMessageServiceImpl implements MessageService {
         return new MessageBuilder();
     }
 
+    @Override
+    public MessageSanitizer getMessageSanitizer(final String text) {
+        return new MessageSanitizer(text);
+    }
+
     private List<String> splitByMaxLength(final String message) {
         final String[] words = message.split("\\s+");
         if (words.length > 1) {
@@ -148,7 +156,7 @@ public class DefaultMessageServiceImpl implements MessageService {
         }
     }
 
-    public class MessageBuilder {
+    public static class MessageBuilder {
         private static final String TWITCH_TAG_TEMPLATE = "@%s";
         private static final String DISCORD_TAG_TEMPLATE = "<@%s>";
 
@@ -214,6 +222,96 @@ public class DefaultMessageServiceImpl implements MessageService {
 
         public boolean isNotEmpty() {
             return StringUtils.isNotEmpty(tag) || StringUtils.isNotEmpty(text) || CollectionUtils.isNotEmpty(emotes);
+        }
+    }
+
+    public class MessageSanitizer {
+        private final String[] DELIMITERS = {".", "?", "!"};
+        private static final String TWITCH_TAG_CHARACTER = "@";
+
+        private final String text;
+        private boolean removeTags;
+        private boolean removeEmotes;
+        private Integer maxLength;
+        private boolean checkDelimiter;
+        private String defaultDelimiter = ".";
+
+        private MessageSanitizer(final String text) {
+            this.text = text;
+        }
+
+        public MessageSanitizer withNoTags() {
+            this.removeTags = true;
+            return this;
+        }
+
+        public MessageSanitizer withNoEmotes() {
+            this.removeEmotes = true;
+            return this;
+        }
+
+        public MessageSanitizer withDelimiter() {
+            this.checkDelimiter = true;
+            return this;
+        }
+
+        public MessageSanitizer withDelimiter(final String delimiter) {
+            this.defaultDelimiter = delimiter;
+            this.checkDelimiter = true;
+            return this;
+        }
+
+        public MessageSanitizer withMaxLength(final int maxLength) {
+            this.maxLength = maxLength;
+            return this;
+        }
+
+        public String sanitizeForTwitch(final String channelId, final String channelName) {
+            List<String> sanitizedWords = Arrays.asList(text.trim().split(StringUtils.SPACE));
+            if (removeTags) {
+                sanitizedWords = removeTags(sanitizedWords, channelName);
+            }
+            if (removeEmotes) {
+                sanitizedWords = removeEmotes(sanitizedWords, channelId);
+            }
+            if (sanitizedWords.isEmpty()) {
+                return StringUtils.EMPTY;
+            }
+            final String sanitizedMessage = (maxLength != null && maxLength > 0)
+                    ? reduceLength(sanitizedWords).trim()
+                    : String.join(StringUtils.SPACE, sanitizedWords).trim();
+            return checkDelimiter && !StringUtils.endsWithAny(sanitizedMessage, DELIMITERS) ? sanitizedMessage + defaultDelimiter : sanitizedMessage;
+        }
+
+        private List<String> removeTags(final List<String> words, final String channelName) {
+            return words.stream()
+                    .filter(word -> !word.startsWith(TWITCH_TAG_CHARACTER))
+                    .filter(word -> !StringUtils.equalsIgnoreCase(word, configurationService.getTwitchBotName()))
+                    .filter(word -> !StringUtils.equalsAnyIgnoreCase(word, CollectionUtils.emptyIfNull(configurationService.getConfiguration(channelName).getAdditionalBotTagNames()).toArray(new String[0])))
+                    .collect(Collectors.toList());
+        }
+
+        private List<String> removeEmotes(final List<String> words, final String channelId) {
+            return words.stream()
+                    .filter(word -> !twitchEmoteService.isEmote(channelId, word))
+                    .collect(Collectors.toList());
+        }
+
+        private String reduceLength(final List<String> words) {
+            String sanitizedMessage = String.join(StringUtils.SPACE, words);
+            final StringBuilder sanitizedMessageBuilder = new StringBuilder();
+            for (final String word : words) {
+                if (sanitizedMessageBuilder.length() + word.length() + 1 < maxLength) {
+                    sanitizedMessageBuilder.append(word).append(StringUtils.SPACE);
+                } else if (StringUtils.isNotEmpty(sanitizedMessageBuilder.toString())) {
+                    sanitizedMessage = sanitizedMessageBuilder.toString();
+                    break;
+                } else {
+                    sanitizedMessage = (sanitizedMessage.length() > maxLength ? sanitizedMessage.substring(0, maxLength) : sanitizedMessage).trim();
+                    break;
+                }
+            }
+            return sanitizedMessage;
         }
     }
 }
