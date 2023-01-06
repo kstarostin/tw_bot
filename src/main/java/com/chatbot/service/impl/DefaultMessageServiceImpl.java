@@ -278,7 +278,8 @@ public class DefaultMessageServiceImpl implements MessageService {
         }
 
         private String sanitize(final boolean isTwitch, final String channelId, final String channelName) {
-            List<String> sanitizedWords = Arrays.asList(text.trim().split(StringUtils.SPACE));
+            final String sanitizedText = StringUtils.isEmpty(text) ? text : text.replaceAll("\n", StringUtils.SPACE).replaceAll("\\s+", StringUtils.SPACE).trim();
+            List<String> sanitizedWords = Arrays.asList(sanitizedText.split(StringUtils.SPACE));
             if (removeTags) {
                 sanitizedWords = isTwitch ? removeTwitchTags(sanitizedWords, channelName) : removeDiscordTags(sanitizedWords);
             }

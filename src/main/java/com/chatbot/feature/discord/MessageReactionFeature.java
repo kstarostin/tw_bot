@@ -2,21 +2,23 @@ package com.chatbot.feature.discord;
 
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.DiscordEmoteService;
+import com.chatbot.service.MessageService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import com.chatbot.service.impl.DefaultDiscordEmoteServiceImpl;
+import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.util.emotes.AbstractEmote;
 import com.chatbot.util.emotes.DiscordEmote;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.reaction.ReactionEmoji;
-import discord4j.discordjson.json.EmojiData;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
@@ -34,8 +36,11 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
     private static final Set<String> NO_STREAM_TODAY_STRING_TOKENS = Set.of("сегодня без", "сегодня не", "не будет", "не сегодня", "завтра", "в понедельник", "во вторник", "в среду",
             "в четверг", "в пятницу", "в субботу", "в воскресенье", "в день после", "а вот");
 
+    private static final String TWITCH_URL_PATTERN = "^(https:|www\\.)\\/{0,2}w{0,3}\\.?twitch.tv\\/[a-zA-Z_\\d]+\\/?";
+
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final DiscordEmoteService discordEmoteService = DefaultDiscordEmoteServiceImpl.getInstance();
+    private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
     private MessageReactionFeature() {
     }
@@ -85,5 +90,18 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
 
     private ReactionEmoji getReaction(final DiscordEmote emote, final boolean isAnimated) {
         return ReactionEmoji.of(emote.getId(), emote.getCode(), isAnimated);
+    }
+
+    private boolean isEveryone(final String message) {
+        return StringUtils.containsIgnoreCase(message, "@everyone") || StringUtils.containsIgnoreCase(message, "@here");
+    }
+
+    private boolean hasStreamLink(final String message) {
+        return Arrays.stream(messageService.getMessageSanitizer(message).sanitizeForDiscord().split(StringUtils.SPACE))
+                .anyMatch(token -> token.matches(TWITCH_URL_PATTERN));
+    }
+
+    private Set<String> getWhitelistedChannelsForReactions() {
+        return Set.of(KEBIROW_GENERAL, RED_ROOM_ANNOUNCE);
     }
 }

@@ -58,7 +58,7 @@ public class DiscordEmote extends AbstractEmote {
         List<DiscordEmote> POG = List.of(KebirowHomeGuild.KebirowPog, KebirowHomeGuild.Pogey, KebirowHomeGuild.PagMan, KebirowHomeGuild.stalkPog);
         List<DiscordEmote> COOL = List.of(KebirowHomeGuild.EZ, KebirowHomeGuild.Basedge, KebirowHomeGuild.XyliSiga);
         List<DiscordEmote> LAUGH = List.of(KebirowHomeGuild.OMEGALUL, KebirowHomeGuild.KEKW, KebirowHomeGuild.StreamerDoesntKnow);
-        List<DiscordEmote> DANCE = List.of(KebirowHomeGuild.BoneZone, KebirowHomeGuild.MmmHmm);
+        List<DiscordEmote> DANCE = List.of(KebirowHomeGuild.BoneZone, KebirowHomeGuild.DDoomer, KebirowHomeGuild.MmmHmm);
         List<DiscordEmote> SAD = List.of(KebirowHomeGuild.Sadge, KebirowHomeGuild.Sadeg, KebirowHomeGuild.Aware, KebirowHomeGuild.FeelsBadMan, KebirowHomeGuild.FeelsRainMan,
                 KebirowHomeGuild.KEKWait, KebirowHomeGuild.Despairge, KebirowHomeGuild.XyliSiga);
         List<DiscordEmote> GREETING = List.of(KebirowHomeGuild.XyliWave, KebirowHomeGuild.MLADY, KebirowHomeGuild.KKomrade, KebirowHomeGuild.ZdarovaZaebal);
@@ -110,6 +110,7 @@ public class DiscordEmote extends AbstractEmote {
         // Dynamic
         DiscordEmote Aware = new DiscordEmote("Aware", 1059848803567542322L, true);
         DiscordEmote BoneZone = new DiscordEmote("BoneZone", 1059848867220312194L, true);
+        DiscordEmote DDoomer = new DiscordEmote("DDoomer", 1060887672891125812L, true);
         DiscordEmote DinkDonk = new DiscordEmote("DinkDonk", 1059854474237181972L, true);
         DiscordEmote FeelsRainMan = new DiscordEmote("FeelsRainMan", 1059848864435273798L, true);
         DiscordEmote MLADY = new DiscordEmote("MLADY", 1060835405089472543L, true);

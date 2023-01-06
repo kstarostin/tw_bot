@@ -17,16 +17,4 @@ public abstract class AbstractDiscordFeature<T extends Event> {
     protected static final String RED_ROOM_SUNBOY_MANIA = "1038449077131673661";
 
     public abstract Mono<Void> handle(final T event);
-
-    protected boolean isEveryone(final String message) {
-        return StringUtils.containsIgnoreCase(message, "@everyone") || StringUtils.containsIgnoreCase(message, "@here");
-    }
-
-    protected boolean hasStreamLink(final String message) {
-        return StringUtils.containsIgnoreCase(message, "https://www.twitch.tv/");
-    }
-
-    protected Set<String> getWhitelistedChannelsForReactions() {
-        return Set.of(KEBIROW_GENERAL, RED_ROOM_ANNOUNCE);
-    }
 }
