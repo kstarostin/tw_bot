@@ -2,6 +2,7 @@ package com.chatbot.service.impl;
 
 import com.chatbot.service.BotFeatureService;
 import com.chatbot.service.ConfigurationService;
+import com.chatbot.service.DiscordEmoteService;
 import com.chatbot.service.RandomizerService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.service.TwitchEmoteService;
@@ -38,6 +39,7 @@ public class DefaultMessageServiceImpl implements MessageService {
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
     private final TwitchEmoteService twitchEmoteService = DefaultTwitchEmoteServiceImpl.getInstance();
+    private final DiscordEmoteService discordEmoteService = DefaultDiscordEmoteServiceImpl.getInstance();
 
     private DefaultMessageServiceImpl() {
     }
@@ -228,6 +230,7 @@ public class DefaultMessageServiceImpl implements MessageService {
     public class MessageSanitizer {
         private final String[] DELIMITERS = {".", "?", "!"};
         private static final String TWITCH_TAG_CHARACTER = "@";
+        private static final String DISCORD_TAG_FORMAT = "<@\\d{17,19}>";
 
         private final String text;
         private boolean removeTags;
@@ -267,12 +270,20 @@ public class DefaultMessageServiceImpl implements MessageService {
         }
 
         public String sanitizeForTwitch(final String channelId, final String channelName) {
+            return sanitize(true, channelId, channelName);
+        }
+
+        public String sanitizeForDiscord() {
+            return sanitize(false, null, null);
+        }
+
+        private String sanitize(final boolean isTwitch, final String channelId, final String channelName) {
             List<String> sanitizedWords = Arrays.asList(text.trim().split(StringUtils.SPACE));
             if (removeTags) {
-                sanitizedWords = removeTags(sanitizedWords, channelName);
+                sanitizedWords = isTwitch ? removeTwitchTags(sanitizedWords, channelName) : removeDiscordTags(sanitizedWords);
             }
             if (removeEmotes) {
-                sanitizedWords = removeEmotes(sanitizedWords, channelId);
+                sanitizedWords = isTwitch ? removeTwitchEmotes(sanitizedWords, channelId) : removeDiscordEmotes(sanitizedWords);
             }
             if (sanitizedWords.isEmpty()) {
                 return StringUtils.EMPTY;
@@ -283,7 +294,7 @@ public class DefaultMessageServiceImpl implements MessageService {
             return checkDelimiter && !StringUtils.endsWithAny(sanitizedMessage, DELIMITERS) ? sanitizedMessage + defaultDelimiter : sanitizedMessage;
         }
 
-        private List<String> removeTags(final List<String> words, final String channelName) {
+        private List<String> removeTwitchTags(final List<String> words, final String channelName) {
             return words.stream()
                     .filter(word -> !word.startsWith(TWITCH_TAG_CHARACTER))
                     .filter(word -> !StringUtils.equalsIgnoreCase(word, configurationService.getTwitchBotName()))
@@ -291,9 +302,21 @@ public class DefaultMessageServiceImpl implements MessageService {
                     .collect(Collectors.toList());
         }
 
-        private List<String> removeEmotes(final List<String> words, final String channelId) {
+        private List<String> removeDiscordTags(final List<String> words) {
+            return words.stream()
+                    .filter(word -> !word.matches(DISCORD_TAG_FORMAT))
+                    .collect(Collectors.toList());
+        }
+
+        private List<String> removeTwitchEmotes(final List<String> words, final String channelId) {
             return words.stream()
                     .filter(word -> !twitchEmoteService.isEmote(channelId, word))
+                    .collect(Collectors.toList());
+        }
+
+        private List<String> removeDiscordEmotes(final List<String> words) {
+            return words.stream()
+                    .filter(word -> !discordEmoteService.isEmote(word))
                     .collect(Collectors.toList());
         }
 

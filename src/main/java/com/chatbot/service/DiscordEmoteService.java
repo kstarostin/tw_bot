@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface DiscordEmoteService {
     List<DiscordEmote> buildRandomEmoteList(String channelId, int maxNumberOfEmotes, List<DiscordEmote>... emoteSets);
+    boolean isEmote(String text);
 }

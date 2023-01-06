@@ -2,12 +2,15 @@ package com.chatbot.service.impl;
 
 import com.chatbot.service.DiscordEmoteService;
 import com.chatbot.util.emotes.DiscordEmote;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
 
 public class DefaultDiscordEmoteServiceImpl extends AbstractEmoteServiceImpl<DiscordEmote> implements DiscordEmoteService {
     private static DefaultDiscordEmoteServiceImpl instance;
+
+    private static final String DISCORD_EMOTE_FORMAT = "<.+:\\d{17,19}>";
 
     private DefaultDiscordEmoteServiceImpl() {
     }
@@ -20,12 +23,17 @@ public class DefaultDiscordEmoteServiceImpl extends AbstractEmoteServiceImpl<Dis
     }
 
     @Override
-    protected boolean isEmote(final String channelId, final String text) {
-        return true;
+    public boolean isEmote(final String text) {
+        return isEmote(null, text);
     }
 
     @Override
     protected Map<DiscordEmote, List<DiscordEmote>> getEmoteCombinations() {
         return DiscordEmote.Sets.EMOTE_COMBINATIONS;
+    }
+
+    @Override
+    protected boolean isEmote(final String channelId, final String text) {
+        return StringUtils.isNotEmpty(text) && text.matches(DISCORD_EMOTE_FORMAT);
     }
 }

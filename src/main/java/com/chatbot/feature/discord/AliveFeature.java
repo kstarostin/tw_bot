@@ -51,9 +51,12 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         final String userId = message.getAuthor().map(user -> user.getId().asString()).orElse(StringUtils.EMPTY);
         final String requesterId = "ds:" + channelId + ":" + userName;
 
-        final String[] delimiters = {".", "?", "!"};
-        String sanitizedMessage = message.getContent().replaceAll("<@\\d+>", StringUtils.EMPTY).trim();
-        sanitizedMessage = StringUtils.endsWithAny(sanitizedMessage, delimiters) ? sanitizedMessage : sanitizedMessage + ".";
+        String sanitizedMessage = messageService.getMessageSanitizer(message.getContent())
+                .withNoTags()
+                .withNoEmotes()
+                .withMaxLength(150)
+                .withDelimiter()
+                .sanitizeForDiscord();
 
         final String responseMessage = generate(new GeneratorRequest(sanitizedMessage, requesterId, true, 250, false));
 
