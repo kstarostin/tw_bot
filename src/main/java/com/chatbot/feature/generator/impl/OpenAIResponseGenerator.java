@@ -43,7 +43,7 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
     public String generate(final GeneratorRequest request) {
         final CompletionRequest.CompletionRequestBuilder completionRequestBuilder = CompletionRequest.builder()
                 .prompt(request.getRequestMessage())
-                .model(MODEL_CURIE)
+                .model(MODEL_DAVINCI)
                 .echo(request.isRequestIncluded())
                 .user(request.getRequesterId());
         if (request.getMaxResponseLength() != null) {
