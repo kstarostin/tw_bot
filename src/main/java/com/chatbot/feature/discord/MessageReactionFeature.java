@@ -23,6 +23,8 @@ import java.util.Set;
 
 import static com.chatbot.util.emotes.DiscordEmote.Sets.CONFUSION;
 import static com.chatbot.util.emotes.DiscordEmote.Sets.POG;
+import static com.chatbot.util.emotes.DiscordEmote.Sets.COOL;
+import static com.chatbot.util.emotes.DiscordEmote.Sets.DANCE;
 
 public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static MessageReactionFeature instance;
@@ -69,7 +71,7 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
             }
         }
         if (hasStreamLink(message.getContent())) {
-            discordEmoteOptional = discordEmoteService.buildRandomEmoteList(null, 1, POG).stream().findFirst();
+            discordEmoteOptional = discordEmoteService.buildRandomEmoteList(null, 1, POG, COOL, DANCE).stream().findFirst();
         }
         final ReactionEmoji reaction = discordEmoteOptional.map(discordEmote -> getReaction(discordEmote, discordEmote.isAnimated())).orElse(null);
 
