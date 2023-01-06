@@ -1,6 +1,5 @@
 package com.chatbot.util.emotes;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,20 +50,20 @@ public class DiscordEmote extends AbstractEmote {
 
     public interface Sets {
         List<DiscordEmote> HAPPY = List.of(KebirowHomeGuild.Okayge, KebirowHomeGuild.Basedge, KebirowHomeGuild.Starege, KebirowHomeGuild.Clueless, KebirowHomeGuild.FeelsOkayMan,
-                KebirowHomeGuild.MmmHmm, KebirowHomeGuild.FeelsWowMan, KebirowHomeGuild.YEP, KebirowHomeGuild.peepoChat);
+                KebirowHomeGuild.peepoHappy, KebirowHomeGuild.MmmHmm, KebirowHomeGuild.FeelsWowMan, KebirowHomeGuild.YEP, KebirowHomeGuild.peepoChat);
         List<DiscordEmote> POG = List.of(KebirowHomeGuild.KebirowPog, KebirowHomeGuild.Pogey, KebirowHomeGuild.Pogey, KebirowHomeGuild.PagMan, KebirowHomeGuild.stalkPog);
         List<DiscordEmote> COOL = List.of(KebirowHomeGuild.EZ, KebirowHomeGuild.Basedge, KebirowHomeGuild.XyliSiga);
         List<DiscordEmote> LAUGH = List.of(KebirowHomeGuild.OMEGALUL, KebirowHomeGuild.KEKW, KebirowHomeGuild.StreamerDoesntKnow);
-        List<DiscordEmote> DANCE = List.of(KebirowHomeGuild.BoneZone);
+        List<DiscordEmote> DANCE = List.of(KebirowHomeGuild.BoneZone, KebirowHomeGuild.MmmHmm);
         List<DiscordEmote> SAD = List.of(KebirowHomeGuild.Sadge, KebirowHomeGuild.Sadeg, KebirowHomeGuild.Aware, KebirowHomeGuild.FeelsBadMan, KebirowHomeGuild.FeelsRainMan,
                 KebirowHomeGuild.KEKWait, KebirowHomeGuild.Despairge, KebirowHomeGuild.XyliSiga);
-        List<DiscordEmote> GREETING = List.of(KebirowHomeGuild.KKomrade, KebirowHomeGuild.XyliWave);
-        List<DiscordEmote> CONFUSION = List.of(KebirowHomeGuild.Okayeg, KebirowHomeGuild.KEKWait, KebirowHomeGuild.CheNaxyi, KebirowHomeGuild.HUH, KebirowHomeGuild.Pausey,
-                KebirowHomeGuild.FeelsSpecialMan, KebirowHomeGuild.XyliNado, KebirowHomeGuild.borpaSpin);
-        List<DiscordEmote> SCARY = List.of(KebirowHomeGuild.monkaW);
+        List<DiscordEmote> GREETING = List.of(KebirowHomeGuild.XyliWave, KebirowHomeGuild.MLADY, KebirowHomeGuild.KKomrade, KebirowHomeGuild.ZdarovaZaebal);
+        List<DiscordEmote> CONFUSION = List.of(KebirowHomeGuild.Okayeg, KebirowHomeGuild.KEKWait, KebirowHomeGuild.CheNaxyi, KebirowHomeGuild.MODS, KebirowHomeGuild.DinkDonk,
+                KebirowHomeGuild.Pausey, KebirowHomeGuild.NOTED, KebirowHomeGuild.borpaSpin, KebirowHomeGuild.FeelsDankMan, KebirowHomeGuild.FeelsSpecialMan, KebirowHomeGuild.XyliNado);
+        List<DiscordEmote> SCARY = List.of(KebirowHomeGuild.monkaW, KebirowHomeGuild.HUH);
 
-        Map<DiscordEmote, DiscordEmote> EMOTE_COMBINATIONS = Map.of(
-                KebirowHomeGuild.Okayeg, KebirowHomeGuild.TeaTime
+        Map<DiscordEmote, List<DiscordEmote>> EMOTE_COMBINATIONS = Map.of(
+                KebirowHomeGuild.Okayeg, List.of(KebirowHomeGuild.TeaTime)
         );
     }
 
@@ -76,6 +75,7 @@ public class DiscordEmote extends AbstractEmote {
         DiscordEmote Despairge = new DiscordEmote("Despairge", 1059852518441615370L);
         DiscordEmote EZ = new DiscordEmote("EZ", 1059854115863281664L);
         DiscordEmote FeelsBadMan = new DiscordEmote("FeelsBadMan", 1059855254553886791L);
+        DiscordEmote FeelsDankMan = new DiscordEmote("FeelsDankMan", 1060828224650760272L);
         DiscordEmote FeelsOkayMan = new DiscordEmote("FeelsOkayMan", 1059864339395387402L);
         DiscordEmote FeelsSpecialMan = new DiscordEmote("FeelsSpecialMan", 1059848875688599673L);
         DiscordEmote FeelsWowMan = new DiscordEmote("FeelsWowMan", 1059848799608111264L);
@@ -91,6 +91,7 @@ public class DiscordEmote extends AbstractEmote {
         DiscordEmote PagMan = new DiscordEmote("PagMan", 1059848765885911170L);
         DiscordEmote PauseMan = new DiscordEmote("PauseMan", 1059848767026778123L);
         DiscordEmote Pausey = new DiscordEmote("Pausey", 1059848762069102622L);
+        DiscordEmote peepoHappy = new DiscordEmote("peepoHappy", 1060831455917383720L);
         DiscordEmote Pogey = new DiscordEmote("Pogey", 1059848763931369482L);
         DiscordEmote Sadeg = new DiscordEmote("Sadeg", 1059848760320081960L);
         DiscordEmote Sadge = new DiscordEmote("Sadge", 1059848810282627103L);
@@ -101,12 +102,16 @@ public class DiscordEmote extends AbstractEmote {
         DiscordEmote monkaW = new DiscordEmote("monkaW", 1059852311977017475L);
         DiscordEmote stalk2Head = new DiscordEmote("stalk2Head", 1059853916830969916L);
         DiscordEmote stalkPog = new DiscordEmote("stalkPog", 1059853915136479383L);
+        DiscordEmote ZdarovaZaebal = new DiscordEmote("ZdarovaZaebal", 1060832056264896512L);
         // Dynamic
         DiscordEmote Aware = new DiscordEmote("Aware", 1059848803567542322L, true);
         DiscordEmote BoneZone = new DiscordEmote("BoneZone", 1059848867220312194L, true);
         DiscordEmote DinkDonk = new DiscordEmote("DinkDonk", 1059854474237181972L, true);
         DiscordEmote FeelsRainMan = new DiscordEmote("FeelsRainMan", 1059848864435273798L, true);
-        DiscordEmote MmmHmm = new DiscordEmote("MmmHmm", 1059849614959837205L);
+        DiscordEmote MLADY = new DiscordEmote("MLADY", 1060835405089472543L, true);
+        DiscordEmote MmmHmm = new DiscordEmote("MmmHmm", 1059849614959837205L, true);
+        DiscordEmote MODS = new DiscordEmote("MODS", 1060835973958746132L, true);
+        DiscordEmote NOTED = new DiscordEmote("NOTED", 1060830486680838194L, true);
         DiscordEmote StreamerDoesntKnow = new DiscordEmote("StreamerDoesntKnow", 1059848869355192350L, true);
         DiscordEmote TeaTime = new DiscordEmote("TeaTime", 1059849395262197846L, true);
         DiscordEmote VodkaTime = new DiscordEmote("VodkaTime", 1059848877785747476L, true);

@@ -11,7 +11,7 @@ public class TwitchEmote extends AbstractEmote {
 
     public interface Sets {
         List<TwitchEmote> HAPPY = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.Okayge, SevenTVChannel.Basedge, SevenTVChannel.PepeChill, SevenTVChannel.Starege, SevenTVChannel.MmmHmm,
-                SevenTVChannel.Zaebis, BTTVChannel.OkayChamp, SevenTVGlobal.Gayge, SevenTVGlobal.peepoHappy, SevenTVChannel.Clueless, SevenTVGlobal.FeelsOkayMan, BTTVGlobal.FeelsGoodMan,
+                SevenTVGlobal.FeelsOkayMan, SevenTVChannel.Zaebis, BTTVChannel.OkayChamp, SevenTVGlobal.Gayge, SevenTVGlobal.peepoHappy, SevenTVChannel.Clueless, BTTVGlobal.FeelsGoodMan,
                 BTTVGlobal.FeelsAmazingMan, TwitchGlobal.SUBprise, TwitchGlobal.TriHard, TwitchGlobal.FourHead, TwitchGlobal.BloodTrail, TwitchGlobal.SmileyFace38);
 
         List<TwitchEmote> POG = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.Pogey, SevenTVChannel.stalkPog, SevenTVChannel.SHTO, TwitchGlobal.PogChamp);
@@ -23,7 +23,7 @@ public class TwitchEmote extends AbstractEmote {
                 SevenTVChannel.RoflanEbalo, TwitchGlobal.LUL, TwitchGlobal.SUBprise, SevenTVChannel.aRolf, BTTVGlobal.tf);
 
         List<TwitchEmote> DANCE = List.of(SevenTVChannel.goblinPls, SevenTVChannel.pepeJAM, SevenTVChannel.BoneZone, SevenTVChannel.catJAM, SevenTVChannel.ratJAM,
-                SevenTVChannel.peepoDJ, SevenTVChannel.slavPls2, SevenTVChannel.hoSway, SevenTVChannel.DDoomer, BTTVChannel.roflanTanec, SevenTVChannel.MmmHmm,
+                SevenTVChannel.peepoDJ, SevenTVChannel.slavPls2, SevenTVChannel.DDoomer, BTTVChannel.roflanTanec, SevenTVChannel.MmmHmm, SevenTVGlobal.forsenPls,
                 SevenTVChannel.pepeGuitar, SevenTVGlobal.PartyParrot, SevenTVGlobal.PepePls, SevenTVGlobal.AlienDance, SevenTVGlobal.RareParrot);
 
         List<TwitchEmote> SAD = List.of(SevenTVChannel.jvcrSad, SevenTVChannel.Sadge, SevenTVChannel.FeelsRainMan, SevenTVChannel.TrollDespair, SevenTVChannel.KEKWait,
@@ -34,8 +34,8 @@ public class TwitchEmote extends AbstractEmote {
                 TwitchGlobal.PotFriend, TwitchGlobal.KonCha, TwitchGlobal.VoHiYo, TwitchGlobal.HeyGuys);
 
         List<TwitchEmote> CONFUSION = List.of(SevenTVChannel.Okayeg, SevenTVChannel.KEKWait, SevenTVChannel.CheNaxyi, SevenTVChannel.XyliHuh, SevenTVChannel.Pausey,
-                SevenTVChannel.roflanUpalo, SevenTVChannel.FeelsSpecialMan, SevenTVChannel.XyliSnes, SevenTVChannel.deshovka, SevenTVChannel.xyliNado, SevenTVChannel.XyliChel,
-                SevenTVGlobal.WAYTOODANK, SevenTVGlobal.Stare, SevenTVGlobal.FeelsWeirdMan, BTTVChannel.Ebaka, TwitchGlobal.RlyTho);
+                SevenTVGlobal.FeelsDankMan, SevenTVChannel.roflanUpalo, SevenTVChannel.FeelsSpecialMan, SevenTVChannel.XyliSnes, SevenTVChannel.deshovka, SevenTVChannel.xyliNado,
+                SevenTVChannel.XyliChel, SevenTVGlobal.WAYTOODANK, SevenTVGlobal.Stare, SevenTVGlobal.FeelsWeirdMan, BTTVChannel.Ebaka, TwitchGlobal.RlyTho);
 
         List<TwitchEmote> SCARY = List.of(SevenTVChannel.jvcrS, SevenTVChannel.monkaStop, SevenTVChannel.monkaChrist, BTTVChannel.Ebaka, TwitchGlobal.WutFace);
 
@@ -43,15 +43,16 @@ public class TwitchEmote extends AbstractEmote {
 
         List<List<TwitchEmote>> ALL_SETS = List.of(HAPPY, POG, COOL, LAUGH, DANCE, SAD, GREETING, CONFUSION, SCARY);
 
-        Map<TwitchEmote, TwitchEmote> EMOTE_COMBINATIONS = Map.of(
-                SevenTVChannel.Okayeg, SevenTVGlobal.TeaTime,
-                SevenTVChannel.Pogey, SevenTVGlobal.Clap,
-                SevenTVGlobal.EZ, SevenTVGlobal.Clap,
-                SevenTVChannel.Terpiloid, SevenTVChannel.VodkaTime,
-                SevenTVChannel.peepoDJ, SevenTVChannel.xar2EDM,
-                SevenTVChannel.hoSway, SevenTVChannel.xar2EDM,
-                SevenTVChannel.xar2EDM, SevenTVChannel.peepoDJ,
-                SevenTVChannel.MmmHmm, SevenTVGlobal.PianoTime);
+        Map<TwitchEmote, List<TwitchEmote>> EMOTE_COMBINATIONS = Map.of(
+                SevenTVChannel.Okayeg, List.of(SevenTVGlobal.TeaTime, SevenTVGlobal.WineTime),
+                SevenTVChannel.Pogey, List.of(SevenTVGlobal.Clap, SevenTVGlobal.nymnCorn),
+                SevenTVGlobal.EZ, List.of(SevenTVGlobal.Clap),
+                SevenTVChannel.Terpiloid, List.of(SevenTVChannel.VodkaTime),
+                SevenTVChannel.peepoDJ, List.of(SevenTVChannel.xar2EDM, SevenTVGlobal.PartyParrot),
+                SevenTVChannel.hoSway, List.of(SevenTVChannel.xar2EDM),
+                SevenTVChannel.xar2EDM, List.of(SevenTVChannel.peepoDJ, SevenTVGlobal.PartyParrot),
+                SevenTVChannel.MmmHmm, List.of(SevenTVGlobal.PianoTime, SevenTVGlobal.GuitarTime),
+                SevenTVGlobal.PartyParrot, List.of(SevenTVChannel.peepoDJ, SevenTVChannel.xar2EDM));
     }
 
     interface TwitchGlobal {

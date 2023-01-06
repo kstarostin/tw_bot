@@ -38,13 +38,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.chatbot.util.emotes.TwitchEmote.Sets.EMOTE_COMBINATIONS;
-
-public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
+public class DefaultTwitchEmoteServiceImpl extends AbstractEmoteServiceImpl<TwitchEmote> implements TwitchEmoteService {
     private static DefaultTwitchEmoteServiceImpl instance;
 
     private final Logger LOG = LoggerFactory.getLogger(DefaultTwitchEmoteServiceImpl.class);
@@ -72,7 +71,6 @@ public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
-    private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
 
     private DefaultTwitchEmoteServiceImpl() {
     }
@@ -217,40 +215,14 @@ public class DefaultTwitchEmoteServiceImpl implements TwitchEmoteService {
         return buildEmoteLine(channelId, selectedEmotes);
     }
 
-    @SafeVarargs
-    @Override
-    public final List<TwitchEmote> buildRandomEmoteList(final String channelId, final int maxNumberOfEmotes, final List<TwitchEmote>... emoteSets) {
-        final int numberOfEmotes = randomizerService.rollDiceExponentially(maxNumberOfEmotes, 2) + 1;
-
-        final List<TwitchEmote> selectedEmotes = new ArrayList<>();
-        for (int i = 0; i < numberOfEmotes; i++) {
-            if (i > 0) {
-                final TwitchEmote previousEmote = selectedEmotes.get(i - 1);
-                if (EMOTE_COMBINATIONS.containsKey(previousEmote) && randomizerService.flipCoin() && isEmote(channelId, previousEmote.toString())) {
-                    selectedEmotes.add(EMOTE_COMBINATIONS.get(previousEmote));
-                } else if (randomizerService.flipCoin()) {
-                    selectedEmotes.add(previousEmote);
-                } else {
-                    selectedEmotes.add(getRandomEmoteFromSets(channelId, emoteSets));
-                }
-            } else {
-                selectedEmotes.add(getRandomEmoteFromSets(channelId, emoteSets));
-            }
-        }
-        return selectedEmotes;
-    }
-
     @Override
     public boolean isEmote(final String channelId, final String text) {
         return getValidEmoteCodes(channelId).contains(text);
     }
 
-    @SafeVarargs
-    private TwitchEmote getRandomEmoteFromSets(final String channelId, final List<TwitchEmote>... emoteSets) {
-        final int setNumber = randomizerService.rollDiceExponentially(emoteSets.length, 2);
-        final List<TwitchEmote> selectedSet = emoteSets[setNumber].parallelStream().filter(emote -> isEmote(channelId, emote.toString())).collect(Collectors.toList());
-        final int index = randomizerService.rollDiceExponentially(selectedSet.size(), 2);
-        return selectedSet.get(index);
+    @Override
+    protected Map<TwitchEmote, List<TwitchEmote>> getEmoteCombinations() {
+        return TwitchEmote.Sets.EMOTE_COMBINATIONS;
     }
 
     private String buildEmoteLine(final String channelId, final List<TwitchEmote> emotes) {

@@ -5,5 +5,5 @@ import com.chatbot.util.emotes.DiscordEmote;
 import java.util.List;
 
 public interface DiscordEmoteService {
-    List<DiscordEmote> buildRandomEmoteList(int maxNumberOfEmotes, List<DiscordEmote>... emoteSets);
+    List<DiscordEmote> buildRandomEmoteList(String channelId, int maxNumberOfEmotes, List<DiscordEmote>... emoteSets);
 }

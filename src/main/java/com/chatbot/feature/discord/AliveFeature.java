@@ -60,7 +60,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder()
                 .withUserTag(userId)
                 .withText(responseMessage)
-                .withEmotes(discordEmoteService.buildRandomEmoteList(2, CONFUSION, HAPPY));
+                .withEmotes(discordEmoteService.buildRandomEmoteList(null, 2, CONFUSION, HAPPY));
 
         return StringUtils.isNotEmpty(responseMessage)
                 ? message.getChannel().flatMap(channel -> channel.createMessage(responseMessageBuilder.buildForDiscord())).then()
