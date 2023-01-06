@@ -11,7 +11,7 @@ public abstract class AbstractDiscordFeature<T extends Event> {
     /**
      * Discord channel IDs
      */
-    protected static final String OMSK_OMSK = "799649888102645810";
+    protected static final String KEBIROW_GENERAL = "1057723933769617440";
     protected static final String RED_ROOM_ANNOUNCE = "950482716078538823";
     protected static final String RED_ROOM_TEXT = "950376827468267530";
     protected static final String RED_ROOM_SUNBOY_MANIA = "1038449077131673661";
@@ -26,11 +26,7 @@ public abstract class AbstractDiscordFeature<T extends Event> {
         return StringUtils.containsIgnoreCase(message, "https://www.twitch.tv/");
     }
 
-    protected Set<String> getWhitelistedChannelsForCommands() {
-        return Set.of(OMSK_OMSK, RED_ROOM_ANNOUNCE, RED_ROOM_TEXT, RED_ROOM_SUNBOY_MANIA);
-    }
-
     protected Set<String> getWhitelistedChannelsForReactions() {
-        return Set.of(OMSK_OMSK, RED_ROOM_ANNOUNCE);
+        return Set.of(KEBIROW_GENERAL, RED_ROOM_ANNOUNCE);
     }
 }

@@ -26,6 +26,10 @@ public class DiscordEmote extends AbstractEmote {
         return id;
     }
 
+    public boolean isAnimated() {
+        return isAnimated;
+    }
+
     @Override
     public String toString() {
         return String.format(isAnimated ? EMOTE_ANIMATED_TEMPLATE : EMOTE_TEMPLATE, getCode(), getId());
@@ -51,7 +55,7 @@ public class DiscordEmote extends AbstractEmote {
     public interface Sets {
         List<DiscordEmote> HAPPY = List.of(KebirowHomeGuild.Okayge, KebirowHomeGuild.Basedge, KebirowHomeGuild.Starege, KebirowHomeGuild.Clueless, KebirowHomeGuild.FeelsOkayMan,
                 KebirowHomeGuild.peepoHappy, KebirowHomeGuild.MmmHmm, KebirowHomeGuild.FeelsWowMan, KebirowHomeGuild.YEP, KebirowHomeGuild.peepoChat);
-        List<DiscordEmote> POG = List.of(KebirowHomeGuild.KebirowPog, KebirowHomeGuild.Pogey, KebirowHomeGuild.Pogey, KebirowHomeGuild.PagMan, KebirowHomeGuild.stalkPog);
+        List<DiscordEmote> POG = List.of(KebirowHomeGuild.KebirowPog, KebirowHomeGuild.Pogey, KebirowHomeGuild.PagMan, KebirowHomeGuild.stalkPog);
         List<DiscordEmote> COOL = List.of(KebirowHomeGuild.EZ, KebirowHomeGuild.Basedge, KebirowHomeGuild.XyliSiga);
         List<DiscordEmote> LAUGH = List.of(KebirowHomeGuild.OMEGALUL, KebirowHomeGuild.KEKW, KebirowHomeGuild.StreamerDoesntKnow);
         List<DiscordEmote> DANCE = List.of(KebirowHomeGuild.BoneZone, KebirowHomeGuild.MmmHmm);
