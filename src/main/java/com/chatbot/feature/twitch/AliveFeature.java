@@ -51,7 +51,7 @@ public class AliveFeature extends AbstractFeature {
     private static final String ADDITION_TOKEN = "${addition}";
 
     private static final Set<String> USER_FRIEND_LIST = Set.of("0mskbird", "yura_atlet", "1skybox1", "chenushka", "hereticjz", "skvdee", "svetloholmov", "prof_133", "kiber_bober",
-            "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013", "shinigamidth");
+            "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013", "shinigamidth", "enteris");
 
     private static final int MIN_CHATTING_RATE = 1;
     private static final int MAX_CHATTING_RATE = 10;

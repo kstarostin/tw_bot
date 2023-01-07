@@ -185,10 +185,12 @@ public class CommandMessageFeature extends AbstractDiscordFeature<ChatInputInter
         textBuilder.append(generatedMessage);
 
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder()
-                .withUserTag(userId)
                 .withText(textBuilder.toString())
                 .withEmotes(List.of(emote));
 
+        if (StringUtils.isBlank(customStartText)) {
+            responseMessageBuilder.withUserTag(userId);
+        }
         final String response = responseMessageBuilder.buildForDiscord();
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), response);
         return response;
