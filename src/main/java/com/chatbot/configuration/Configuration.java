@@ -19,6 +19,7 @@ public class Configuration {
     private int selfTriggerMaxWaitTime;
     private List<String> messageWhitelistedPermissions;
     private List<String> additionalBotTagNames;
+    private String openaiModel;
     private boolean checkModeratorPermissions;
     private int moderationWordNumberThreshold;
     private int violationPointsThresholdForTimeout;
@@ -88,6 +89,14 @@ public class Configuration {
 
     public void setAdditionalBotTagNames(List<String> additionalBotTagNames) {
         this.additionalBotTagNames = additionalBotTagNames;
+    }
+
+    public String getOpenaiModel() {
+        return openaiModel;
+    }
+
+    public void setOpenaiModel(String openaiModel) {
+        this.openaiModel = openaiModel;
     }
 
     public boolean isCheckModeratorPermissions() {

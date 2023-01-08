@@ -3,29 +3,33 @@ package com.chatbot.feature.generator;
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 
 public class GeneratorRequest {
-    private final String requestMessage;
-    private final String requesterId;
-    private final boolean responseSanitized;
-    private final Integer maxResponseLength;
-    private final boolean requestIncluded;
-    private final BalabobaResponseGenerator.Style responseStyle;
+    protected String requestMessage = null;
+    protected String channelId = null;
+    protected String channelName = null;
+    protected String userName = null;
+    protected String requesterId = null;
+    protected boolean responseSanitized = false;
+    protected Integer maxResponseLength = null;
+    protected boolean requestMessageIncluded = false;
+    protected BalabobaResponseGenerator.Style responseStyle = null;
 
-    public GeneratorRequest(final String requestMessage, final String requesterId, final boolean responseSanitized, final Integer maxResponseLength, final boolean requestIncluded) {
-        this(requestMessage, requesterId, responseSanitized, maxResponseLength, requestIncluded, null);
-    }
-
-    public GeneratorRequest(final String requestMessage, final String requesterId, final boolean responseSanitized, final Integer maxResponseLength, final boolean requestIncluded,
-                            final BalabobaResponseGenerator.Style responseStyle) {
-        this.requestMessage = requestMessage;
-        this.requesterId = requesterId;
-        this.responseSanitized = responseSanitized;
-        this.maxResponseLength = maxResponseLength;
-        this.requestIncluded = requestIncluded;
-        this.responseStyle = responseStyle;
+    private GeneratorRequest() {
     }
 
     public String getRequestMessage() {
         return requestMessage;
+    }
+
+    public String getChannelId() {
+        return channelId;
+    }
+
+    public String getChannelName() {
+        return channelName;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     public String getRequesterId() {
@@ -40,11 +44,69 @@ public class GeneratorRequest {
         return maxResponseLength;
     }
 
-    public boolean isRequestIncluded() {
-        return requestIncluded;
+    public boolean isRequestMessageIncluded() {
+        return requestMessageIncluded;
     }
 
     public BalabobaResponseGenerator.Style getResponseStyle() {
         return responseStyle;
+    }
+
+    public static Builder getBuilder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private final GeneratorRequest request = new GeneratorRequest();
+
+        public Builder withRequestMessage(final String requestMessage) {
+            request.requestMessage = requestMessage;
+            return this;
+        }
+
+        public Builder withChannelId(final String channelId) {
+            request.channelId = channelId;
+            return this;
+        }
+
+        public Builder withChannelName(final String channelName) {
+            request.channelName = channelName;
+            return this;
+        }
+
+        public Builder withUserName(final String userName) {
+            request.userName = userName;
+            return this;
+        }
+
+        public Builder withResponseSanitized() {
+            request.responseSanitized = true;
+            return this;
+        }
+
+        public Builder withMaxResponseLength(final int maxResponseLength) {
+            request.maxResponseLength = maxResponseLength;
+            return this;
+        }
+
+        public Builder withRequestMessageIncluded() {
+            request.requestMessageIncluded = true;
+            return this;
+        }
+
+        public Builder withResponseStyle(final BalabobaResponseGenerator.Style responseStyle) {
+            request.responseStyle = responseStyle;
+            return this;
+        }
+
+        public GeneratorRequest buildForTwitch() {
+            request.requesterId = "tw:" + request.getChannelId() + ":" + request.getUserName();
+            return request;
+        }
+
+        public GeneratorRequest buildForDiscord() {
+            request.requesterId = "ds:" + request.getChannelId() + ":" + request.getUserName();
+            return request;
+        }
     }
 }

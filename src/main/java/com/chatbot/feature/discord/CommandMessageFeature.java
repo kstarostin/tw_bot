@@ -176,9 +176,17 @@ public class CommandMessageFeature extends AbstractDiscordFeature<ChatInputInter
         if (StringUtils.isNotBlank(customStartText)) {
             textBuilder.append(customStartText).append(StringUtils.SPACE);
         }
-        final String requesterId = "ds:" + channelId + ":" + userName;
         final String requestMessage = messageService.getStandardMessageForKey("message.discord." + commandName + ".request");
-        final String generatedMessage = responseGenerator.generate(new GeneratorRequest(requestMessage, requesterId, true, null, true, style));
+
+        final String generatedMessage = responseGenerator.generate(GeneratorRequest.getBuilder()
+                .withRequestMessage(requestMessage)
+                .withChannelId(channelId)
+                .withUserName(userName)
+                .withResponseSanitized()
+                .withRequestMessageIncluded()
+                .withResponseStyle(style)
+                .buildForDiscord());
+
         if (StringUtils.isBlank(generatedMessage) || StringUtils.equalsIgnoreCase(generatedMessage, requestMessage + StringUtils.SPACE)) {
             return StringUtils.EMPTY;
         }

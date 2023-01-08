@@ -12,6 +12,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class OpenAIResponseGenerator implements ResponseGenerator {
     private static OpenAIResponseGenerator instance;
 
@@ -19,11 +22,10 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
 
     private final OpenAiService service;
 
-    // see <a href="https://openai.com/api/pricing/"/>
-    private static final String MODEL_DAVINCI = "text-davinci-003"; // $0.0200/1K tokens
-    private static final String MODEL_CURIE = "text-curie-001"; // $0.0020/1K tokens
-    private static final String MODEL_BABBAGE = "text-babbage-001"; // $0.0005/1K tokens
-    private static final String MODEL_ADA = "text-ada-001"; // $0.0004/1K tokens
+    private static final Model DEFAULT_MODEL_DAVINCI = Model.DAVINCI;
+    private static final Model DEFAULT_MODEL_CURIE = Model.CURIE;
+    private static final Model DEFAULT_MODEL_BABBAGE = Model.BABBAGE;
+    private static final Model DEFAULT_MODEL_ADA = Model.ADA;
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
 
@@ -41,10 +43,15 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
 
     @Override
     public String generate(final GeneratorRequest request) {
+        final String channelName = StringUtils.isNotEmpty(request.getChannelName()) ? request.getChannelName() : "default";
+        final Model model = StringUtils.isNotEmpty(configurationService.getConfiguration(channelName).getOpenaiModel())
+                ? Model.getForName(configurationService.getConfiguration(channelName).getOpenaiModel())
+                : DEFAULT_MODEL_DAVINCI;
+
         final CompletionRequest.CompletionRequestBuilder completionRequestBuilder = CompletionRequest.builder()
                 .prompt(request.getRequestMessage())
-                .model(MODEL_DAVINCI)
-                .echo(request.isRequestIncluded())
+                .model(model.toString())
+                .echo(request.isRequestMessageIncluded())
                 .user(request.getRequesterId());
         if (request.getMaxResponseLength() != null) {
             completionRequestBuilder.maxTokens((int) (request.getMaxResponseLength() * 1.33));
@@ -65,6 +72,33 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
         } catch (final Exception e) {
             LOG.error("Unexpected error: " + e.getMessage());
             return StringUtils.EMPTY;
+        }
+    }
+
+    public enum Model {
+        // see <a href="https://openai.com/api/pricing/"/>
+        DAVINCI("text-davinci-003"), // $0.0200/1K tokens
+        CURIE("text-curie-001"), // $0.0020/1K tokens
+        BABBAGE("text-babbage-001"), // $0.0005/1K tokens
+        ADA("text-ada-001"); // $0.0004/1K tokens
+        private final String value;
+
+        Model(final String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+
+        public static Model getForName(final String name) {
+            for (final Model model : Arrays.stream(Model.values()).collect(Collectors.toList())) {
+                if (model.name().equalsIgnoreCase(name)) {
+                    return model;
+                }
+            }
+            return DAVINCI; // use as default
         }
     }
 }

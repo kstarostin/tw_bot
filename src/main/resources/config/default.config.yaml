@@ -48,6 +48,8 @@ additional_bot_tag_names:
     - кебирову
     - кебировым
     - bot
+# Selected model for OpenAI response generator
+openai_model: DAVINCI
 
 
 ## FEATURE: MODERATOR

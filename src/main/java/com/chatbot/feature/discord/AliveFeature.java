@@ -49,16 +49,21 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         final String channelId = message.getChannelId().asString();
         final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);
         final String userId = message.getAuthor().map(user -> user.getId().asString()).orElse(StringUtils.EMPTY);
-        final String requesterId = "ds:" + channelId + ":" + userName;
 
-        String sanitizedMessage = messageService.getMessageSanitizer(message.getContent())
+        final String sanitizedMessage = messageService.getMessageSanitizer(message.getContent())
                 .withNoTags()
                 .withNoEmotes()
                 .withMaxLength(150)
                 .withDelimiter()
                 .sanitizeForDiscord();
 
-        final String responseMessage = generate(new GeneratorRequest(sanitizedMessage, requesterId, true, 250, false));
+        final String responseMessage = generate(GeneratorRequest.getBuilder()
+                .withRequestMessage(sanitizedMessage)
+                .withChannelId(channelId)
+                .withUserName(userName)
+                .withResponseSanitized()
+                .withMaxResponseLength(250)
+                .buildForDiscord());
 
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder()
                 .withUserTag(userId)

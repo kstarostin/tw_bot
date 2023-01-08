@@ -275,15 +275,22 @@ public class AliveFeature extends AbstractFeature {
             final String replacement = messageService.getPersonalizedMessageForKey("message.greeting." + token + "." + userName.toLowerCase(), "message.greeting." + token + ".default");
             messageTemplate = messageTemplate.replace(token, replacement);
         }
-        final String requesterId = "tw:" + channelId + ":" + configurationService.getConfiguration().getSuperAdmin();
-        String requestMessage = messageService.getMessageSanitizer(messageTemplate.replace(ADDITION_TOKEN, StringUtils.EMPTY))
+        final String requestMessage = messageService.getMessageSanitizer(messageTemplate.replace(ADDITION_TOKEN, StringUtils.EMPTY))
                 .withNoTags()
                 .withNoEmotes()
                 .withMaxLength(REQUEST_MESSAGE_MAX_LENGTH)
                 .withDelimiter(",")
                 .sanitizeForTwitch(channelId, channelName);
 
-        final String responseMessage = generateResponseText(new GeneratorRequest(requestMessage, requesterId, true, 100, true));
+        final String responseMessage = generateResponseText(GeneratorRequest.getBuilder()
+                .withRequestMessage(requestMessage)
+                .withChannelId(channelId)
+                .withChannelName(channelName)
+                .withUserName(configurationService.getConfiguration().getSuperAdmin())
+                .withResponseSanitized()
+                .withRequestMessageIncluded()
+                .withMaxResponseLength(100)
+                .buildForTwitch());
         return responseMessage.replaceAll(" +", StringUtils.SPACE).trim();
     }
 
@@ -312,7 +319,6 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private String generateResponseText(final String channelId, final String channelName, final String userName, final List<String> lastMessages) {
-        final String requesterId = "tw:" + channelId + ":" + userName;
         final String requestMessage = messageService.getMessageSanitizer(String.join(StringUtils.SPACE, lastMessages))
                 .withNoTags()
                 .withNoEmotes()
@@ -320,9 +326,17 @@ public class AliveFeature extends AbstractFeature {
                 .withDelimiter()
                 .sanitizeForTwitch(channelId, channelName);
 
-        return StringUtils.isNotBlank(requestMessage)
-                ? generateResponseText(new GeneratorRequest(requestMessage, requesterId, true, 150, false))
-                : StringUtils.EMPTY;
+        if (StringUtils.isNotBlank(requestMessage)) {
+            return generateResponseText(GeneratorRequest.getBuilder()
+                    .withRequestMessage(requestMessage)
+                    .withChannelId(channelId)
+                    .withChannelName(channelName)
+                    .withUserName(userName)
+                    .withResponseSanitized()
+                    .withMaxResponseLength(150)
+                    .buildForTwitch());
+        }
+        return StringUtils.EMPTY;
     }
 
     private String generateResponseText(final GeneratorRequest request) {

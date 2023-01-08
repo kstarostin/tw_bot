@@ -53,7 +53,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         if (request.isResponseSanitized()) {
             generatedMessage = ResponseGeneratorUtil.sanitize(generatedMessage);
         }
-        return request.isRequestIncluded() ? request.getRequestMessage() + StringUtils.SPACE + generatedMessage : generatedMessage;
+        return request.isRequestMessageIncluded() ? request.getRequestMessage() + StringUtils.SPACE + generatedMessage : generatedMessage;
     }
 
     private String generateByBalaboba(final String payload, final int counter) {
@@ -116,7 +116,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         MOVIE_SYNOPSES ("9"),
         HOROSCOPE ("10"),
         FOLK_WISDOM ("11"),
-        MODERN_ART ("12"),;
+        MODERN_ART ("12");
 
         private final String style;
 
