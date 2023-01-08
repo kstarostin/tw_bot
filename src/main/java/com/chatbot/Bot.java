@@ -69,7 +69,6 @@ public class Bot {
                             }))
                     .then();
 
-
             registerDiscordCommands(gateway);
 
             final Mono<Void> handleMessageReaction = gateway.on(MessageCreateEvent.class, event -> MessageReactionFeature.getInstance().handle(event)).then();

@@ -3,9 +3,11 @@ package com.chatbot.feature.discord;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.DiscordEmoteService;
 import com.chatbot.service.MessageService;
+import com.chatbot.service.RandomizerService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import com.chatbot.service.impl.DefaultDiscordEmoteServiceImpl;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
+import com.chatbot.service.impl.DefaultRandomizerServiceImpl;
 import com.chatbot.util.emotes.AbstractEmote;
 import com.chatbot.util.emotes.DiscordEmote;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -19,10 +21,12 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.chatbot.util.emotes.DiscordEmote.Sets.CONFUSION;
 import static com.chatbot.util.emotes.DiscordEmote.Sets.POG;
@@ -43,6 +47,7 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final DiscordEmoteService discordEmoteService = DefaultDiscordEmoteServiceImpl.getInstance();
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
+    private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
 
     private MessageReactionFeature() {
     }
@@ -69,23 +74,41 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         }
         final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY), message.getContent());
-        Optional<DiscordEmote> discordEmoteOptional = Optional.empty();
+        List<DiscordEmote> discordEmotes = new ArrayList<>();
         if (isEveryone(message.getContent())) {
             if (isNoStreamToday(message.getContent())) {
-                discordEmoteOptional = Optional.of(DiscordEmote.KebirowHomeGuild.Kippah);
+                discordEmotes = Arrays.asList(DiscordEmote.KebirowHomeGuild.Kippah);
             } else if (hasAttachment(message)) {
-                discordEmoteOptional = discordEmoteService.buildRandomEmoteList(null, 1, LAUGH).stream().findFirst();
+                discordEmotes = discordEmoteService.buildRandomEmoteList(null, 1, LAUGH);
             } else {
-                discordEmoteOptional = discordEmoteService.buildRandomEmoteList(null, 1, CONFUSION).stream().findFirst();
+                discordEmotes = discordEmoteService.buildRandomEmoteList(null, 1, CONFUSION);
             }
         }
         if (hasStreamLink(message.getContent())) {
-            discordEmoteOptional = discordEmoteService.buildRandomEmoteList(null, 1, POG, COOL, DANCE).stream().findFirst();
+            discordEmotes = discordEmoteService.buildRandomEmoteList(null, 1, POG, COOL, DANCE);
         }
-        final ReactionEmoji reaction = discordEmoteOptional.map(discordEmote -> getReaction(discordEmote, discordEmote.isAnimated())).orElse(null);
 
-        LOG.info("Discord[{}]-[{}]:[{}]:[Reaction:{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), discordEmoteOptional.map(AbstractEmote::getCode).orElse(StringUtils.EMPTY));
-        return reaction != null ? message.addReaction(reaction) : Mono.empty();
+        LOG.info("Discord[{}]-[{}]:[{}]:[Reactions:{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), discordEmotes.stream().map(AbstractEmote::getCode).collect(Collectors.joining(StringUtils.SPACE)));
+        if (CollectionUtils.isEmpty(discordEmotes)) {
+            return Mono.empty();
+        } else if (discordEmotes.size() == 1) {
+            addReaction(message, discordEmotes.iterator().next());
+            return Mono.empty();
+        } else {
+            discordEmotes.forEach(discordEmote -> {
+                addReaction(message, discordEmote);
+            });
+            return Mono.empty();
+        }
+    }
+
+    private void addReaction(final Message message, final DiscordEmote discordEmote) {
+        message.addReaction(convert(discordEmote)).subscribe();
+        if (discordEmote.isCombination() && randomizerService.flipCoin()) {
+            final int index = randomizerService.rollDice(discordEmote.getCombinedWith().size());
+            final DiscordEmote combinationEmote = (DiscordEmote) discordEmote.getCombinedWith().get(index);
+            message.addReaction(convert(combinationEmote)).subscribe();
+        }
     }
 
     private boolean isNoStreamToday(final String content) {
@@ -96,8 +119,8 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         return CollectionUtils.isNotEmpty(message.getAttachments());
     }
 
-    private ReactionEmoji getReaction(final DiscordEmote emote, final boolean isAnimated) {
-        return ReactionEmoji.of(emote.getId(), emote.getCode(), isAnimated);
+    private ReactionEmoji convert(final DiscordEmote emote) {
+        return ReactionEmoji.of(emote.getId(), emote.getCode(), emote.isAnimated());
     }
 
     private boolean isEveryone(final String message) {

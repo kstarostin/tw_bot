@@ -58,7 +58,7 @@ public class DiscordEmote extends AbstractEmote {
     }
 
     public interface Sets {
-        List<DiscordEmote> HAPPY = List.of(KebirowHomeGuild.Okayge, KebirowHomeGuild.Basedge, KebirowHomeGuild.Starege, KebirowHomeGuild.Clueless, KebirowHomeGuild.FeelsOkayMan,
+        List<DiscordEmote> HAPPY = List.of(KebirowHomeGuild.Okayge, KebirowHomeGuild.Basedge, KebirowHomeGuild.Starege, KebirowHomeGuild.BOTTING, KebirowHomeGuild.FeelsOkayMan,
                 KebirowHomeGuild.peepoHappy, KebirowHomeGuild.MmmHmm, KebirowHomeGuild.FeelsWowMan, KebirowHomeGuild.YEP, KebirowHomeGuild.peepoChat);
         List<DiscordEmote> POG = List.of(KebirowHomeGuild.KebirowPog, KebirowHomeGuild.Pogey, KebirowHomeGuild.PagMan, KebirowHomeGuild.stalkPog);
         List<DiscordEmote> COOL = List.of(KebirowHomeGuild.EZ, KebirowHomeGuild.Basedge, KebirowHomeGuild.XyliSiga);
@@ -68,7 +68,8 @@ public class DiscordEmote extends AbstractEmote {
                 KebirowHomeGuild.KEKWait, KebirowHomeGuild.Despairge, KebirowHomeGuild.XyliSiga);
         List<DiscordEmote> GREETING = List.of(KebirowHomeGuild.XyliWave, KebirowHomeGuild.MLADY, KebirowHomeGuild.KKomrade, KebirowHomeGuild.ZdarovaZaebal);
         List<DiscordEmote> CONFUSION = List.of(KebirowHomeGuild.Okayeg, KebirowHomeGuild.KEKWait, KebirowHomeGuild.CheNaxyi, KebirowHomeGuild.MODS, KebirowHomeGuild.DinkDonk,
-                KebirowHomeGuild.Pausey, KebirowHomeGuild.NOTED, KebirowHomeGuild.borpaSpin, KebirowHomeGuild.FeelsDankMan, KebirowHomeGuild.FeelsSpecialMan, KebirowHomeGuild.XyliNado);
+                KebirowHomeGuild.Clueless, KebirowHomeGuild.Pausey, KebirowHomeGuild.NOTED, KebirowHomeGuild.borpaSpin, KebirowHomeGuild.FeelsDankMan, KebirowHomeGuild.FeelsSpecialMan,
+                KebirowHomeGuild.XyliNado);
         List<DiscordEmote> SCARY = List.of(KebirowHomeGuild.monkaW, KebirowHomeGuild.HUH);
     }
 
@@ -77,8 +78,8 @@ public class DiscordEmote extends AbstractEmote {
         DiscordEmote Basedge = new DiscordEmote("Basedge", 1059848754313842708L);
         DiscordEmote CheNaxyi = new DiscordEmote("CheNaxyi", 1059848842998190150L);
         DiscordEmote Clueless = new DiscordEmote("Clueless", 1059848798265950338L);
-        DiscordEmote Despairge = new DiscordEmote("Despairge", 1059852518441615370L);
-        DiscordEmote EZ = new DiscordEmote("EZ", 1059854115863281664L);
+        DiscordEmote Despairge = new DiscordEmote("Despairge", 1059852518441615370L).withCombinations(List.of(new DiscordEmote("SmokeTime", 1061688995282698330L, true)));
+        DiscordEmote EZ = new DiscordEmote("EZ", 1059854115863281664L).withCombinations(List.of(new DiscordEmote("Clap", 1061688002306388038L, true)));
         DiscordEmote FeelsBadMan = new DiscordEmote("FeelsBadMan", 1059855254553886791L);
         DiscordEmote FeelsDankMan = new DiscordEmote("FeelsDankMan", 1060828224650760272L);
         DiscordEmote FeelsOkayMan = new DiscordEmote("FeelsOkayMan", 1059864339395387402L);
@@ -93,11 +94,11 @@ public class DiscordEmote extends AbstractEmote {
         DiscordEmote OMEGALUL = new DiscordEmote("OMEGALUL", 1059848846957617242L);
         DiscordEmote Okayeg = new DiscordEmote("Okayeg", 1059848758826901534L).withCombinations(List.of(new DiscordEmote("TeaTime", 1059849395262197846L, true)));
         DiscordEmote Okayge = new DiscordEmote("Okayge", 1059848809292763216L);
-        DiscordEmote PagMan = new DiscordEmote("PagMan", 1059848765885911170L);
+        DiscordEmote PagMan = new DiscordEmote("PagMan", 1059848765885911170L).withCombinations(List.of(new DiscordEmote("Clap", 1061688002306388038L, true)));;
         DiscordEmote PauseMan = new DiscordEmote("PauseMan", 1059848767026778123L);
         DiscordEmote Pausey = new DiscordEmote("Pausey", 1059848762069102622L);
         DiscordEmote peepoHappy = new DiscordEmote("peepoHappy", 1060831455917383720L);
-        DiscordEmote Pogey = new DiscordEmote("Pogey", 1059848763931369482L);
+        DiscordEmote Pogey = new DiscordEmote("Pogey", 1059848763931369482L).withCombinations(List.of(new DiscordEmote("Clap", 1061688002306388038L, true)));;
         DiscordEmote Sadeg = new DiscordEmote("Sadeg", 1059848760320081960L);
         DiscordEmote Sadge = new DiscordEmote("Sadge", 1059848810282627103L);
         DiscordEmote Starege = new DiscordEmote("Starege", 1059848755999932496L);
@@ -111,6 +112,7 @@ public class DiscordEmote extends AbstractEmote {
         // Dynamic
         DiscordEmote Aware = new DiscordEmote("Aware", 1059848803567542322L, true);
         DiscordEmote BoneZone = new DiscordEmote("BoneZone", 1059848867220312194L, true);
+        DiscordEmote BOTTING = new DiscordEmote("BOTTING", 1061691388904878152L, true);
         DiscordEmote DDoomer = new DiscordEmote("DDoomer", 1060887672891125812L, true);
         DiscordEmote DinkDonk = new DiscordEmote("DinkDonk", 1059854474237181972L, true);
         DiscordEmote FeelsRainMan = new DiscordEmote("FeelsRainMan", 1059848864435273798L, true);
