@@ -12,6 +12,8 @@ public class GeneratorRequest {
     protected Integer maxResponseLength = null;
     protected boolean requestMessageIncluded = false;
     protected BalabobaResponseGenerator.Style responseStyle = null;
+    protected boolean isFromTwitch = false;
+    protected boolean isFromDiscord = false;
 
     private GeneratorRequest() {
     }
@@ -50,6 +52,14 @@ public class GeneratorRequest {
 
     public BalabobaResponseGenerator.Style getResponseStyle() {
         return responseStyle;
+    }
+
+    public boolean isFromTwitch() {
+        return isFromTwitch;
+    }
+
+    public boolean isFromDiscord() {
+        return isFromDiscord;
     }
 
     public static Builder getBuilder() {
@@ -101,11 +111,13 @@ public class GeneratorRequest {
 
         public GeneratorRequest buildForTwitch() {
             request.requesterId = "tw:" + request.getChannelId() + ":" + request.getUserName();
+            request.isFromTwitch = true;
             return request;
         }
 
         public GeneratorRequest buildForDiscord() {
             request.requesterId = "ds:" + request.getChannelId() + ":" + request.getUserName();
+            request.isFromDiscord = true;
             return request;
         }
     }

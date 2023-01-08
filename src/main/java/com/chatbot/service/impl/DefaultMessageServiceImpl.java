@@ -165,6 +165,7 @@ public class DefaultMessageServiceImpl implements MessageService {
         private String tag;
         private boolean startsWithTag;
         private String text;
+        private List<String> sentences = new ArrayList<>();
         private List<? extends AbstractEmote> emotes;
 
         private MessageBuilder() {
@@ -184,6 +185,7 @@ public class DefaultMessageServiceImpl implements MessageService {
 
         public MessageBuilder withText(final String text) {
             this.text = text;
+            sentences = Arrays.stream(text.split("(?<=[.!?])")).map(String::trim).collect(Collectors.toList());
             return this;
         }
 

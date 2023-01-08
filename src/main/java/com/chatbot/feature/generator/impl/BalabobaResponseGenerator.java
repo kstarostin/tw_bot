@@ -3,6 +3,8 @@ package com.chatbot.feature.generator.impl;
 import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
+import com.chatbot.service.MessageService;
+import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -24,6 +26,8 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
     private final static String REQUEST_TEMPLATE = "{\"query\":\"@@@query@@@\",\"intro\":@@@intro@@@,\"style\":@@@style@@@,\"filter\":@@@filter@@@}";
 
     private final static int GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS = 5;
+
+    private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
     private BalabobaResponseGenerator () {
     }
@@ -51,7 +55,9 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
             generatedMessage = generateByBalaboba(payload, 1);
         }
         if (request.isResponseSanitized()) {
-            generatedMessage = ResponseGeneratorUtil.sanitize(generatedMessage);
+            generatedMessage = request.isFromTwitch()
+                    ? messageService.getMessageSanitizer(generatedMessage).sanitizeForTwitch(request.getChannelId(), request.getChannelName())
+                    : messageService.getMessageSanitizer(generatedMessage).sanitizeForDiscord();
         }
         return request.isRequestMessageIncluded() ? request.getRequestMessage() + StringUtils.SPACE + generatedMessage : generatedMessage;
     }

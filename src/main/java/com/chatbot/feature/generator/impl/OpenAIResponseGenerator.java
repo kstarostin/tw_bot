@@ -4,7 +4,9 @@ import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.ConfigurationService;
+import com.chatbot.service.MessageService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
+import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.theokanning.openai.OpenAiService;
 import com.theokanning.openai.completion.CompletionRequest;
 import com.theokanning.openai.completion.CompletionResult;
@@ -28,6 +30,7 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
     private static final Model DEFAULT_MODEL_ADA = Model.ADA;
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
+    private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
 
     private OpenAIResponseGenerator() {
         final String apiToken = configurationService.getCredentialProperties().getProperty("openai.credentials.api.key");
@@ -66,7 +69,9 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
             generatedMessage = result.getChoices().iterator().next().getText();
 
             if (request.isResponseSanitized()) {
-                generatedMessage = ResponseGeneratorUtil.sanitize(generatedMessage);
+                generatedMessage = request.isFromTwitch()
+                        ? messageService.getMessageSanitizer(generatedMessage).sanitizeForTwitch(request.getChannelId(), request.getChannelName())
+                        : messageService.getMessageSanitizer(generatedMessage).sanitizeForDiscord();
             }
             return request.getMaxResponseLength() != null ? ResponseGeneratorUtil.shorten(generatedMessage, request.getMaxResponseLength(), ResponseGeneratorUtil.SENTENCE_SHORTENER) : generatedMessage;
         } catch (final Exception e) {

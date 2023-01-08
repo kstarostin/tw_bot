@@ -7,9 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ResponseGeneratorUtil {
-
     public static final String SENTENCE_SHORTENER = "(?<=[.!?])";
-    public static final String SPACE_SHORTENER = StringUtils.SPACE;
 
     private static final String MODERATION_REPLACEMENT_SIGN = "*";
 
@@ -17,19 +15,6 @@ public class ResponseGeneratorUtil {
     private static final Set<String> BAN_WORDS = new HashSet<>(DefaultModerationServiceImpl.getInstance().readDictionary(BAN_WORDS_PATH));
 
     private ResponseGeneratorUtil() {
-    }
-
-    public static String sanitize(final String message) {
-        String sanitizedMessage = message.trim();
-        while (sanitizedMessage.startsWith("-") || sanitizedMessage.startsWith("—")) {
-            sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "-");
-            sanitizedMessage = StringUtils.removeStart(sanitizedMessage, "—");
-            sanitizedMessage = sanitizedMessage.trim();
-        }
-        if (sanitizedMessage.contains("\n")) {
-            sanitizedMessage = sanitizedMessage.replaceAll("\n", StringUtils.SPACE);
-        }
-        return sanitizedMessage.replaceAll("\\s+", StringUtils.SPACE).trim();
     }
 
     public static String shorten(final String message, final int maxLength, final String delimiterRegex) {
