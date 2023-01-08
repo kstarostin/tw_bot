@@ -12,6 +12,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.reaction.ReactionEmoji;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ import static com.chatbot.util.emotes.DiscordEmote.Sets.CONFUSION;
 import static com.chatbot.util.emotes.DiscordEmote.Sets.POG;
 import static com.chatbot.util.emotes.DiscordEmote.Sets.COOL;
 import static com.chatbot.util.emotes.DiscordEmote.Sets.DANCE;
+import static com.chatbot.util.emotes.DiscordEmote.Sets.LAUGH;
 
 public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static MessageReactionFeature instance;
@@ -71,6 +73,8 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         if (isEveryone(message.getContent())) {
             if (isNoStreamToday(message.getContent())) {
                 discordEmoteOptional = Optional.of(DiscordEmote.KebirowHomeGuild.Kippah);
+            } else if (hasAttachment(message)) {
+                discordEmoteOptional = discordEmoteService.buildRandomEmoteList(null, 1, LAUGH).stream().findFirst();
             } else {
                 discordEmoteOptional = discordEmoteService.buildRandomEmoteList(null, 1, CONFUSION).stream().findFirst();
             }
@@ -86,6 +90,10 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
 
     private boolean isNoStreamToday(final String content) {
         return NO_STREAM_TODAY_STRING_TOKENS.stream().anyMatch(token -> content.toLowerCase().contains(token));
+    }
+
+    private boolean hasAttachment(final Message message) {
+        return CollectionUtils.isNotEmpty(message.getAttachments());
     }
 
     private ReactionEmoji getReaction(final DiscordEmote emote, final boolean isAnimated) {
