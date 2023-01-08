@@ -214,6 +214,23 @@ public class DefaultTwitchEmoteServiceImpl extends AbstractEmoteServiceImpl<Twit
     }
 
     @Override
+    public List<TwitchEmote> buildRandomEmoteList(final String channelId, final int maxNumberOfEmotes, List<TwitchEmote>... emoteSets) {
+        final int numberOfEmotes = randomizerService.rollDiceExponentially(maxNumberOfEmotes, 2) + 1;
+
+        final List<TwitchEmote> selectedEmotes = new ArrayList<>();
+        for (int i = 0; i < numberOfEmotes; i++) {
+            final TwitchEmote emote = getRandomEmoteFromSets(channelId, emoteSets);
+            if (!emote.isCombination()) {
+                selectedEmotes.add(emote);
+            } else {
+                selectedEmotes.add(new TwitchEmote(emote.getCode())
+                        .withCombinations(emote.getCombinedWith().stream().filter(combination -> isEmote(channelId, combination.toString())).collect(Collectors.toList())));
+            }
+        }
+        return selectedEmotes;
+    }
+
+    @Override
     public boolean isEmote(final String channelId, final String text) {
         return getValidEmoteCodes(channelId).contains(text);
     }

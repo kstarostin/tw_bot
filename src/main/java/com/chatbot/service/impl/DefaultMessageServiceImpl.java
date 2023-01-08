@@ -200,23 +200,23 @@ public class DefaultMessageServiceImpl implements MessageService {
         }
 
         public String buildForTwitch() {
-            return build(TWITCH_TAG_TEMPLATE);
+            return build(true);
         }
 
         public String buildForDiscord() {
-            return build(DISCORD_TAG_TEMPLATE);
+            return build(false);
         }
 
-        private String build(final String tagTemplate) {
+        private String build(final boolean isTwitch) {
             final StringBuilder sb = new StringBuilder();
             if (startsWithTag && StringUtils.isNotEmpty(tag)) {
-                sb.append(String.format(tagTemplate, tag));
+                sb.append(String.format(isTwitch ? TWITCH_TAG_TEMPLATE : DISCORD_TAG_TEMPLATE, tag));
             }
             if (StringUtils.isNotEmpty(text)) {
                 sb.append(StringUtils.SPACE).append(text);
             }
             if (!startsWithTag && StringUtils.isNotEmpty(tag)) {
-                sb.append(StringUtils.SPACE).append(String.format(tagTemplate, tag));
+                sb.append(StringUtils.SPACE).append(String.format(isTwitch ? TWITCH_TAG_TEMPLATE : DISCORD_TAG_TEMPLATE, tag));
             }
             if (CollectionUtils.isNotEmpty(emotes)) {
                 emotes.forEach(emote -> {
