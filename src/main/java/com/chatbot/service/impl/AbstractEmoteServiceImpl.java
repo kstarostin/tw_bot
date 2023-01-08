@@ -5,7 +5,6 @@ import com.chatbot.util.emotes.AbstractEmote;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class AbstractEmoteServiceImpl<T extends AbstractEmote> {
@@ -16,19 +15,7 @@ public abstract class AbstractEmoteServiceImpl<T extends AbstractEmote> {
 
         final List<T> selectedEmotes = new ArrayList<>();
         for (int i = 0; i < numberOfEmotes; i++) {
-            if (i > 0) {
-                final T previousEmote = selectedEmotes.get(i - 1);
-                if (getEmoteCombinations().containsKey(previousEmote) && randomizerService.flipCoin()) {
-                    final List<T> combinations = getEmoteCombinations().get(previousEmote);
-                    selectedEmotes.add(combinations.get(randomizerService.rollDice(combinations.size())));
-                } else if (randomizerService.flipCoin()) {
-                    selectedEmotes.add(previousEmote);
-                } else {
-                    selectedEmotes.add(getRandomEmoteFromSets(channelId, emoteSets));
-                }
-            } else {
-                selectedEmotes.add(getRandomEmoteFromSets(channelId, emoteSets));
-            }
+            selectedEmotes.add(getRandomEmoteFromSets(channelId, emoteSets));
         }
         return selectedEmotes;
     }
@@ -42,6 +29,4 @@ public abstract class AbstractEmoteServiceImpl<T extends AbstractEmote> {
     }
 
     protected abstract boolean isEmote(final String channelId, final String text);
-
-    protected abstract Map<T, List<T>> getEmoteCombinations();
 }

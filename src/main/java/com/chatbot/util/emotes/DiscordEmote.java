@@ -1,7 +1,6 @@
 package com.chatbot.util.emotes;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class DiscordEmote extends AbstractEmote {
@@ -28,6 +27,12 @@ public class DiscordEmote extends AbstractEmote {
 
     public boolean isAnimated() {
         return isAnimated;
+    }
+
+    @Override
+    public DiscordEmote withCombinations(final List<? extends AbstractEmote> combinations) {
+        this.combinedWith = combinations;
+        return this;
     }
 
     @Override
@@ -65,10 +70,6 @@ public class DiscordEmote extends AbstractEmote {
         List<DiscordEmote> CONFUSION = List.of(KebirowHomeGuild.Okayeg, KebirowHomeGuild.KEKWait, KebirowHomeGuild.CheNaxyi, KebirowHomeGuild.MODS, KebirowHomeGuild.DinkDonk,
                 KebirowHomeGuild.Pausey, KebirowHomeGuild.NOTED, KebirowHomeGuild.borpaSpin, KebirowHomeGuild.FeelsDankMan, KebirowHomeGuild.FeelsSpecialMan, KebirowHomeGuild.XyliNado);
         List<DiscordEmote> SCARY = List.of(KebirowHomeGuild.monkaW, KebirowHomeGuild.HUH);
-
-        Map<DiscordEmote, List<DiscordEmote>> EMOTE_COMBINATIONS = Map.of(
-                KebirowHomeGuild.Okayeg, List.of(KebirowHomeGuild.TeaTime)
-        );
     }
 
     public interface KebirowHomeGuild {
@@ -90,7 +91,7 @@ public class DiscordEmote extends AbstractEmote {
         DiscordEmote KebirowPog = new DiscordEmote("KebirowPog", 1059850120235077732L);
         DiscordEmote Kippah = new DiscordEmote("Kippah", 1059862799993540618L);
         DiscordEmote OMEGALUL = new DiscordEmote("OMEGALUL", 1059848846957617242L);
-        DiscordEmote Okayeg = new DiscordEmote("Okayeg", 1059848758826901534L);
+        DiscordEmote Okayeg = new DiscordEmote("Okayeg", 1059848758826901534L).withCombinations(List.of(new DiscordEmote("TeaTime", 1059849395262197846L, true)));
         DiscordEmote Okayge = new DiscordEmote("Okayge", 1059848809292763216L);
         DiscordEmote PagMan = new DiscordEmote("PagMan", 1059848765885911170L);
         DiscordEmote PauseMan = new DiscordEmote("PauseMan", 1059848767026778123L);

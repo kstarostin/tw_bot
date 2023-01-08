@@ -2,7 +2,6 @@ package com.chatbot.service.impl;
 
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.PeriodCacheService;
-import com.chatbot.service.RandomizerService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.service.TwitchEmoteService;
 import com.chatbot.util.emotes.TwitchEmote;
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -218,11 +216,6 @@ public class DefaultTwitchEmoteServiceImpl extends AbstractEmoteServiceImpl<Twit
     @Override
     public boolean isEmote(final String channelId, final String text) {
         return getValidEmoteCodes(channelId).contains(text);
-    }
-
-    @Override
-    protected Map<TwitchEmote, List<TwitchEmote>> getEmoteCombinations() {
-        return TwitchEmote.Sets.EMOTE_COMBINATIONS;
     }
 
     private String buildEmoteLine(final String channelId, final List<TwitchEmote> emotes) {

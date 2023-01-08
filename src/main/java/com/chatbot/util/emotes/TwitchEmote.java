@@ -1,12 +1,17 @@
 package com.chatbot.util.emotes;
 
 import java.util.List;
-import java.util.Map;
 
 public class TwitchEmote extends AbstractEmote {
 
     public TwitchEmote(final String code) {
         super(code);
+    }
+
+    @Override
+    public TwitchEmote withCombinations(final List<? extends AbstractEmote> combinations) {
+        this.combinedWith = combinations;
+        return this;
     }
 
     public interface Sets {
@@ -42,17 +47,6 @@ public class TwitchEmote extends AbstractEmote {
         List<TwitchEmote> FAVOURITE = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.jvcrEbalo, SevenTVChannel.jvcrS, SevenTVChannel.jvcrSad);
 
         List<List<TwitchEmote>> ALL_SETS = List.of(HAPPY, POG, COOL, LAUGH, DANCE, SAD, GREETING, CONFUSION, SCARY);
-
-        Map<TwitchEmote, List<TwitchEmote>> EMOTE_COMBINATIONS = Map.of(
-                SevenTVChannel.Okayeg, List.of(SevenTVGlobal.TeaTime, SevenTVGlobal.WineTime),
-                SevenTVChannel.Pogey, List.of(SevenTVGlobal.Clap, SevenTVGlobal.nymnCorn),
-                SevenTVGlobal.EZ, List.of(SevenTVGlobal.Clap),
-                SevenTVChannel.Terpiloid, List.of(SevenTVChannel.VodkaTime),
-                SevenTVChannel.peepoDJ, List.of(SevenTVChannel.xar2EDM, SevenTVGlobal.PartyParrot),
-                SevenTVChannel.hoSway, List.of(SevenTVChannel.xar2EDM),
-                SevenTVChannel.xar2EDM, List.of(SevenTVChannel.peepoDJ, SevenTVGlobal.PartyParrot),
-                SevenTVChannel.MmmHmm, List.of(SevenTVGlobal.PianoTime, SevenTVGlobal.GuitarTime),
-                SevenTVGlobal.PartyParrot, List.of(SevenTVChannel.peepoDJ, SevenTVChannel.xar2EDM));
     }
 
     interface TwitchGlobal {
@@ -441,7 +435,7 @@ public class TwitchEmote extends AbstractEmote {
         TwitchEmote forsenPls = new TwitchEmote("forsenPls");
         TwitchEmote CrayonTime = new TwitchEmote("CrayonTime");
         TwitchEmote reckH = new TwitchEmote("reckH");
-        TwitchEmote PartyParrot = new TwitchEmote("PartyParrot");
+        TwitchEmote PartyParrot = new TwitchEmote("PartyParrot").withCombinations(List.of(new TwitchEmote("peepoDJ"), new TwitchEmote("xar2EDM")));
         TwitchEmote ApuApustaja = new TwitchEmote("ApuApustaja");
         TwitchEmote Gayge = new TwitchEmote("Gayge");
         TwitchEmote YEAHBUT7TV = new TwitchEmote("YEAHBUT7TV");
@@ -470,7 +464,7 @@ public class TwitchEmote extends AbstractEmote {
         TwitchEmote gachiGASM = new TwitchEmote("gachiGASM");
         TwitchEmote FeelsStrongMan = new TwitchEmote("FeelsStrongMan");
         TwitchEmote RareParrot = new TwitchEmote("RareParrot");
-        TwitchEmote EZ = new TwitchEmote("EZ");
+        TwitchEmote EZ = new TwitchEmote("EZ").withCombinations(List.of(new TwitchEmote("Clap")));
         TwitchEmote FeelsWeirdMan = new TwitchEmote("FeelsWeirdMan");
         TwitchEmote gachiBASS = new TwitchEmote("gachiBASS");
         TwitchEmote ppL = new TwitchEmote("ppL");
@@ -480,7 +474,7 @@ public class TwitchEmote extends AbstractEmote {
     }
 
     interface SevenTVChannel {
-        TwitchEmote Okayeg = new TwitchEmote("Okayeg");
+        TwitchEmote Okayeg = new TwitchEmote("Okayeg").withCombinations(List.of(new TwitchEmote("TeaTime"), new TwitchEmote("WineTime")));
         TwitchEmote Sadge = new TwitchEmote("Sadge");
         TwitchEmote FeelsRainMan = new TwitchEmote("FeelsRainMan");
         TwitchEmote TrollDespair = new TwitchEmote("TrollDespair");
@@ -502,10 +496,10 @@ public class TwitchEmote extends AbstractEmote {
         TwitchEmote BOOBA = new TwitchEmote("BOOBA");
         TwitchEmote RoflanEbalo = new TwitchEmote("RoflanEbalo");
         TwitchEmote AGAKAKSKAGESH = new TwitchEmote("AGAKAKSKAGESH");
-        TwitchEmote xar2EDM = new TwitchEmote("xar2EDM");
+        TwitchEmote xar2EDM = new TwitchEmote("xar2EDM").withCombinations(List.of(new TwitchEmote("peepoDJ"), new TwitchEmote("PartyParrot")));
         TwitchEmote KEKWait = new TwitchEmote("KEKWait");
         TwitchEmote BoneZone = new TwitchEmote("BoneZone");
-        TwitchEmote Pogey = new TwitchEmote("Pogey");
+        TwitchEmote Pogey = new TwitchEmote("Pogey").withCombinations(List.of(new TwitchEmote("Clap"), new TwitchEmote("nymnCorn")));
         TwitchEmote ratJAM = new TwitchEmote("ratJAM");
         TwitchEmote Clueless = new TwitchEmote("Clueless");
         TwitchEmote roflanUpalo = new TwitchEmote("roflanUpalo");
@@ -525,8 +519,8 @@ public class TwitchEmote extends AbstractEmote {
         TwitchEmote Durka = new TwitchEmote("Durka");
         TwitchEmote toddW = new TwitchEmote("toddW");
         TwitchEmote FeelsWowMan = new TwitchEmote("FeelsWowMan");
-        TwitchEmote MmmHmm = new TwitchEmote("MmmHmm");
-        TwitchEmote peepoDJ = new TwitchEmote("peepoDJ");
+        TwitchEmote MmmHmm = new TwitchEmote("MmmHmm").withCombinations(List.of(new TwitchEmote("PianoTime"), new TwitchEmote("GuitarTime")));
+        TwitchEmote peepoDJ = new TwitchEmote("peepoDJ").withCombinations(List.of(new TwitchEmote("xar2EDM"), new TwitchEmote("PartyParrot")));
         TwitchEmote pepoG = new TwitchEmote("pepoG");
         TwitchEmote monkaChrist = new TwitchEmote("monkaChrist");
         TwitchEmote slavPls2 = new TwitchEmote("slavPls2");
@@ -535,7 +529,7 @@ public class TwitchEmote extends AbstractEmote {
         TwitchEmote HUH = new TwitchEmote("HUH");
         TwitchEmote Yasno = new TwitchEmote("Yasno");
         TwitchEmote EGuitarTime = new TwitchEmote("EGuitarTime");
-        TwitchEmote hoSway = new TwitchEmote("hoSway");
+        TwitchEmote hoSway = new TwitchEmote("hoSway").withCombinations(List.of(new TwitchEmote("xar2EDM")));
         TwitchEmote XyliF = new TwitchEmote("XyliF");
         TwitchEmote XyliSnes = new TwitchEmote("XyliSnes");
         TwitchEmote NaSozvoneXyli = new TwitchEmote("NaSozvoneXyli");
@@ -571,7 +565,7 @@ public class TwitchEmote extends AbstractEmote {
         TwitchEmote angryFreeman = new TwitchEmote("angryFreeman");
         TwitchEmote sonSobaki = new TwitchEmote("sonSobaki");
         TwitchEmote PoRukam = new TwitchEmote("PoRukam");
-        TwitchEmote Terpiloid = new TwitchEmote("Terpiloid");
+        TwitchEmote Terpiloid = new TwitchEmote("Terpiloid").withCombinations(List.of(new TwitchEmote("VodkaTime")));
         TwitchEmote XyliTalk = new TwitchEmote("XyliTalk");
         TwitchEmote XyliPizdish = new TwitchEmote("XyliPizdish");
         TwitchEmote sunboyDespair = new TwitchEmote("sunboyDespair");

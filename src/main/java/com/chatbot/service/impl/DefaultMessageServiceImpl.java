@@ -158,7 +158,7 @@ public class DefaultMessageServiceImpl implements MessageService {
         }
     }
 
-    public static class MessageBuilder {
+    public class MessageBuilder {
         private static final String TWITCH_TAG_TEMPLATE = "@%s";
         private static final String DISCORD_TAG_TEMPLATE = "<@%s>";
 
@@ -219,7 +219,12 @@ public class DefaultMessageServiceImpl implements MessageService {
                 sb.append(StringUtils.SPACE).append(String.format(tagTemplate, tag));
             }
             if (CollectionUtils.isNotEmpty(emotes)) {
-                emotes.forEach(emote -> sb.append(StringUtils.SPACE).append(emote.toString()));
+                emotes.forEach(emote -> {
+                    sb.append(StringUtils.SPACE).append(emote.toString());
+                    if (emote.isCombination() && randomizerService.flipCoin()) {
+                        sb.append(StringUtils.SPACE).append(emote.getCombinedWith().get(randomizerService.rollDice(emote.getCombinedWith().size())));
+                    }
+                });
             }
             return sb.toString().trim();
         }

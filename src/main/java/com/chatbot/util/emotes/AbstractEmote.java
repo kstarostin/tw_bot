@@ -1,16 +1,30 @@
 package com.chatbot.util.emotes;
 
+import org.apache.commons.collections4.CollectionUtils;
+
+import java.util.List;
 import java.util.Objects;
 
 public abstract class AbstractEmote {
     private final String code;
+    protected List<? extends AbstractEmote> combinedWith;
 
-    public AbstractEmote(final String code) {
+    protected AbstractEmote(final String code) {
         this.code = code;
     }
 
     public String getCode() {
         return code;
+    }
+
+    abstract AbstractEmote withCombinations(final List<? extends AbstractEmote> combinations);
+
+    public List<? extends AbstractEmote> getCombinedWith() {
+        return combinedWith;
+    }
+
+    public boolean isCombination() {
+        return CollectionUtils.isNotEmpty(combinedWith);
     }
 
     @Override
