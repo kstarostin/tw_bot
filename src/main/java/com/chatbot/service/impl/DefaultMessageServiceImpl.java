@@ -19,7 +19,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
@@ -212,21 +214,58 @@ public class DefaultMessageServiceImpl implements MessageService {
             if (startsWithTag && StringUtils.isNotEmpty(tag)) {
                 sb.append(String.format(isTwitch ? TWITCH_TAG_TEMPLATE : DISCORD_TAG_TEMPLATE, tag));
             }
-            if (StringUtils.isNotEmpty(text)) {
+
+            if (StringUtils.isNotEmpty(text) && CollectionUtils.isEmpty(emotes)) {
                 sb.append(StringUtils.SPACE).append(text);
+            } else if (StringUtils.isEmpty(text) && CollectionUtils.isNotEmpty(emotes)) {
+                applyEmotes(sb, emotes);
+            } else if (StringUtils.isNotEmpty(text) && CollectionUtils.isNotEmpty(emotes)) {
+                if (sentences.size() < 2 || emotes.size() < 2) {
+                    sb.append(StringUtils.SPACE).append(text);
+                    applyEmotes(sb, emotes);
+                } else {
+                    mergeTextWithEmotes(sb);
+                }
             }
+
             if (!startsWithTag && StringUtils.isNotEmpty(tag)) {
                 sb.append(StringUtils.SPACE).append(String.format(isTwitch ? TWITCH_TAG_TEMPLATE : DISCORD_TAG_TEMPLATE, tag));
             }
-            if (CollectionUtils.isNotEmpty(emotes)) {
-                emotes.forEach(emote -> {
-                    sb.append(StringUtils.SPACE).append(emote.toString());
-                    if (emote.isCombination() && randomizerService.flipCoin()) {
-                        sb.append(StringUtils.SPACE).append(emote.getCombinedWith().get(randomizerService.rollDice(emote.getCombinedWith().size())));
-                    }
-                });
-            }
             return sb.toString().trim();
+        }
+
+        private void mergeTextWithEmotes(final StringBuilder sb) {
+            final int eps = (emotes.size() / sentences.size()) > 0 ? (emotes.size() / sentences.size()) : 1; // emotes per sentence
+            final int spe = (sentences.size() / emotes.size()) > 0 ? (sentences.size() / emotes.size()) : 1; // sentences per emote
+
+            final List<? extends AbstractEmote> emotesTail = emotes.subList(Math.max(emotes.size() - eps, 0), emotes.size());
+            final Queue<? extends AbstractEmote> emotesToMerge = emotes.stream().limit(emotes.size() - emotesTail.size()).collect(Collectors.toCollection(LinkedList::new));
+
+            int sentencesAfterEmote = 0;
+            for (String sentence : sentences) {
+                sb.append(StringUtils.SPACE).append(sentence);
+                sentencesAfterEmote++;
+                if (sentencesAfterEmote >= spe && !emotesToMerge.isEmpty()) {
+                    for (int e = 0; e < eps; e++) {
+                        if (!emotesToMerge.isEmpty()) {
+                            applyEmote(sb, emotesToMerge.poll());
+                        }
+                    }
+                    sentencesAfterEmote = 0;
+                }
+            }
+            applyEmotes(sb, emotesTail);
+        }
+
+        private void applyEmotes(final StringBuilder sb, final List<? extends AbstractEmote> emotes) {
+            emotes.forEach(emote -> applyEmote(sb, emote));
+        }
+
+        private void applyEmote(final StringBuilder sb, final AbstractEmote emote) {
+            sb.append(StringUtils.SPACE).append(emote.toString());
+            if (emote.isCombination() && randomizerService.flipCoin()) {
+                sb.append(StringUtils.SPACE).append(emote.getCombinedWith().get(randomizerService.rollDice(emote.getCombinedWith().size())));
+            }
         }
 
         public boolean isNotEmpty() {
