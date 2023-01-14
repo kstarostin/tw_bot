@@ -48,7 +48,6 @@ public class AliveFeature extends AbstractFeature {
 
     private static final String USERNAME_TOKEN = "${name}";
     private static final String GREETING_TOKEN = "${greeting}";
-    private static final String ADDITION_TOKEN = "${addition}";
 
     private static final Set<String> USER_FRIEND_LIST = Set.of("0mskbird", "yura_atlet", "1skybox1", "chenushka", "hereticjz", "skvdee", "svetloholmov", "prof_133", "kiber_bober",
             "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013", "shinigamidth", "enteris");
@@ -275,7 +274,7 @@ public class AliveFeature extends AbstractFeature {
             final String replacement = messageService.getPersonalizedMessageForKey("message.greeting." + token + "." + userName.toLowerCase(), "message.greeting." + token + ".default");
             messageTemplate = messageTemplate.replace(token, replacement);
         }
-        final String requestMessage = messageService.getMessageSanitizer(messageTemplate.replace(ADDITION_TOKEN, StringUtils.EMPTY))
+        final String requestMessage = messageService.getMessageSanitizer(messageTemplate)
                 .withNoTags()
                 .withNoEmotes()
                 .withMaxLength(REQUEST_MESSAGE_MAX_LENGTH)
