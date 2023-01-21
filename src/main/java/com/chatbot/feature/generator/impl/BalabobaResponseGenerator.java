@@ -2,7 +2,6 @@ package com.chatbot.feature.generator.impl;
 
 import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
-import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.MessageService;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +16,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 
-public class BalabobaResponseGenerator implements ResponseGenerator {
+public class BalabobaResponseGenerator extends AbstractResponseGenerator implements ResponseGenerator {
     private static BalabobaResponseGenerator instance;
 
     private final Logger LOG = LoggerFactory.getLogger(BalabobaResponseGenerator.class);
@@ -48,7 +47,7 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
         if (request.getMaxResponseLength() != null) {
             int generateCounter = 1;
             do {
-                generatedMessage = ResponseGeneratorUtil.shorten(generateByBalaboba(payload, generateCounter), request.getMaxResponseLength(), ResponseGeneratorUtil.SENTENCE_SHORTENER);
+                generatedMessage = shorten(generateByBalaboba(payload, generateCounter), request.getMaxResponseLength(), SENTENCE_SHORTENER);
                 generateCounter++;
             } while ((generatedMessage.length() == 0 || generatedMessage.length() > request.getMaxResponseLength()) && generateCounter <= GENERATED_MESSAGE_MAX_NUMBER_OF_ATTEMPTS);
         } else {
@@ -59,7 +58,8 @@ public class BalabobaResponseGenerator implements ResponseGenerator {
                     ? messageService.getMessageSanitizer(generatedMessage).sanitizeForTwitch(request.getChannelId(), request.getChannelName())
                     : messageService.getMessageSanitizer(generatedMessage).sanitizeForDiscord();
         }
-        return request.isRequestMessageIncluded() ? request.getRequestMessage() + StringUtils.SPACE + generatedMessage : generatedMessage;
+        final String response = request.isRequestMessageIncluded() ? request.getRequestMessage() + StringUtils.SPACE + generatedMessage : generatedMessage;
+        return moderate(response);
     }
 
     private String generateByBalaboba(final String payload, final int counter) {

@@ -1,4 +1,4 @@
-package com.chatbot.feature.generator.impl.util;
+package com.chatbot.feature.generator.impl;
 
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import org.apache.commons.lang3.StringUtils;
@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ResponseGeneratorUtil {
+public class AbstractResponseGenerator {
     public static final String SENTENCE_SHORTENER = "(?<=[.!?])";
 
     private static final String MODERATION_REPLACEMENT_SIGN = "*";
@@ -14,10 +14,7 @@ public class ResponseGeneratorUtil {
     private static final String BAN_WORDS_PATH = "moderation/ban-words.txt";
     private static final Set<String> BAN_WORDS = new HashSet<>(DefaultModerationServiceImpl.getInstance().readDictionary(BAN_WORDS_PATH));
 
-    private ResponseGeneratorUtil() {
-    }
-
-    public static String shorten(final String message, final int maxLength, final String delimiterRegex) {
+    protected static String shorten(final String message, final int maxLength, final String delimiterRegex) {
         final String[] parts =  message.split(delimiterRegex);
         if (parts.length > 1) {
             StringBuilder shortenedMessage = new StringBuilder();
@@ -35,7 +32,7 @@ public class ResponseGeneratorUtil {
         return message;
     }
 
-    public static String moderate(final String message) {
+    protected static String moderate(final String message) {
         String moderatedMessage = message;
         for (String word : BAN_WORDS) {
             if (StringUtils.containsIgnoreCase(moderatedMessage, word)) {

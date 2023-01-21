@@ -4,7 +4,6 @@ import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.impl.OpenAIResponseGenerator;
-import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.DiscordEmoteService;
 import com.chatbot.service.LoggerService;
@@ -96,6 +95,6 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         if (StringUtils.isBlank(response)) {
             response = balabobaResponseGenerator.generate(request);
         }
-        return StringUtils.isNotEmpty(response) ? ResponseGeneratorUtil.moderate(response) : response;
+        return response;
     }
 }

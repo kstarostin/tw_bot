@@ -4,7 +4,6 @@ import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.impl.OpenAIResponseGenerator;
-import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.PeriodCacheService;
 import com.chatbot.service.ModerationService;
 import com.chatbot.service.RandomizerService;
@@ -332,7 +331,7 @@ public class AliveFeature extends AbstractFeature {
                     .withChannelName(channelName)
                     .withUserName(userName)
                     .withResponseSanitized()
-                    .withMaxResponseLength(150)
+                    .withMaxResponseLength(200)
                     .buildForTwitch());
         }
         return StringUtils.EMPTY;
@@ -343,7 +342,7 @@ public class AliveFeature extends AbstractFeature {
         if (StringUtils.isBlank(response)) {
             response = balabobaResponseGenerator.generate(request);
         }
-        return StringUtils.isNotEmpty(response) ? ResponseGeneratorUtil.moderate(response) : response;
+        return response;
     }
 
     private int calculateResponseDelayTime(final DefaultMessageServiceImpl.MessageBuilder messageBuilder) {

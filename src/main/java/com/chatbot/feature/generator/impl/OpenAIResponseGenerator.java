@@ -2,7 +2,6 @@ package com.chatbot.feature.generator.impl;
 
 import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
-import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.MessageService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
@@ -17,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class OpenAIResponseGenerator implements ResponseGenerator {
+public class OpenAIResponseGenerator extends AbstractResponseGenerator implements ResponseGenerator {
     private static OpenAIResponseGenerator instance;
 
     private final Logger LOG = LoggerFactory.getLogger(OpenAIResponseGenerator.class);
@@ -71,7 +70,8 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
                         ? messageService.getMessageSanitizer(generatedMessage).sanitizeForTwitch(request.getChannelId(), request.getChannelName())
                         : messageService.getMessageSanitizer(generatedMessage).sanitizeForDiscord();
             }
-            return request.getMaxResponseLength() != null ? ResponseGeneratorUtil.shorten(generatedMessage, request.getMaxResponseLength(), ResponseGeneratorUtil.SENTENCE_SHORTENER) : generatedMessage;
+            final String response = request.getMaxResponseLength() != null ? shorten(generatedMessage, request.getMaxResponseLength(), SENTENCE_SHORTENER) : generatedMessage;
+            return moderate(response);
         } catch (final Exception e) {
             LOG.error("Unexpected error: " + e.getMessage());
             return StringUtils.EMPTY;
