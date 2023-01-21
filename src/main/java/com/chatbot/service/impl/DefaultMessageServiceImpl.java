@@ -3,6 +3,7 @@ package com.chatbot.service.impl;
 import com.chatbot.service.BotFeatureService;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.DiscordEmoteService;
+import com.chatbot.service.LoggerService;
 import com.chatbot.service.RandomizerService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.service.TwitchEmoteService;
@@ -12,13 +13,9 @@ import com.chatbot.util.emotes.AbstractEmote;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -30,10 +27,6 @@ import java.util.stream.Collectors;
 public class DefaultMessageServiceImpl implements MessageService {
     private static DefaultMessageServiceImpl instance;
 
-    private final Logger LOG = LoggerFactory.getLogger(DefaultMessageServiceImpl.class);
-
-    private static final String DATE_FORMAT = "dd-MM-yyyy HH:mm:ss";
-
     private static final int MAX_MESSAGE_LENGTH = 450;
 
     private final BotFeatureService botFeatureService = DefaultBotFeatureServiceImpl.getInstance();
@@ -42,6 +35,7 @@ public class DefaultMessageServiceImpl implements MessageService {
     private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
     private final TwitchEmoteService twitchEmoteService = DefaultTwitchEmoteServiceImpl.getInstance();
     private final DiscordEmoteService discordEmoteService = DefaultDiscordEmoteServiceImpl.getInstance();
+    private final LoggerService loggerService = DefaultLoggerServiceImpl.getInstance();
 
     private DefaultMessageServiceImpl() {
     }
@@ -71,8 +65,7 @@ public class DefaultMessageServiceImpl implements MessageService {
             return;
         }
         if (botFeatureService.isTwitchFeatureActive(channelName, FeatureEnum.LOGGING)) {
-            final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-            LOG.info("Channel[{}]-[{}]:[{}]:[{}]", channelName, formatter.format(new Date()) , configurationService.getTwitchBotName(), responseMessage);
+            loggerService.logTwitchMessage(channelName, configurationService.getTwitchBotName(), responseMessage);
         }
         final List<String> messageParts = new ArrayList<>();
 

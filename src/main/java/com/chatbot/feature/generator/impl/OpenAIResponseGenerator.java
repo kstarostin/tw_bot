@@ -63,9 +63,7 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
 
         String generatedMessage;
         try {
-            final CompletionResult result = service.createCompletion(completionRequestBuilder.build());
-            LOG.info(String.format("OpenAI response: %s", result.toString()));
-
+            final CompletionResult result = createCompletion(completionRequestBuilder.build(), true);
             generatedMessage = result.getChoices().iterator().next().getText();
 
             if (request.isResponseSanitized()) {
@@ -77,6 +75,22 @@ public class OpenAIResponseGenerator implements ResponseGenerator {
         } catch (final Exception e) {
             LOG.error("Unexpected error: " + e.getMessage());
             return StringUtils.EMPTY;
+        }
+    }
+
+    private CompletionResult createCompletion(final CompletionRequest request, boolean isRepeatOnFailure) {
+        final CompletionResult result;
+        try {
+            result = service.createCompletion(request);
+            LOG.info(String.format("OpenAI response: %s", result.toString()));
+            return result;
+        } catch (final Exception e) {
+            LOG.error("Unexpected error: " + e.getMessage());
+            if (isRepeatOnFailure) {
+                LOG.warn(String.format(String.format("Repeat OpenAI request: %s", request)));
+                return createCompletion(request, false);
+            }
+            throw e;
         }
     }
 

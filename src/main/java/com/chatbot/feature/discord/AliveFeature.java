@@ -7,11 +7,14 @@ import com.chatbot.feature.generator.impl.OpenAIResponseGenerator;
 import com.chatbot.feature.generator.impl.util.ResponseGeneratorUtil;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.DiscordEmoteService;
+import com.chatbot.service.LoggerService;
 import com.chatbot.service.MessageService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import com.chatbot.service.impl.DefaultDiscordEmoteServiceImpl;
+import com.chatbot.service.impl.DefaultLoggerServiceImpl;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import org.apache.commons.collections4.CollectionUtils;
@@ -29,6 +32,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final ResponseGenerator openAIresponseGenerator = OpenAIResponseGenerator.getInstance();
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
+    private final LoggerService loggerService = DefaultLoggerServiceImpl.getInstance();
 
     private AliveFeature() {
     }
@@ -42,12 +46,17 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
 
     public Mono<Void> handle(final MessageCreateEvent event) {
         final Message message = event.getMessage();
+        final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);
+        final String serverName = message.getGuild().map(Guild::getName).block();
+        final String channelName = message.getGuild().map(guild -> guild.getChannelById(message.getChannelId()).block()).block().getName();
 
-        if (!isBotTagged(message)) {
+        // todo create separate logger feature for DS
+        loggerService.logDiscordMessage(serverName, channelName, message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY), message.getContent());
+
+        if (!isBotTagged(message) || configurationService.getDiscordBotName().equalsIgnoreCase(userName)) {
             return Mono.empty();
         }
         final String channelId = message.getChannelId().asString();
-        final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);
         final String userId = message.getAuthor().map(user -> user.getId().asString()).orElse(StringUtils.EMPTY);
 
         final String sanitizedMessage = messageService.getMessageSanitizer(message.getContent())

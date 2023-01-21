@@ -247,7 +247,7 @@ public class AliveFeature extends AbstractFeature {
         final int rateMultiplier = maxSecondsToCheck / (MAX_CHATTING_RATE * 2);
         int secondsToCheck = maxSecondsToCheck - chattingRate * rateMultiplier;
 
-        LOG.info(String.format("Current chatting rate [%d], independent response probability [%s], last bot message must be [%d] seconds ago", chattingRate, chattingRate * 10 + "%", secondsToCheck));
+        LOG.debug(String.format("Current chatting rate [%d], independent response probability [%s], last bot message must be [%d] seconds ago", chattingRate, chattingRate * 10 + "%", secondsToCheck));
         if (hasMessagesSentInChannelSince(channelId, secondsToCheck)) {
             return false;
         }

@@ -2,28 +2,26 @@ package com.chatbot.feature.discord;
 
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.DiscordEmoteService;
+import com.chatbot.service.LoggerService;
 import com.chatbot.service.MessageService;
 import com.chatbot.service.RandomizerService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import com.chatbot.service.impl.DefaultDiscordEmoteServiceImpl;
+import com.chatbot.service.impl.DefaultLoggerServiceImpl;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultRandomizerServiceImpl;
 import com.chatbot.util.emotes.AbstractEmote;
 import com.chatbot.util.emotes.DiscordEmote;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.User;
 import discord4j.core.object.reaction.ReactionEmoji;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,17 +35,16 @@ import static com.chatbot.util.emotes.DiscordEmote.Sets.LAUGH;
 public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static MessageReactionFeature instance;
 
-    private final Logger LOG = LoggerFactory.getLogger(MessageReactionFeature.class);
-
     private static final Set<String> NO_STREAM_TODAY_STRING_TOKENS = Set.of("сегодня без", "сегодня не", "не будет", "не сегодня", "завтра", "в понедельник", "во вторник", "в среду",
             "в четверг", "в пятницу", "в субботу", "в воскресенье", "в день после", "а вот");
 
-    private static final String TWITCH_URL_PATTERN = "^(https:|www\\.)\\/{0,2}w{0,3}\\.?twitch.tv\\/[a-zA-Z_\\d]+\\/?";
+    private static final String TWITCH_URL_PATTERN = "^(https:|www\\.)/{0,2}w{0,3}\\.?twitch.tv/[a-zA-Z_\\d]+/?";
 
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final DiscordEmoteService discordEmoteService = DefaultDiscordEmoteServiceImpl.getInstance();
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
     private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
+    private final LoggerService loggerService = DefaultLoggerServiceImpl.getInstance();
 
     private MessageReactionFeature() {
     }
@@ -68,16 +65,17 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
     }
 
     private Mono<Void> handleReaction(final Message message) {
+        final String serverName = message.getGuild().map(Guild::getName).block();
+        final String channelName = message.getGuild().map(guild -> guild.getChannelById(message.getChannelId()).block()).block().getName();
         final String channelId = message.getChannelId().asString();
         if (!getWhitelistedChannelsForReactions().contains(channelId)) {
             return Mono.empty();
         }
-        final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        LOG.info("Discord[{}]-[{}]:[{}]:[{}]", channelId, formatter.format(new Date()), message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY), message.getContent());
+
         List<DiscordEmote> discordEmotes = new ArrayList<>();
         if (isEveryone(message.getContent())) {
             if (isNoStreamToday(message.getContent())) {
-                discordEmotes = Arrays.asList(DiscordEmote.KebirowHomeGuild.Kippah);
+                discordEmotes = List.of(DiscordEmote.KebirowHomeGuild.Kippah);
             } else if (hasAttachment(message)) {
                 discordEmotes = discordEmoteService.buildRandomEmoteList(null, 1, LAUGH);
             } else {
@@ -88,16 +86,14 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
             discordEmotes = discordEmoteService.buildRandomEmoteList(null, 1, POG, COOL, DANCE);
         }
 
-        LOG.info("Discord[{}]-[{}]:[{}]:[Reactions:{}]", channelId, formatter.format(new Date()), configurationService.getDiscordBotName(), discordEmotes.stream().map(AbstractEmote::getCode).collect(Collectors.joining(StringUtils.SPACE)));
+        loggerService.logDiscordReaction(serverName, channelName, configurationService.getDiscordBotName(), discordEmotes.stream().map(AbstractEmote::getCode).collect(Collectors.joining(StringUtils.SPACE)));
         if (CollectionUtils.isEmpty(discordEmotes)) {
             return Mono.empty();
         } else if (discordEmotes.size() == 1) {
             addReaction(message, discordEmotes.iterator().next());
             return Mono.empty();
         } else {
-            discordEmotes.forEach(discordEmote -> {
-                addReaction(message, discordEmote);
-            });
+            discordEmotes.forEach(discordEmote -> addReaction(message, discordEmote));
             return Mono.empty();
         }
     }
