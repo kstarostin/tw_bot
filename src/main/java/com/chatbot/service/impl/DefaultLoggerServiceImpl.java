@@ -10,7 +10,7 @@ import java.util.Date;
 public class DefaultLoggerServiceImpl implements LoggerService {
     private static DefaultLoggerServiceImpl instance;
 
-    private final Logger LOG = LoggerFactory.getLogger(DefaultMessageServiceImpl.class);
+    private final Logger LOG = LoggerFactory.getLogger(DefaultLoggerServiceImpl.class);
 
     private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
     final SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);

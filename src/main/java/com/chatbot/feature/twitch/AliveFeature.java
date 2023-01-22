@@ -305,7 +305,6 @@ public class AliveFeature extends AbstractFeature {
 
         final StringBuilder message = new StringBuilder();
         final List<String> lastMessages = new ArrayList<>();
-
         for (final ChannelMessageEvent event : lastMessageEvents) {
             lastMessages.add(event.getMessage());
             message.append(event.getMessage()).append(StringUtils.SPACE);

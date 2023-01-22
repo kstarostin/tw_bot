@@ -2,6 +2,7 @@ package com.chatbot;
 
 import com.chatbot.configuration.GlobalConfiguration;
 import com.chatbot.feature.discord.AliveFeature;
+import com.chatbot.feature.discord.LogChatMessageFeature;
 import com.chatbot.feature.discord.MessageReactionFeature;
 import com.chatbot.feature.discord.CommandMessageFeature;
 import com.chatbot.service.ChannelService;
@@ -71,11 +72,12 @@ public class Bot {
 
             registerDiscordCommands(gateway);
 
+            final Mono<Void> handleMessageLogging = gateway.on(MessageCreateEvent.class, event -> LogChatMessageFeature.getInstance().handle(event)).then();
             final Mono<Void> handleMessageReaction = gateway.on(MessageCreateEvent.class, event -> MessageReactionFeature.getInstance().handle(event)).then();
             final Mono<Void> handleMessage = gateway.on(MessageCreateEvent.class, event -> AliveFeature.getInstance().handle(event)).then();
             final Mono<Void> handleCommandMessage = gateway.on(ChatInputInteractionEvent.class, event -> CommandMessageFeature.getInstance().handle(event)).then();
 
-            return printOnLogin.and(handleMessageReaction).and(handleCommandMessage).and(handleMessage);
+            return printOnLogin.and(handleMessageLogging).and(handleMessageReaction).and(handleCommandMessage).and(handleMessage);
         });
         login.block();
     }

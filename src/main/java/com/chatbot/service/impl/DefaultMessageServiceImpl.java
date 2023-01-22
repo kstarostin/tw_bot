@@ -345,6 +345,7 @@ public class DefaultMessageServiceImpl implements MessageService {
         private List<String> removeDiscordTags(final List<String> words) {
             return words.stream()
                     .filter(word -> !word.matches(DISCORD_TAG_FORMAT))
+                    .filter(word -> !StringUtils.equalsAnyIgnoreCase(word, CollectionUtils.emptyIfNull(configurationService.getConfiguration("default").getAdditionalBotTagNames()).toArray(new String[0])))
                     .collect(Collectors.toList());
         }
 
