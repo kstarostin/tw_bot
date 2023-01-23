@@ -53,10 +53,13 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
             return Mono.empty();
         }
         final int lastMessagesLimit;
+        final boolean isUserTaggedInResponse;
         if (isBotTaggedDirectly(message)) {
             lastMessagesLimit = 1;
+            isUserTaggedInResponse = true;
         } else if (isBotTaggedIndirectly(message)) {
             lastMessagesLimit = 3;
+            isUserTaggedInResponse = false;
         } else {
             return Mono.empty();
         }
@@ -82,10 +85,11 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
                 .buildForDiscord());
 
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder()
-                .withUserTag(userId)
                 .withText(responseMessage)
                 .withEmotes(discordEmoteService.buildRandomEmoteList(null, 2, CONFUSION, HAPPY));
-
+        if (isUserTaggedInResponse) {
+            responseMessageBuilder.withUserTag(userId);
+        }
         return StringUtils.isNotEmpty(responseMessage)
                 ? message.getChannel().flatMap(channel -> channel.createMessage(responseMessageBuilder.buildForDiscord())).then()
                 : Mono.empty();

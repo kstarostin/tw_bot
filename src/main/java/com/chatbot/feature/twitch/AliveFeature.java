@@ -140,13 +140,15 @@ public class AliveFeature extends AbstractFeature {
         final String userName = event.getUser().getName();
         final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder();
 
-        List<String> lastMessagesForRequest = null;
+        final List<String> lastMessagesForRequest;
+        final boolean isUserTaggedInResponse;
         if (isBotTaggedDirectly(message)) {
             lastMessagesForRequest = List.of(message);
+            isUserTaggedInResponse = true;
         } else if (isNoOneTagged(message) && (isBotTaggedIndirectly(channelName, message) || isBotSelfTriggered(channelId, channelName))) {
             lastMessagesForRequest = getLastMessagesLimited(channelId, userName);
-        }
-        if (CollectionUtils.isEmpty(lastMessagesForRequest)) {
+            isUserTaggedInResponse = false;
+        } else {
             return;
         }
         responseMessageBuilder.withText(generateResponseText(channelId, channelName, userName, lastMessagesForRequest));
@@ -154,7 +156,7 @@ public class AliveFeature extends AbstractFeature {
             if (randomizerService.flipCoin(3)) {
                 responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 2, CONFUSION, HAPPY));
             }
-            sendMessage(channelId, channelName, userName, responseMessageBuilder, event);
+            sendMessage(channelId, channelName, isUserTaggedInResponse ? userName : null, responseMessageBuilder, event);
             cacheService.cacheGreeting(channelName, userName);
         }
     }
@@ -362,7 +364,7 @@ public class AliveFeature extends AbstractFeature {
 
     private void greetWithDelay(final String channelId, final String channelName, final String userName, final DefaultMessageServiceImpl.MessageBuilder messageBuilder, final int delay, final ChannelMessageEvent event) {
         ChannelMessageEvent replyEvent = null;
-        switch (getReplyType()) {
+        switch (getReplyType(userName)) {
             case SEND_RESPONSE:
                 final boolean startsWithTag = randomizerService.flipCoin(2);
                 messageBuilder.withUserTag(userName, startsWithTag);
@@ -383,7 +385,7 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private void sendMessage(final String channelId, final String channelName, final String userName, final DefaultMessageServiceImpl.MessageBuilder messageBuilder, final ChannelMessageEvent event) {
-        switch (getReplyType()) {
+        switch (getReplyType(userName)) {
             case SEND_RESPONSE:
                 final boolean startsWithTag = randomizerService.flipCoin(2);
                 messageService.sendMessage(channelName, messageBuilder.withUserTag(userName, startsWithTag), null);
@@ -400,9 +402,9 @@ public class AliveFeature extends AbstractFeature {
         }
     }
 
-    private MessageType getReplyType() {
+    private MessageType getReplyType(final String userName) {
         //return RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP[randomizerService.rollDice(RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP.length)];
-        return MessageType.SEND_RESPONSE; // todo fix response to reply chain
+        return StringUtils.isNotEmpty(userName) ? MessageType.SEND_RESPONSE : MessageType.SEND_MESSAGE; // todo fix response to reply chain
     }
 
     private int calculateCurrentChattingRate(final String channelId) {
