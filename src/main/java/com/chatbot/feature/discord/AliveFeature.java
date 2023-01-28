@@ -17,6 +17,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -126,6 +128,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         if (lastMessagesLimit > 1) {
             lastMessages.addAll(message.getChannel().block().getMessagesBefore(message.getId()).collectList().block().stream()
                     .filter(lastMessage -> !isBotMessage(lastMessage))
+                    .filter(lastMessage -> lastMessage.getTimestamp().isAfter(Instant.now().minus(1, ChronoUnit.DAYS))) // not older than a day ago
                     .limit(lastMessagesLimit - 1)
                     .map(Message::getContent)
                     .collect(Collectors.toList()));

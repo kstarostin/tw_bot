@@ -15,6 +15,8 @@ import com.chatbot.util.FeatureEnum;
 import com.chatbot.util.emotes.TwitchEmote;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
+import com.github.twitch4j.eventsub.events.StreamOfflineEvent;
+import com.github.twitch4j.eventsub.events.StreamOnlineEvent;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.lang3.StringUtils;
@@ -68,6 +70,8 @@ public class AliveFeature extends AbstractFeature {
 
     public AliveFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
+        eventHandler.onEvent(StreamOnlineEvent.class, this::onStreamOnline);
+        eventHandler.onEvent(StreamOfflineEvent.class, this::onStreamOffline);
     }
 
     public void onChannelMessage(final ChannelMessageEvent event) {
@@ -96,6 +100,32 @@ public class AliveFeature extends AbstractFeature {
                 respondWithMessage(message, event);
             }
         }
+    }
+
+    public void onStreamOnline(final StreamOnlineEvent event) {
+        final String channelName = event.getBroadcasterUserLogin();
+        if (!isFeatureActive(channelName, FeatureEnum.ALIVE) || (isActiveOnLiveStreamOnly(channelName) && !isStreamLive(channelName))) {
+            return;
+        }
+        final String channelId = event.getBroadcasterUserId();
+
+        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder().withText(buildGreetingText(channelId, channelName, channelName));
+        if (randomizerService.flipCoin(2)) {
+            responseMessageBuilder.withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 3, GREETING, POG, HAPPY));
+        }
+        greetWithDelay(channelId, channelName, channelName, responseMessageBuilder, calculateResponseDelayTime(responseMessageBuilder), null);
+    }
+
+    public void onStreamOffline(final StreamOfflineEvent event) {
+        final String channelName = event.getBroadcasterUserLogin();
+        if (!isFeatureActive(channelName, FeatureEnum.ALIVE)) {
+            return;
+        }
+        final String channelId = event.getBroadcasterUserId();
+        final DefaultMessageServiceImpl.MessageBuilder messageBuilder = messageService.getMessageBuilder()
+                .withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 1, SAD))
+                .withText(messageService.getPersonalizedMessageForKey("message.stream.offline." + channelName.toLowerCase(), "message.stream.offline.default"));
+        messageService.sendMessage(event.getBroadcasterUserLogin(), messageBuilder, null);
     }
 
     private void greet(final ChannelMessageEvent event) {

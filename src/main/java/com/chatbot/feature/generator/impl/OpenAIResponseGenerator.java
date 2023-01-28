@@ -62,8 +62,7 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
 
         String generatedMessage;
         try {
-            final CompletionResult result = createCompletion(completionRequestBuilder.build(), true);
-            generatedMessage = result.getChoices().iterator().next().getText();
+            generatedMessage = createCompletion(completionRequestBuilder.build(), true);
 
             if (request.isResponseSanitized()) {
                 generatedMessage = request.isFromTwitch()
@@ -78,12 +77,17 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
         }
     }
 
-    private CompletionResult createCompletion(final CompletionRequest request, boolean isRepeatOnFailure) {
+    private String createCompletion(final CompletionRequest request, boolean isRepeatOnFailure) {
         final CompletionResult result;
         try {
             result = service.createCompletion(request);
             LOG.info(String.format("OpenAI response: %s", result.toString()));
-            return result;
+            final String text = result.getChoices().iterator().next().getText();
+
+            if (StringUtils.isEmpty(text) && isRepeatOnFailure) {
+                return createCompletion(request, false);
+            }
+            return text;
         } catch (final Exception e) {
             LOG.error("Unexpected error: " + e.getMessage());
             if (isRepeatOnFailure) {

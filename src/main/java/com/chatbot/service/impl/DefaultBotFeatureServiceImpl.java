@@ -2,7 +2,6 @@ package com.chatbot.service.impl;
 
 import com.chatbot.feature.twitch.AliveFeature;
 import com.chatbot.feature.twitch.ChatCommandMessageFeature;
-import com.chatbot.feature.twitch.ChannelNotificationOnStreamStatusFeature;
 import com.chatbot.feature.twitch.ChannelNotificationOnSubscriptionFeature;
 import com.chatbot.feature.twitch.ChatModerationFeature;
 import com.chatbot.feature.twitch.LogChatMessageFeature;
@@ -26,7 +25,6 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
      * Twitch features
      */
     private ChannelNotificationOnSubscriptionFeature channelNotificationOnSubscriptionFeature;
-    //private ChannelNotificationOnStreamStatusFeature channelNotificationOnStreamStatusFeature;
     private ChatCommandMessageFeature chatCommandMessageFeature;
     private AliveFeature aliveFeature;
     private ChatModerationFeature chatModerationFeature;
@@ -92,14 +90,6 @@ public class DefaultBotFeatureServiceImpl implements BotFeatureService {
             LOG.info(REGISTER_FEATURE, MODERATOR);
         }
     }
-
-    /*@Override
-    public void registerChannelNotificationOnStreamStatusTwitchFeature(final SimpleEventHandler eventHandler) {
-        if (channelNotificationOnStreamStatusFeature == null) {
-            channelNotificationOnStreamStatusFeature = new ChannelNotificationOnStreamStatusFeature(eventHandler);
-            LOG.info(REGISTER_FEATURE, STREAM);
-        }
-    }*/
 
     @Override
     public boolean isTwitchFeatureActive(final String channelName, final FeatureEnum featureEnum) {
