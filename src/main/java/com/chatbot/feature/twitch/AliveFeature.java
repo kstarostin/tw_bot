@@ -39,14 +39,6 @@ import static com.chatbot.util.emotes.TwitchEmote.Sets.*;
 public class AliveFeature extends AbstractFeature {
     private final Logger LOG = LoggerFactory.getLogger(AliveFeature.class);
 
-    private final static MessageType[] RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP = {
-            MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE,
-            MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE,
-            MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE, MessageType.SEND_RESPONSE,
-            MessageType.SEND_REPLY, MessageType.SEND_REPLY, MessageType.SEND_REPLY,
-            MessageType.SEND_MESSAGE
-    };
-
     private static final String USERNAME_TOKEN = "${name}";
     private static final String GREETING_TOKEN = "${greeting}";
 
@@ -420,9 +412,6 @@ public class AliveFeature extends AbstractFeature {
                 final boolean startsWithTag = randomizerService.flipCoin(2);
                 messageService.sendMessage(channelName, messageBuilder.withUserTag(userName, startsWithTag), null);
                 break;
-            case SEND_REPLY:
-                messageService.sendMessage(channelName, messageBuilder, event);
-                break;
             case SEND_MESSAGE:
                 messageService.sendMessage(channelName, messageBuilder, null);
                 break;
@@ -433,7 +422,6 @@ public class AliveFeature extends AbstractFeature {
     }
 
     private MessageType getReplyType(final String userName) {
-        //return RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP[randomizerService.rollDice(RESPONSE_MESSAGE_TYPE_PROBABILITY_MAP.length)];
         return StringUtils.isNotEmpty(userName) ? MessageType.SEND_RESPONSE : MessageType.SEND_MESSAGE; // todo fix response to reply chain
     }
 

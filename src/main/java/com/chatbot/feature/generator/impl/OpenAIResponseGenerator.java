@@ -33,7 +33,7 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
 
     private OpenAIResponseGenerator() {
         final String apiToken = configurationService.getCredentialProperties().getProperty("openai.credentials.api.key");
-        service = new OpenAiService(apiToken);
+        service = new OpenAiService(apiToken, 20);
     }
 
     public static synchronized OpenAIResponseGenerator getInstance() {
