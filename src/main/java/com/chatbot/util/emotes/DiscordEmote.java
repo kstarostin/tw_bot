@@ -67,9 +67,8 @@ public class DiscordEmote extends AbstractEmote {
         List<DiscordEmote> SAD = List.of(KebirowHomeGuild.Sadge, KebirowHomeGuild.Sadeg, KebirowHomeGuild.Aware, KebirowHomeGuild.FeelsBadMan, KebirowHomeGuild.FeelsRainMan,
                 KebirowHomeGuild.KEKWait, KebirowHomeGuild.Despairge, KebirowHomeGuild.XyliSiga);
         List<DiscordEmote> GREETING = List.of(KebirowHomeGuild.XyliWave, KebirowHomeGuild.MLADY, KebirowHomeGuild.KKomrade, KebirowHomeGuild.ZdarovaZaebal);
-        List<DiscordEmote> CONFUSION = List.of(KebirowHomeGuild.Okayeg, KebirowHomeGuild.KEKWait, KebirowHomeGuild.CheNaxyi, KebirowHomeGuild.MODS, KebirowHomeGuild.DinkDonk,
-                KebirowHomeGuild.Clueless, KebirowHomeGuild.Pausey, KebirowHomeGuild.NOTED, KebirowHomeGuild.borpaSpin, KebirowHomeGuild.FeelsDankMan, KebirowHomeGuild.FeelsSpecialMan,
-                KebirowHomeGuild.XyliNado);
+        List<DiscordEmote> CONFUSION = List.of(KebirowHomeGuild.Okayeg, KebirowHomeGuild.KEKWait, KebirowHomeGuild.CheNaxyi, KebirowHomeGuild.MODS, KebirowHomeGuild.Clueless,
+                KebirowHomeGuild.Pausey, KebirowHomeGuild.NOTED, KebirowHomeGuild.borpaSpin, KebirowHomeGuild.FeelsDankMan, KebirowHomeGuild.FeelsSpecialMan, KebirowHomeGuild.XyliNado);
         List<DiscordEmote> SCARY = List.of(KebirowHomeGuild.monkaW, KebirowHomeGuild.HUH);
     }
 

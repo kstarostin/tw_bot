@@ -15,11 +15,11 @@ public class TwitchEmote extends AbstractEmote {
     }
 
     public interface Sets {
-        List<TwitchEmote> HAPPY = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.Okayge, SevenTVChannel.Basedge, SevenTVChannel.PepeChill, SevenTVChannel.Starege, SevenTVChannel.MmmHmm,
+        List<TwitchEmote> HAPPY = List.of(SevenTVChannel.kebirowPog, SevenTVChannel.Okayge, SevenTVChannel.Basedge, SevenTVChannel.PepeChill, SevenTVChannel.Starege, SevenTVChannel.MmmHmm,
                 SevenTVGlobal.FeelsOkayMan, SevenTVChannel.Zaebis, BTTVChannel.OkayChamp, SevenTVGlobal.Gayge, SevenTVGlobal.peepoHappy, SevenTVChannel.Clueless, BTTVGlobal.FeelsGoodMan,
                 BTTVGlobal.FeelsAmazingMan, TwitchGlobal.SUBprise, TwitchGlobal.TriHard, TwitchGlobal.FourHead, TwitchGlobal.BloodTrail, TwitchGlobal.SmileyFace38);
 
-        List<TwitchEmote> POG = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.Pogey, SevenTVChannel.stalkPog, SevenTVChannel.SHTO, TwitchGlobal.PogChamp);
+        List<TwitchEmote> POG = List.of(SevenTVChannel.kebirowPog, SevenTVChannel.Pogey, SevenTVChannel.stalkPog, SevenTVChannel.SHTO, TwitchGlobal.PogChamp);
 
         List<TwitchEmote> COOL = List.of(SevenTVGlobal.EZ, SevenTVChannel.Basedge, BTTVGlobal.KappaCool, SevenTVChannel.KKool, SevenTVChannel.Siga, TwitchGlobal.GlitchCat,
                 TwitchGlobal.CoolCat, TwitchGlobal.DatSheffy, TwitchGlobal.DxCat);
@@ -44,7 +44,7 @@ public class TwitchEmote extends AbstractEmote {
 
         List<TwitchEmote> SCARY = List.of(SevenTVChannel.jvcrS, SevenTVChannel.monkaStop, SevenTVChannel.monkaChrist, BTTVChannel.Ebaka, TwitchGlobal.WutFace);
 
-        List<TwitchEmote> FAVOURITE = List.of(SevenTVChannel.jvcrPog, SevenTVChannel.jvcrEbalo, SevenTVChannel.jvcrS, SevenTVChannel.jvcrSad);
+        List<TwitchEmote> FAVOURITE = List.of(SevenTVChannel.kebirowPog, SevenTVChannel.jvcrEbalo, SevenTVChannel.jvcrS, SevenTVChannel.jvcrSad);
 
         List<List<TwitchEmote>> ALL_SETS = List.of(HAPPY, POG, COOL, LAUGH, DANCE, SAD, GREETING, CONFUSION, SCARY);
     }
@@ -582,7 +582,7 @@ public class TwitchEmote extends AbstractEmote {
         TwitchEmote Kippah = new TwitchEmote("Kippah");
         TwitchEmote XyliVoyage = new TwitchEmote("XyliVoyage");
         TwitchEmote Shiza = new TwitchEmote("Shiza");
-        TwitchEmote jvcrPog = new TwitchEmote("jvcrPog");
+        TwitchEmote kebirowPog = new TwitchEmote("kebirowPog");
         TwitchEmote jvcrS = new TwitchEmote("jvcrS");
         TwitchEmote jvcrSad = new TwitchEmote("jvcrSad");
         TwitchEmote jvcrEbalo = new TwitchEmote("jvcrEbalo");
