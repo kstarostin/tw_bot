@@ -4,6 +4,7 @@ import com.chatbot.feature.generator.GeneratorRequest;
 import com.chatbot.feature.generator.ResponseGenerator;
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 import com.chatbot.feature.generator.impl.OpenAIResponseGenerator;
+import com.chatbot.service.FriendshipService;
 import com.chatbot.service.PeriodCacheService;
 import com.chatbot.service.ModerationService;
 import com.chatbot.service.RandomizerService;
@@ -11,6 +12,7 @@ import com.chatbot.service.impl.DefaultMessageServiceImpl;
 import com.chatbot.service.impl.DefaultPeriodCacheServiceImpl;
 import com.chatbot.service.impl.DefaultModerationServiceImpl;
 import com.chatbot.service.impl.DefaultRandomizerServiceImpl;
+import com.chatbot.service.impl.FriendshipServiceImpl;
 import com.chatbot.util.FeatureEnum;
 import com.chatbot.util.emotes.TwitchEmote;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -30,7 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -41,9 +42,6 @@ public class AliveFeature extends AbstractFeature {
 
     private static final String USERNAME_TOKEN = "${name}";
     private static final String GREETING_TOKEN = "${greeting}";
-
-    private static final Set<String> USER_FRIEND_LIST = Set.of("0mskbird", "yura_atlet", "1skybox1", "chenushka", "hereticjz", "skvdee", "svetloholmov", "prof_133", "kiber_bober",
-            "poni_prancing", "greyraise", "panthermania", "tachvnkin", "tesla013", "shinigamidth", "enteris");
 
     private static final int MIN_CHATTING_RATE = 1;
     private static final int MAX_CHATTING_RATE = 10;
@@ -59,6 +57,7 @@ public class AliveFeature extends AbstractFeature {
     private final ModerationService moderationService = DefaultModerationServiceImpl.getInstance();
     private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
     private final RandomizerService randomizerService = DefaultRandomizerServiceImpl.getInstance();
+    private final FriendshipService friendshipService = FriendshipServiceImpl.getInstance();
 
     public AliveFeature(final SimpleEventHandler eventHandler) {
         eventHandler.onEvent(ChannelMessageEvent.class, this::onChannelMessage);
@@ -186,7 +185,7 @@ public class AliveFeature extends AbstractFeature {
     private boolean isGreetingResponse(final String channelName, final String userName, final String message) {
         return isGreetingEnabled(channelName)
                 && !isUserGreeted(channelName, userName)
-                && (isUserInFriendList(userName) || isRandomGreeting())
+                && (friendshipService.isTwitchFriend(userName) || isRandomGreeting())
                 && !(isBotTaggedDirectly(message) || isBotTaggedIndirectly(channelName, message));
     }
 
@@ -196,10 +195,6 @@ public class AliveFeature extends AbstractFeature {
 
     private boolean isUserGreeted(final String channelName, final String userName) {
         return cacheService.getCachedGreetings(channelName).isPresent() && cacheService.getCachedGreetings(channelName).get().contains(userName);
-    }
-
-    private boolean isUserInFriendList(final String userName) {
-        return USER_FRIEND_LIST.contains(userName.toLowerCase());
     }
 
     private boolean isRandomGreeting() {

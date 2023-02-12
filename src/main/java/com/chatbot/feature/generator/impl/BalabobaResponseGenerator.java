@@ -54,7 +54,7 @@ public class BalabobaResponseGenerator extends AbstractResponseGenerator impleme
             generatedMessage = generateByBalaboba(payload, 1);
         }
         if (request.isResponseSanitized()) {
-            generatedMessage = request.isFromTwitch()
+            generatedMessage = request.isTwitchRequest()
                     ? messageService.getMessageSanitizer(generatedMessage).sanitizeForTwitch(request.getChannelId(), request.getChannelName())
                     : messageService.getMessageSanitizer(generatedMessage).sanitizeForDiscord();
         }

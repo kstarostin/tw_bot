@@ -33,7 +33,7 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
 
     private OpenAIResponseGenerator() {
         final String apiToken = configurationService.getCredentialProperties().getProperty("openai.credentials.api.key");
-        service = new OpenAiService(apiToken, 20);
+        service = new OpenAiService(apiToken, 25);
     }
 
     public static synchronized OpenAIResponseGenerator getInstance() {
@@ -65,7 +65,7 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
             generatedMessage = createCompletion(completionRequestBuilder.build(), true);
 
             if (request.isResponseSanitized()) {
-                generatedMessage = request.isFromTwitch()
+                generatedMessage = request.isTwitchRequest()
                         ? messageService.getMessageSanitizer(generatedMessage).sanitizeForTwitch(request.getChannelId(), request.getChannelName())
                         : messageService.getMessageSanitizer(generatedMessage).sanitizeForDiscord();
             }

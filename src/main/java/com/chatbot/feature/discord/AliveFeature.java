@@ -50,6 +50,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     public Mono<Void> handle(final MessageCreateEvent event) {
         final Message message = event.getMessage();
         final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);
+        final String discriminator = message.getAuthor().map(User::getDiscriminator).orElse(StringUtils.EMPTY);
 
         if (isBotMessage(message)) {
             return Mono.empty();
@@ -81,7 +82,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         final String responseMessage = generate(GeneratorRequest.getBuilder()
                 .withRequestMessage(sanitizedRequestMessage)
                 .withChannelId(channelId)
-                .withUserName(userName)
+                .withUserName(userName + "#" + discriminator)
                 .withResponseSanitized()
                 .withMaxResponseLength(250)
                 .buildForDiscord());

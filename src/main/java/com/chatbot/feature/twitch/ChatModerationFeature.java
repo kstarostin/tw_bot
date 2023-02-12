@@ -40,8 +40,7 @@ public class ChatModerationFeature extends AbstractFeature {
                 final String banReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.ban.reason." + channelName.toLowerCase(), "message.moderation.ban.reason.default");
                 moderationService.banUser(channelName, event.getUser().getName(), banReasonMessage);
 
-                responseBuilder.withUserTag(userName)
-                        .withText(messageService.getPersonalizedMessageForKey("message.moderation.ban." + channelName.toLowerCase(), "message.moderation.ban.default"))
+                responseBuilder.withText(messageService.getPersonalizedMessageForKey("message.moderation.ban." + channelName.toLowerCase(), "message.moderation.ban.default"))
                         .withEmotes(twitchEmoteService.buildRandomEmoteList(channelId, 1, COOL));
             } else if (violationPoints >= getViolationPointsThresholdToTimeout(channelName)) {
                 final String muteReasonMessage = messageService.getPersonalizedMessageForKey("message.moderation.timeout.reason." + channelName.toLowerCase(), "message.moderation.timeout.reason.default");
