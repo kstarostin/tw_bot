@@ -49,7 +49,7 @@ additional_bot_tag_names:
     - кебировым
     - bot
 # Selected model for OpenAI response generator
-openai_model: DAVINCI
+openai_model: ADA
 
 
 ## FEATURE: MODERATOR
