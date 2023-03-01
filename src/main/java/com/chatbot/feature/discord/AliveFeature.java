@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.chatbot.util.emotes.DiscordEmote.Sets.CONFUSION;
@@ -30,6 +31,8 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static AliveFeature instance;
 
     private static final int REQUEST_MESSAGE_MAX_LENGTH = 150;
+
+    private static final Set<String> IMAGE_REQUEST_KEY_WORDS = Set.of("нарисуй", "покажи", "draw", "show");
 
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
     private final DiscordEmoteService discordEmoteService = DefaultDiscordEmoteServiceImpl.getInstance();
@@ -69,32 +72,46 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         final String channelId = message.getChannelId().asString();
         final String userId = message.getAuthor().map(user -> user.getId().asString()).orElse(StringUtils.EMPTY);
 
-        final String sanitizedRequestMessage = messageService.getMessageSanitizer(getRequestMessage(message, lastMessagesLimit))
+        String sanitizedRequestMessage = messageService.getMessageSanitizer(getRequestMessage(message, lastMessagesLimit))
                 .withNoTags()
                 .withNoEmotes()
                 .withMaxLength(150)
+                .sanitizeForDiscord();
+
+        final boolean isImageRequested = isImageRequested(sanitizedRequestMessage);
+        sanitizedRequestMessage = isImageRequested
+                ? messageService.getMessageSanitizer(sanitizedRequestMessage)
+                .withWordsRemoved(IMAGE_REQUEST_KEY_WORDS)
+                .sanitizeForDiscord()
+                : messageService.getMessageSanitizer(sanitizedRequestMessage)
                 .withDelimiter()
                 .sanitizeForDiscord();
 
         if (StringUtils.isBlank(sanitizedRequestMessage)) {
             return Mono.empty();
         }
-        final String responseMessage = generate(GeneratorRequest.getBuilder()
+        final GeneratorRequest.Builder generatorRequestBuilder = GeneratorRequest.getBuilder()
                 .withRequestMessage(sanitizedRequestMessage)
                 .withChannelId(channelId)
                 .withUserName(userName + "#" + discriminator)
                 .withResponseSanitized()
-                .withMaxResponseLength(250)
-                .buildForDiscord());
+                .withMaxResponseLength(250);
 
-        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder()
-                .withText(responseMessage)
-                .withEmotes(discordEmoteService.buildRandomEmoteList(null, 2, CONFUSION, HAPPY));
+        if (isImageRequested) {
+            generatorRequestBuilder.withImageResponse();
+        }
+
+        final String responseMessage = generate(generatorRequestBuilder.buildForDiscord());
+
+        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder().withText(responseMessage);
         if (isUserTaggedInResponse) {
             responseMessageBuilder.withUserTag(userId);
         }
+        final String response = isImageRequested
+                ? responseMessageBuilder.buildForDiscord()
+                : responseMessageBuilder.withEmotes(discordEmoteService.buildRandomEmoteList(null, 2, CONFUSION, HAPPY)).buildForDiscord();
         return StringUtils.isNotEmpty(responseMessage)
-                ? message.getChannel().flatMap(channel -> channel.createMessage(responseMessageBuilder.buildForDiscord())).then()
+                ? message.getChannel().flatMap(channel -> channel.createMessage(response).withFiles()).then()
                 : Mono.empty();
     }
 
@@ -146,9 +163,13 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         return String.join(StringUtils.SPACE, messagesToJoin);
     }
 
+    private boolean isImageRequested(final String requestMessage) {
+        return StringUtils.startsWithAny(requestMessage, IMAGE_REQUEST_KEY_WORDS.toArray(new String[0]));
+    }
+
     private String generate(final GeneratorRequest request) {
         String response = openAIresponseGenerator.generate(request);
-        if (StringUtils.isBlank(response)) {
+        if (StringUtils.isBlank(response) && !request.isImageResponse()) {
             response = balabobaResponseGenerator.generate(request);
         }
         return response;

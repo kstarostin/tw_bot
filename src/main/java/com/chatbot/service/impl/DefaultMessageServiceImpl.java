@@ -16,9 +16,11 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
@@ -277,6 +279,7 @@ public class DefaultMessageServiceImpl implements MessageService {
         private Integer maxLength;
         private boolean checkDelimiter;
         private String defaultDelimiter = ".";
+        private Set<String> wordsToRemove = new HashSet<>();
 
         private MessageSanitizer(final String text) {
             this.text = text;
@@ -308,6 +311,11 @@ public class DefaultMessageServiceImpl implements MessageService {
             return this;
         }
 
+        public MessageSanitizer withWordsRemoved(final Set<String> wordsToRemove) {
+            this.wordsToRemove = wordsToRemove;
+            return this;
+        }
+
         public String sanitizeForTwitch(final String channelId, final String channelName) {
             return sanitize(true, channelId, channelName);
         }
@@ -324,6 +332,9 @@ public class DefaultMessageServiceImpl implements MessageService {
             }
             if (removeEmotes) {
                 sanitizedWords = isTwitch ? removeTwitchEmotes(sanitizedWords, channelId) : removeDiscordEmotes(sanitizedWords);
+            }
+            if (CollectionUtils.isNotEmpty(wordsToRemove)) {
+                sanitizedWords = removeWords(sanitizedWords, wordsToRemove);
             }
             if (sanitizedWords.isEmpty()) {
                 return StringUtils.EMPTY;
@@ -358,6 +369,12 @@ public class DefaultMessageServiceImpl implements MessageService {
         private List<String> removeDiscordEmotes(final List<String> words) {
             return words.stream()
                     .filter(word -> !discordEmoteService.isEmote(word))
+                    .collect(Collectors.toList());
+        }
+
+        private List<String> removeWords(final List<String> words, final Set<String> wordsToRemove) {
+            return words.stream()
+                    .filter(word -> !wordsToRemove.contains(word))
                     .collect(Collectors.toList());
         }
 

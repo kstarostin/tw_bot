@@ -3,17 +3,18 @@ package com.chatbot.feature.generator;
 import com.chatbot.feature.generator.impl.BalabobaResponseGenerator;
 
 public class GeneratorRequest {
-    protected String requestMessage = null;
-    protected String channelId = null;
-    protected String channelName = null;
-    protected String userName = null;
-    protected String requesterId = null;
-    protected boolean responseSanitized = false;
-    protected Integer maxResponseLength = null;
-    protected boolean requestMessageIncluded = false;
-    protected BalabobaResponseGenerator.Style responseStyle = null;
-    protected boolean isTwitchRequest = false;
-    protected boolean isDiscordRequest = false;
+    private String requestMessage = null;
+    private String channelId = null;
+    private String channelName = null;
+    private String userName = null;
+    private String requesterId = null;
+    private boolean responseSanitized = false;
+    private Integer maxResponseLength = null;
+    private boolean requestMessageIncluded = false;
+    private BalabobaResponseGenerator.Style responseStyle = null;
+    private boolean isTwitchRequest = false;
+    private boolean isDiscordRequest = false;
+    private boolean isImageResponse = false;
 
     private GeneratorRequest() {
     }
@@ -62,6 +63,10 @@ public class GeneratorRequest {
         return isDiscordRequest;
     }
 
+    public boolean isImageResponse() {
+        return isImageResponse;
+    }
+
     public static Builder getBuilder() {
         return new Builder();
     }
@@ -106,6 +111,11 @@ public class GeneratorRequest {
 
         public Builder withResponseStyle(final BalabobaResponseGenerator.Style responseStyle) {
             request.responseStyle = responseStyle;
+            return this;
+        }
+
+        public Builder withImageResponse() {
+            request.isImageResponse = true;
             return this;
         }
 

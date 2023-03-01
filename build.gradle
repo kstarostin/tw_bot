@@ -45,7 +45,10 @@ dependencies {
     implementation group: 'com.google.oauth-client', name: 'google-oauth-client-jetty', version: '1.34.1'
 
     // https://mvnrepository.com/artifact/com.theokanning.openai-gpt3-java/client
-    implementation group: 'com.theokanning.openai-gpt3-java', name: 'client', version: '0.8.1'
+    implementation group: 'com.theokanning.openai-gpt3-java', name: 'client', version: '0.10.0'
+    // https://mvnrepository.com/artifact/com.theokanning.openai-gpt3-java/service
+    implementation group: 'com.theokanning.openai-gpt3-java', name: 'service', version: '0.10.0'
+
 }
 
 // Declare Main

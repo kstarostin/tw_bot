@@ -6,13 +6,17 @@ import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.MessageService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
-import com.theokanning.openai.OpenAiService;
 import com.theokanning.openai.completion.CompletionRequest;
 import com.theokanning.openai.completion.CompletionResult;
+import com.theokanning.openai.image.CreateImageRequest;
+import com.theokanning.openai.image.ImageResult;
+import com.theokanning.openai.service.OpenAiService;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -33,7 +37,7 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
 
     private OpenAIResponseGenerator() {
         final String apiToken = configurationService.getCredentialProperties().getProperty("openai.credentials.api.key");
-        service = new OpenAiService(apiToken, 25);
+        service = new OpenAiService(apiToken, Duration.ofSeconds(25));
     }
 
     public static synchronized OpenAIResponseGenerator getInstance() {
@@ -45,6 +49,10 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
 
     @Override
     public String generate(final GeneratorRequest request) {
+        return request.isImageResponse() ? generateImage(request) : generateCompletion(request);
+    }
+
+    private String generateCompletion(final GeneratorRequest request) {
         final String channelName = StringUtils.isNotEmpty(request.getChannelName()) ? request.getChannelName() : "default";
         final Model model = StringUtils.isNotEmpty(configurationService.getConfiguration(channelName).getOpenaiModel())
                 ? Model.getForName(configurationService.getConfiguration(channelName).getOpenaiModel())
@@ -58,7 +66,7 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
         if (request.getMaxResponseLength() != null) {
             completionRequestBuilder.maxTokens((int) (request.getMaxResponseLength() * 1.33));
         }
-        LOG.info(String.format("OpenAI request: %s", completionRequestBuilder.toString()));
+        LOG.info(String.format("OpenAI completion request: %s", completionRequestBuilder.toString()));
 
         String generatedMessage;
         try {
@@ -77,11 +85,24 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
         }
     }
 
+    private String generateImage(final GeneratorRequest request) {
+        final CreateImageRequest.CreateImageRequestBuilder createImageRequestBuilder = CreateImageRequest.builder()
+                .prompt(request.getRequestMessage());
+        LOG.info(String.format("OpenAI image request: %s", createImageRequestBuilder.toString()));
+
+        try {
+            return createImage(createImageRequestBuilder.build(), true);
+        } catch (final Exception e) {
+            LOG.error("Unexpected error: " + e.getMessage());
+            return StringUtils.EMPTY;
+        }
+    }
+
     private String createCompletion(final CompletionRequest request, boolean isRepeatOnFailure) {
         final CompletionResult result;
         try {
             result = service.createCompletion(request);
-            LOG.info(String.format("OpenAI response: %s", result.toString()));
+            LOG.info(String.format("OpenAI completion response: %s", result.toString()));
             final String text = result.getChoices().iterator().next().getText();
 
             if (StringUtils.isEmpty(text) && isRepeatOnFailure) {
@@ -91,8 +112,26 @@ public class OpenAIResponseGenerator extends AbstractResponseGenerator implement
         } catch (final Exception e) {
             LOG.error("Unexpected error: " + e.getMessage());
             if (isRepeatOnFailure) {
-                LOG.warn(String.format(String.format("Repeat OpenAI request: %s", request)));
+                LOG.warn(String.format(String.format("Repeat OpenAI completion request: %s", request)));
                 return createCompletion(request, false);
+            }
+            throw e;
+        }
+    }
+
+    private String createImage(final CreateImageRequest request, boolean isRepeatOnFailure) {
+        final ImageResult result;
+        try {
+            result = service.createImage(request);
+            LOG.info(String.format("OpenAI image response: %s", result.toString()));
+            return CollectionUtils.isNotEmpty(result.getData())
+                    ? result.getData().iterator().next().getUrl()
+                    : StringUtils.EMPTY;
+        } catch (final Exception e) {
+            LOG.error("Unexpected error: " + e.getMessage());
+            if (isRepeatOnFailure) {
+                LOG.warn(String.format(String.format("Repeat OpenAI image request: %s", request)));
+                return createImage(request, false);
             }
             throw e;
         }
