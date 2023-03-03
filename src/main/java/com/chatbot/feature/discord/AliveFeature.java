@@ -7,20 +7,32 @@ import com.chatbot.feature.generator.impl.OpenAIResponseGenerator;
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.DiscordEmoteService;
 import com.chatbot.service.MessageService;
+import com.chatbot.service.TrustManagerService;
 import com.chatbot.service.impl.DefaultConfigurationServiceImpl;
 import com.chatbot.service.impl.DefaultDiscordEmoteServiceImpl;
 import com.chatbot.service.impl.DefaultMessageServiceImpl;
+import com.chatbot.service.impl.DefaultTrustManagerServiceImpl;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
+import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.core.spec.MessageCreateFields;
+import discord4j.core.spec.MessageCreateMono;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,15 +42,18 @@ import static com.chatbot.util.emotes.DiscordEmote.Sets.HAPPY;
 public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     private static AliveFeature instance;
 
+    private final Logger LOG = LoggerFactory.getLogger(AliveFeature.class);
+
     private static final int REQUEST_MESSAGE_MAX_LENGTH = 150;
 
-    private static final Set<String> IMAGE_REQUEST_KEY_WORDS = Set.of("нарисуй", "покажи", "draw", "show");
+    private static final Set<String> IMAGE_REQUEST_KEY_WORDS = Set.of("нарисуй", "покажи", "изобрази", "продемонстрируй", "draw", "show", "imagine");
 
     private final MessageService messageService = DefaultMessageServiceImpl.getInstance();
     private final DiscordEmoteService discordEmoteService = DefaultDiscordEmoteServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final ResponseGenerator openAIresponseGenerator = OpenAIResponseGenerator.getInstance();
     private final ResponseGenerator balabobaResponseGenerator = BalabobaResponseGenerator.getInstance();
+    private final TrustManagerService trustManagerService = DefaultTrustManagerServiceImpl.getInstance();
 
     private AliveFeature() {
     }
@@ -101,18 +116,11 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
             generatorRequestBuilder.withImageResponse();
         }
 
-        final String responseMessage = generate(generatorRequestBuilder.buildForDiscord());
+        final String responseText = generate(generatorRequestBuilder.buildForDiscord());
 
-        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder().withText(responseMessage);
-        if (isUserTaggedInResponse) {
-            responseMessageBuilder.withUserTag(userId);
-        }
-        final String response = isImageRequested
-                ? responseMessageBuilder.buildForDiscord()
-                : responseMessageBuilder.withEmotes(discordEmoteService.buildRandomEmoteList(null, 2, CONFUSION, HAPPY)).buildForDiscord();
-        return StringUtils.isNotEmpty(responseMessage)
-                ? message.getChannel().flatMap(channel -> channel.createMessage(response).withFiles()).then()
-                : Mono.empty();
+        final Optional<MessageCreateMono> discordResponseMessageOptional = createDiscordResponseMessage(message.getChannel().block(), responseText, isImageRequested, isUserTaggedInResponse ? userId : StringUtils.EMPTY);
+
+        return discordResponseMessageOptional.map(messageCreateMono -> message.getChannel().flatMap(channel -> messageCreateMono).then()).orElseGet(Mono::empty);
     }
 
     private boolean isBotMessage(final Message message) {
@@ -173,5 +181,38 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
             response = balabobaResponseGenerator.generate(request);
         }
         return response;
+    }
+
+    private Optional<MessageCreateFields.File> getFileFromUrl(final String urlString) {
+        try {
+            trustManagerService.trustAllCertificates();
+            final URL url = new URL(urlString);
+            return Optional.of(MessageCreateFields.File.of(FilenameUtils.getName(url.getPath()), url.openStream()));
+        } catch (final Exception e) {
+            LOG.error("Can't read from resource [{}], error: {}", urlString, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private Optional<MessageCreateMono> createDiscordResponseMessage(final MessageChannel channel, final String responseText, final boolean isImageRequested, final String userId) {
+        final DefaultMessageServiceImpl.MessageBuilder responseMessageBuilder = messageService.getMessageBuilder();
+
+        if (!isImageRequested) {
+            responseMessageBuilder.withText(responseText).withEmotes(discordEmoteService.buildRandomEmoteList(null, 2, CONFUSION, HAPPY));
+            if (StringUtils.isNotEmpty(userId)) {
+                responseMessageBuilder.withUserTag(userId);
+            }
+            return Optional.of(channel.createMessage(responseMessageBuilder.buildForDiscord()));
+        } else {
+            final Optional<MessageCreateFields.File> fileOptional = getFileFromUrl(responseText);
+
+            if (fileOptional.isEmpty()) {
+                return Optional.empty();
+            }
+            if (StringUtils.isNotEmpty(userId)) {
+                responseMessageBuilder.withUserTag(userId);
+            }
+            return Optional.of(channel.createMessage(responseMessageBuilder.buildForDiscord()).withFiles(fileOptional.get()));
+        }
     }
 }

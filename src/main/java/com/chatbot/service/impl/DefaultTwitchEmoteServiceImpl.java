@@ -2,6 +2,7 @@ package com.chatbot.service.impl;
 
 import com.chatbot.service.ConfigurationService;
 import com.chatbot.service.PeriodCacheService;
+import com.chatbot.service.TrustManagerService;
 import com.chatbot.service.TwitchClientService;
 import com.chatbot.service.TwitchEmoteService;
 import com.chatbot.util.emotes.TwitchEmote;
@@ -23,16 +24,8 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,6 +62,7 @@ public class DefaultTwitchEmoteServiceImpl extends AbstractEmoteServiceImpl<Twit
     private final TwitchClientService twitchClientService = DefaultTwitchClientServiceImpl.getInstance();
     private final ConfigurationService configurationService = DefaultConfigurationServiceImpl.getInstance();
     private final PeriodCacheService cacheService = DefaultPeriodCacheServiceImpl.getInstance();
+    private final TrustManagerService trustManagerService = DefaultTrustManagerServiceImpl.getInstance();
 
     private DefaultTwitchEmoteServiceImpl() {
     }
@@ -102,7 +96,7 @@ public class DefaultTwitchEmoteServiceImpl extends AbstractEmoteServiceImpl<Twit
             emotes.addAll(globalEmotesOptional.get());
         } else {
             try {
-                doTrustToCertificates();
+                trustManagerService.trustAllCertificates();
                 final JSONArray jsonArray = new JSONArray(IOUtils.toString(new URL(requestUrl), StandardCharsets.UTF_8));
                 if (jsonArray.length() > 0) {
                     for (int i = 0; i < jsonArray.length(); i++) {
@@ -128,7 +122,7 @@ public class DefaultTwitchEmoteServiceImpl extends AbstractEmoteServiceImpl<Twit
             emotes.addAll(channelEmotesOptional.get());
         } else {
             try {
-                doTrustToCertificates();
+                trustManagerService.trustAllCertificates();
                 final JSONObject json = new JSONObject(IOUtils.toString(new URL(requestUrl), StandardCharsets.UTF_8));
                 final BTTV bttv = objectMapper.readValue(json.toString(), BTTV.class);
                 emotes.addAll(CollectionUtils.emptyIfNull(Arrays.asList(bttv.getSharedEmotes())));
@@ -253,7 +247,7 @@ public class DefaultTwitchEmoteServiceImpl extends AbstractEmoteServiceImpl<Twit
             emotes.addAll(emotesOptional.get());
         } else {
             try {
-                doTrustToCertificates();
+                trustManagerService.trustAllCertificates();
                 final JSONArray jsonArray = new JSONArray(IOUtils.toString(new URL(url), StandardCharsets.UTF_8));
                 if (jsonArray.length() > 0) {
                     for (int i = 0; i < jsonArray.length(); i++) {
@@ -279,7 +273,7 @@ public class DefaultTwitchEmoteServiceImpl extends AbstractEmoteServiceImpl<Twit
             emotes.addAll(emotesOptional.get());
         } else {
             try {
-                doTrustToCertificates();
+                trustManagerService.trustAllCertificates();
                 final JSONObject json = new JSONObject(IOUtils.toString(new URL(url), StandardCharsets.UTF_8));
                 final T ffz = objectMapper.readValue(json.toString(), rootClass);
                 emotes.addAll(CollectionUtils.emptyIfNull(ffz.getSets().values()).stream()
@@ -295,39 +289,6 @@ public class DefaultTwitchEmoteServiceImpl extends AbstractEmoteServiceImpl<Twit
             cacheService.cacheEmotes(channelId, provider, emotes, period);
         }
         return emotes;
-    }
-
-    private void doTrustToCertificates() throws Exception {
-        // configure the SSLContext with a dummy TrustManager
-        final SSLContext ctx = SSLContext.getInstance("SSL");
-        ctx.init(null, getTrustManager(), new SecureRandom());
-        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
-        final HostnameVerifier hv = new HostnameVerifier() {
-            public boolean verify(final String urlHostName, final SSLSession session) {
-                if (!urlHostName.equalsIgnoreCase(session.getPeerHost())) {
-                    LOG.warn("Warning: URL host '" + urlHostName + "' is different to SSLSession host '" + session.getPeerHost() + "'.");
-                }
-                return true;
-            }
-        };
-        HttpsURLConnection.setDefaultHostnameVerifier(hv);
-    }
-
-    private TrustManager[] getTrustManager() {
-        return new TrustManager[]{
-                new X509TrustManager() {
-                    @Override
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    @Override
-                    public void checkClientTrusted(final X509Certificate[] certs, final String authType) {
-                    }
-                    @Override
-                    public void checkServerTrusted(final X509Certificate[] certs, final String authType) {
-                    }
-                }
-        };
     }
 
     public enum EmoteProvider {
