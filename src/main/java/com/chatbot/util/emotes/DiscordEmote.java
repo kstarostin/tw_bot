@@ -132,6 +132,7 @@ public class DiscordEmote extends AbstractEmote {
 
     public interface RedRoomGuild {
         // Static
+        DiscordEmote adixWxman = new DiscordEmote("adixWxman", 1081873470817829024L);
         DiscordEmote Pausey = new DiscordEmote("Pausey", 1035132999798358016L);
         DiscordEmote Pogey = new DiscordEmote("Pogey", 1035133015040462869L);
         DiscordEmote deshovka = new DiscordEmote("deshovka", 950496796948447312L);

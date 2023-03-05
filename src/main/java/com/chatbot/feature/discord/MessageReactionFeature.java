@@ -36,7 +36,7 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
     private static MessageReactionFeature instance;
 
     private static final Set<String> NO_STREAM_TODAY_STRING_TOKENS = Set.of("сегодня без", "сегодня не", "не будет", "не сегодня", "завтра", "в понедельник", "во вторник", "в среду",
-            "в четверг", "в пятницу", "в субботу", "в воскресенье", "в день после", "а вот");
+            "в четверг", "в пятницу", "в субботу", "в воскресенье", "в день после", "а вот", "цок");
 
     private static final String TWITCH_URL_PATTERN = "^(https:|www\\.)/{0,2}w{0,3}\\.?twitch.tv/[a-zA-Z_\\d]+/?";
 
@@ -75,7 +75,7 @@ public class MessageReactionFeature extends AbstractDiscordFeature<MessageCreate
         List<DiscordEmote> discordEmotes = new ArrayList<>();
         if (isEveryone(message.getContent())) {
             if (isNoStreamToday(message.getContent())) {
-                discordEmotes = List.of(DiscordEmote.KebirowHomeGuild.Kippah);
+                discordEmotes = discordEmoteService.buildRandomEmoteList(null, 1, List.of(DiscordEmote.RedRoomGuild.adixWxman, DiscordEmote.KebirowHomeGuild.Kippah));
             } else if (hasAttachment(message)) {
                 discordEmotes = discordEmoteService.buildRandomEmoteList(null, 1, LAUGH);
             } else {

@@ -38,9 +38,9 @@ public class TwitchEmote extends AbstractEmote {
         List<TwitchEmote> GREETING = List.of(SevenTVChannel.XyliWave, SevenTVChannel.ZdarovaZaebal, SevenTVChannel.KKomrade, SevenTVChannel.noxSorry, TwitchGlobal.FutureMan,
                 TwitchGlobal.PotFriend, TwitchGlobal.KonCha, TwitchGlobal.VoHiYo, TwitchGlobal.HeyGuys);
 
-        List<TwitchEmote> CONFUSION = List.of(SevenTVChannel.Okayeg, SevenTVChannel.KEKWait, SevenTVChannel.CheNaxyi, SevenTVChannel.XyliHuh, SevenTVChannel.Pausey,
-                SevenTVGlobal.FeelsDankMan, SevenTVChannel.roflanUpalo, SevenTVChannel.FeelsSpecialMan, SevenTVChannel.XyliSnes, SevenTVChannel.deshovka, SevenTVChannel.xyliNado,
-                SevenTVChannel.XyliChel, SevenTVGlobal.WAYTOODANK, SevenTVGlobal.Stare, SevenTVGlobal.FeelsWeirdMan, BTTVChannel.Ebaka, TwitchGlobal.RlyTho);
+        List<TwitchEmote> CONFUSION = List.of(SevenTVChannel.Okayeg, SevenTVChannel.KEKWait, SevenTVChannel.CheNaxyi, SevenTVChannel.adixWxman, SevenTVChannel.XyliHuh,
+                SevenTVChannel.Pausey, SevenTVGlobal.FeelsDankMan, SevenTVChannel.FeelsSpecialMan, SevenTVChannel.XyliSnes, SevenTVChannel.deshovka, SevenTVChannel.xyliNado,
+                SevenTVChannel.XyliChel, SevenTVGlobal.WAYTOODANK, SevenTVGlobal.Stare, SevenTVGlobal.FeelsWeirdMan, TwitchGlobal.RlyTho);
 
         List<TwitchEmote> SCARY = List.of(SevenTVChannel.jvcrS, SevenTVChannel.monkaStop, SevenTVChannel.monkaChrist, BTTVChannel.Ebaka, TwitchGlobal.WutFace);
 
@@ -586,5 +586,6 @@ public class TwitchEmote extends AbstractEmote {
         TwitchEmote jvcrS = new TwitchEmote("jvcrS");
         TwitchEmote jvcrSad = new TwitchEmote("jvcrSad");
         TwitchEmote jvcrEbalo = new TwitchEmote("jvcrEbalo");
+        TwitchEmote adixWxman = new TwitchEmote("adixWxman");
     }
 }
