@@ -172,7 +172,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
     }
 
     private boolean isImageRequested(final String requestMessage) {
-        return StringUtils.containsAny(requestMessage, IMAGE_REQUEST_KEY_WORDS.toArray(new String[0]));
+        return StringUtils.containsAnyIgnoreCase(requestMessage, IMAGE_REQUEST_KEY_WORDS.toArray(new String[0]));
     }
 
     private String generate(final GeneratorRequest request) {
