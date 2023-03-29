@@ -65,6 +65,7 @@ public class AliveFeature extends AbstractDiscordFeature<MessageCreateEvent> {
         return instance;
     }
 
+    @Override
     public Mono<Void> handle(final MessageCreateEvent event) {
         final Message message = event.getMessage();
         final String userName = message.getAuthor().map(User::getUsername).orElse(StringUtils.EMPTY);

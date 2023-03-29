@@ -6,15 +6,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Set;
 
-public abstract class AbstractDiscordFeature<T extends Event> {
-
-    /**
-     * Discord channel IDs
-     */
-    protected static final String KEBIROW_GENERAL = "1057723933769617440";
-    protected static final String RED_ROOM_ANNOUNCE = "950482716078538823";
-    protected static final String RED_ROOM_TEXT = "950376827468267530";
-    protected static final String RED_ROOM_SUNBOY_MANIA = "1038449077131673661";
+public abstract class AbstractDiscordFeature<T extends Event> implements DiscordFeature {
 
     public abstract Mono<Void> handle(final T event);
 }

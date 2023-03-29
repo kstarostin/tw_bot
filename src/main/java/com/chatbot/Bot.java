@@ -5,6 +5,7 @@ import com.chatbot.feature.discord.AliveFeature;
 import com.chatbot.feature.discord.LogChatMessageFeature;
 import com.chatbot.feature.discord.MessageReactionFeature;
 import com.chatbot.feature.discord.CommandMessageFeature;
+import com.chatbot.feature.discord.ScheduledShutDownFeature;
 import com.chatbot.service.ChannelService;
 import com.chatbot.service.impl.DefaultChannelServiceImpl;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -76,6 +77,8 @@ public class Bot {
             final Mono<Void> handleMessageReaction = gateway.on(MessageCreateEvent.class, event -> MessageReactionFeature.getInstance().handle(event)).then();
             final Mono<Void> handleMessage = gateway.on(MessageCreateEvent.class, event -> AliveFeature.getInstance().handle(event)).then();
             final Mono<Void> handleCommandMessage = gateway.on(ChatInputInteractionEvent.class, event -> CommandMessageFeature.getInstance().handle(event)).then();
+
+            ScheduledShutDownFeature.getInstance().handle(gateway);
 
             return printOnLogin.and(handleMessageLogging).and(handleMessageReaction).and(handleCommandMessage).and(handleMessage);
         });
